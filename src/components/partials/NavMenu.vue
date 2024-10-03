@@ -13,15 +13,21 @@ const toggleMenu = () => {
 };
 
 const isMenuOpen = ref(false);
+
+const closeMenuIfOpen = () => {
+  if (isMenuOpen.value) {
+    toggleMenu();
+  }
+};
 </script>
 
 <template>
-  <nav>
+  <nav class="mb-8">
     <!-- Mobile Navbar -->
     <div class="flex flex-row justify-center items-center md:hidden">
       <div class="flex items-center justify-between w-full max-w-screen-lg">
-        <router-link to="/" @click="toggleMenu">
-          <Logo link />
+        <router-link to="/" @click="closeMenuIfOpen">
+          <Logo />
         </router-link>
         <div class="flex items-center">
           <ThemeSwitch class="mr-1.5" />
@@ -45,7 +51,7 @@ const isMenuOpen = ref(false);
         'bg-gray-900 text-white': darkMode,
         'inset-0 h-screen overflow-hidden': isMenuOpen,
       }"
-      class="md:hidden flex flex-col items-center mt-10 z-50 transition-all"
+      class="md:hidden flex flex-col items-center mt-10 z-50 transition-all dropdown-transition"
       style="top: 0; left: 0"
     >
       <router-link
@@ -79,7 +85,7 @@ const isMenuOpen = ref(false);
         <div class="justify-start">
           <Logo class="object-contain w-full" />
         </div>
-        <div class="flex-grow flex justify-center">
+        <div class="flex-grow flex justify-end">
           <div class="space-x-10">
             <router-link to="/" class="uppercase" v-slot="{ isActive }">
               <span :class="{ 'active-link': isActive }">Home</span>
@@ -90,11 +96,10 @@ const isMenuOpen = ref(false);
             <router-link to="/contact" class="uppercase" v-slot="{ isActive }">
               <span :class="{ 'active-link': isActive }">Contact</span>
             </router-link>
+          <ThemeSwitch />
           </div>
         </div>
-        <div class="w-0 flex-shrink-0 flex justify-end">
-          <ThemeSwitch />
-        </div>
+
       </div>
     </div>
   </nav>
@@ -125,5 +130,9 @@ const isMenuOpen = ref(false);
 .active-link:focus::after {
   visibility: visible;
   transform: scaleX(1);
+}
+
+.dropdown-transition {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 </style>

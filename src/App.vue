@@ -2,6 +2,7 @@
 import { useDarkModeStore } from '@/store/store';
 import NavMenu from '@/components/partials/NavMenu.vue';
 import Container from '@/components/partials/Container.vue';
+import Footer from '@/components/partials/Footer.vue'
 
 const darkModeStore = useDarkModeStore();
 </script>
@@ -12,7 +13,7 @@ const darkModeStore = useDarkModeStore();
       'bg-white text-black': !darkModeStore.darkMode,
       'bg-gray-900 text-white': darkModeStore.darkMode,
     }"
-    class="flex flex-col min-h-screen"
+    class="flex flex-col min-h-screen, wrapper"
   >
     <Container>
       <NavMenu />
@@ -20,19 +21,16 @@ const darkModeStore = useDarkModeStore();
         <router-view></router-view>
       </main>
     </Container>
+    <Footer />
   </div>
 </template>
 
 <style>
-.app-wrapper {
+.wrapper {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-main {
-  flex: 1;
 }
 
 .logo {
@@ -46,5 +44,9 @@ main {
 }
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
+}
+
+main {
+  flex-grow: 1;
 }
 </style>
