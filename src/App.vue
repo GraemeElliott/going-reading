@@ -2,18 +2,18 @@
 import { useDarkModeStore } from '@/store/store';
 import NavMenu from '@/components/partials/NavMenu.vue';
 import Container from '@/components/partials/Container.vue';
-import { computed } from 'vue';
 
 const darkModeStore = useDarkModeStore();
-
-const appClasses = computed(() => ({
-  'bg-white text-black': !darkModeStore.darkMode,
-  'bg-gray-900 text-white': darkModeStore.darkMode,
-}));
 </script>
 
 <template>
-  <div :class="['app-wrapper', appClasses]">
+  <div
+    :class="{
+      'bg-white text-black': !darkModeStore.darkMode,
+      'bg-gray-900 text-white': darkModeStore.darkMode,
+    }"
+    class="flex flex-col min-h-screen"
+  >
     <Container>
       <NavMenu />
       <main>

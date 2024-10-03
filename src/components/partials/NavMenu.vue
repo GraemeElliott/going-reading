@@ -1,59 +1,24 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, toRef } from 'vue';
 import { useDarkModeStore } from '@/store/store';
 import ThemeSwitch from './ThemeSwitch.vue';
 import Logo from '@/components/logo/Logo.vue';
 
 const darkModeStore = useDarkModeStore();
-const darkMode = ref(darkModeStore.darkMode); // No need for toRef unless reactivity is required for nested objects
-
-const isMenuOpen = ref(false);
-let scrollPosition = 0;
-let scrollBarWidth = 0;
-
-const calculateScrollBarWidth = () => {
-  const outer = document.createElement('div');
-  outer.style.visibility = 'hidden';
-  outer.style.overflow = 'scroll';
-  document.body.appendChild(outer);
-  const inner = document.createElement('div');
-  outer.appendChild(inner);
-  scrollBarWidth = outer.offsetWidth - inner.offsetWidth;
-  outer.remove();
-};
-
-const lockScroll = () => {
-  scrollPosition = window.scrollY;
-  document.body.style.cssText = `
-    overflow: hidden;
-    position: fixed;
-    top: -${scrollPosition}px;
-    width: 100%;
-    padding-right: ${scrollBarWidth}px;
-  `;
-};
-
-const unlockScroll = () => {
-  document.body.style.cssText = '';
-  window.scrollTo(0, scrollPosition);
-};
+const darkMode = toRef(darkModeStore, 'darkMode');
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
-  isMenuOpen.value ? lockScroll() : unlockScroll();
+  document.body.style.overflow = isMenuOpen.value ? 'hidden' : '';
 };
 
-onMounted(calculateScrollBarWidth);
-
-onUnmounted(() => {
-  if (isMenuOpen.value) unlockScroll();
-});
+const isMenuOpen = ref(false);
 </script>
 
 <template>
   <nav>
     <!-- Mobile Navbar -->
-    <div class="flex flex-row my-3 justify-center items-center md:hidden">
+    <div class="flex flex-row justify-center items-center md:hidden">
       <div class="flex items-center justify-between w-full max-w-screen-lg">
         <router-link to="/" @click="toggleMenu">
           <Logo link />
@@ -85,7 +50,7 @@ onUnmounted(() => {
     >
       <router-link
         to="/"
-        class="block px-3 py-2 uppercase ubuntu-large"
+        class="block px-3 py-2 uppercase"
         @click="toggleMenu"
         v-slot="{ isActive }"
       >
@@ -93,7 +58,7 @@ onUnmounted(() => {
       </router-link>
       <router-link
         to="/articles"
-        class="block px-3 py-2 uppercase ubuntu-large"
+        class="block px-3 py-2 uppercase"
         @click="toggleMenu"
         v-slot="{ isActive }"
       >
@@ -101,7 +66,7 @@ onUnmounted(() => {
       </router-link>
       <router-link
         to="/contact"
-        class="block px-3 py-2 uppercase ubuntu-large"
+        class="block px-3 py-2 uppercase"
         @click="toggleMenu"
         v-slot="{ isActive }"
       >
@@ -109,7 +74,7 @@ onUnmounted(() => {
       </router-link>
     </div>
     <!-- Desktop and Tablet Navbar -->
-    <nav class="hidden md:block w-full max-w-screen-xl mx-auto">
+    <div class="hidden md:block w-full max-w-screen-xl mx-auto">
       <div class="flex items-center">
         <div class="justify-start">
           <Logo class="object-contain w-full" />
@@ -131,8 +96,34 @@ onUnmounted(() => {
           <ThemeSwitch />
         </div>
       </div>
-    </nav>
+    </div>
   </nav>
 </template>
 
-<style scoped></style>
+<style scoped>
+.active-link {
+  position: relative;
+  color: rgb(0, 124, 137);
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.active-link::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: -3px;
+  left: 0;
+  background-color: rgb(0, 124, 137);
+  visibility: hidden;
+  transform: scaleX(0);
+  transition: all 0.3s ease-in-out 0s;
+}
+
+.active-link:hover::after,
+.active-link:focus::after {
+  visibility: visible;
+  transform: scaleX(1);
+}
+</style>
