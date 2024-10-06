@@ -56,27 +56,27 @@ const closeMenuIfOpen = () => {
     >
       <router-link
         to="/"
-        class="block px-3 py-2 uppercase"
+        class="block px-3 py-2"
         @click="toggleMenu"
         v-slot="{ isActive }"
       >
         <span :class="{ 'active-link': isActive }">Home</span>
       </router-link>
       <router-link
-        to="/articles"
-        class="block px-3 py-2 uppercase"
+        to="/my-books"
+        class="block px-3 py-2"
         @click="toggleMenu"
         v-slot="{ isActive }"
       >
-        <span :class="{ 'active-link': isActive }">Articles</span>
+        <span :class="{ 'active-link': isActive }">My Books</span>
       </router-link>
       <router-link
-        to="/contact"
-        class="block px-3 py-2 uppercase"
+        to="/sign-in"
+        class="block px-3 py-2"
         @click="toggleMenu"
         v-slot="{ isActive }"
       >
-        <span :class="{ 'active-link': isActive }">Contact</span>
+        <span :class="{ 'active-link': isActive }">Sign In</span>
       </router-link>
     </div>
     <!-- Desktop and Tablet Navbar -->
@@ -87,19 +87,18 @@ const closeMenuIfOpen = () => {
         </div>
         <div class="flex-grow flex justify-end">
           <div class="space-x-10">
-            <router-link to="/" class="uppercase" v-slot="{ isActive }">
+            <router-link to="/" class="" v-slot="{ isActive }">
               <span :class="{ 'active-link': isActive }">Home</span>
             </router-link>
-            <router-link to="/articles" class="uppercase" v-slot="{ isActive }">
-              <span :class="{ 'active-link': isActive }">Articles</span>
+            <router-link to="/my-books" class="" v-slot="{ isActive }">
+              <span :class="{ 'active-link': isActive }">My Books</span>
             </router-link>
-            <router-link to="/contact" class="uppercase" v-slot="{ isActive }">
-              <span :class="{ 'active-link': isActive }">Contact</span>
+            <router-link to="/sign-in" class="" v-slot="{ isActive }">
+              <span :class="{ 'active-link': isActive }">Sign In</span>
             </router-link>
-          <ThemeSwitch />
+            <ThemeSwitch />
           </div>
         </div>
-
       </div>
     </div>
   </nav>

@@ -2,7 +2,8 @@
 import { useDarkModeStore } from '@/store/store';
 import NavMenu from '@/components/partials/NavMenu.vue';
 import Container from '@/components/partials/Container.vue';
-import Footer from '@/components/partials/Footer.vue'
+import Footer from '@/components/partials/Footer.vue';
+import Toaster from '@/components/ui/toast/Toaster.vue';
 
 const darkModeStore = useDarkModeStore();
 </script>
@@ -19,6 +20,7 @@ const darkModeStore = useDarkModeStore();
       <NavMenu />
       <main>
         <router-view></router-view>
+        <Toaster />
       </main>
     </Container>
     <Footer />

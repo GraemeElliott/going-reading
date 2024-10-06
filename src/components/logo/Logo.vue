@@ -12,9 +12,12 @@ const textColor = computed(() =>
 <template>
   <div class="flex flex-row items-center justify-center h-full">
     <div class="flex items-center">
-      <p :class="['kanit-thin text-4xl', textColor]">Going</p>
-      <font-awesome-icon icon="fa-solid fa-bookmark" class="fa-2xl mx-2"/>
-      <p :class="['kanit-regular text-4xl', textColor]">Reading</p>
+      <p :class="['kanit-thin text-2xl', textColor]">Going</p>
+      <font-awesome-icon
+        icon="fa-solid fa-bookmark"
+        class="fa-1xl mx-1 text-cyan-800"
+      />
+      <p :class="['kanit-regular text-2xl', textColor]">Reading</p>
     </div>
   </div>
 </template>
