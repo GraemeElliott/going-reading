@@ -14,7 +14,7 @@ const props = defineProps<{
   <div
     :class="
       cn(
-        'rounded-lg border bg-card text-card-foreground shadow-sm',
+        'rounded-lg border bg-card text-card-foreground shadow-sm transition-colors duration-300 ease-in-out',
         props.class,
         {
           'bg-white text-black': !darkModeStore.darkMode, // Light mode classes

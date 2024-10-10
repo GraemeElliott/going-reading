@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate';
-import { toTypedSchema } from '@vee-validate/zod';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
 import {
@@ -19,66 +17,47 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card/';
+import { useAuthStore } from '@/store/auth-store';
+import { useRouter } from 'vue-router';
 
-// Define the form schema with zod
-const formSchema = toTypedSchema(
-  z
-    .object({
-      firstName: z
-        .string()
-        .min(2, 'First name must be at least 2 characters')
-        .max(30, 'Max 30 characters'),
-      lastName: z
-        .string()
-        .min(2, 'Last name must be at least 2 characters')
-        .max(30, 'Max 30 characters'),
-      username: z
-        .string()
-        .min(5, 'Username must be at least 5 characters')
-        .max(20, 'Max 20 characters')
-        .regex(
-          /^[a-zA-Z0-9]+$/,
-          'Username must contain only letters and numbers'
-        ),
-      email: z.string().email('Invalid email address'),
-      password: z
-        .string()
-        .min(6, 'Password must be at least 6 characters')
-        .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-        .regex(/[\W_]/, 'Password must contain at least one special character'),
-      confirmPassword: z.string(),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-      message: 'Passwords must match',
-      path: ['confirmPassword'],
-    })
-);
+const authStore = useAuthStore();
+const router = useRouter();
 
-// Initialize the form using useForm and the defined schema
 const { handleSubmit, resetForm } = useForm({
-  validationSchema: formSchema,
+  validationSchema: authStore.formSchema,
 });
 
-// Define the submit handler
-const onSubmit = handleSubmit(() => {
-  toast({
-    title: 'Account Created!',
-    description: 'Account successfully created.',
-    variant: 'success',
-  });
-  resetForm();
+const onSubmit = handleSubmit(async (formData) => {
+  try {
+    await authStore.handleRegister(formData);
+
+    toast({
+      title: 'Account created',
+      description: 'Account successfully created.',
+      variant: 'success',
+    });
+
+    router.push('/my-books');
+    resetForm();
+  } catch (error) {
+    toast({
+      title: 'Registration error',
+      description:
+        authStore.errorMessage || 'Registration failed. Please try again.',
+      variant: 'destructive',
+    });
+  }
 });
 </script>
 
 <template>
-  <Card class="h-full">
+  <Card class="h-full border-none">
     <CardHeader class="space-y-1">
       <CardTitle class="text-2xl"> Create an account </CardTitle>
       <CardDescription> Sign up to create your account </CardDescription>
     </CardHeader>
 
-    <!-- Form structure -->
-    <form @submit="onSubmit">
+    <form @submit.prevent="onSubmit">
       <!-- First Name -->
       <FormField v-slot="{ componentField }" name="firstName">
         <FormItem>
@@ -106,7 +85,11 @@ const onSubmit = handleSubmit(() => {
         <FormItem>
           <FormLabel required>Username</FormLabel>
           <FormControl>
-            <Input type="text" placeholder="shadcn" v-bind="componentField" />
+            <Input
+              type="text"
+              placeholder="johnsmith"
+              v-bind="componentField"
+            />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -151,8 +134,8 @@ const onSubmit = handleSubmit(() => {
 
       <!-- Submit button -->
       <CardFooter class="flex flex-col mt-7">
-        <Button type="submit"> Submit </Button>
-        <div class="mt-2">
+        <Button type="submit" class="w-full"> Submit </Button>
+        <div class="mt-3">
           <p>Already a member? <span>Sign-in</span></p>
         </div>
       </CardFooter>

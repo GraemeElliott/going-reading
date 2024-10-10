@@ -2,20 +2,19 @@ import { defineStore } from 'pinia';
 import Cookies from 'js-cookie';
 import { ref } from 'vue';
 
-export const useLoadingStore = defineStore('loading', () => {
-  const isLoading = ref(false);
-
-  function startLoading() {
-    isLoading.value = true;
-  }
-
-  function stopLoading() {
-    isLoading.value = false;
-  }
-
-  return { isLoading, startLoading, stopLoading };
+// Loading store
+export const useLoadingStore = defineStore('loading', {
+  state: () => ({
+    isLoading: false,
+  }),
+  actions: {
+    setLoading(value: boolean) {
+      this.isLoading = value;
+    },
+  },
 });
 
+// Dark mode store
 export const useDarkModeStore = defineStore('darkMode', {
   state: () => ({
     darkMode: Cookies.get('darkMode') === 'true',

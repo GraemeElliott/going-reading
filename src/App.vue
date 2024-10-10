@@ -4,8 +4,16 @@ import NavMenu from '@/components/partials/NavMenu.vue';
 import Container from '@/components/partials/Container.vue';
 import Footer from '@/components/partials/Footer.vue';
 import Toaster from '@/components/ui/toast/Toaster.vue';
+import { useAuthStore } from '@/store/auth-store';
+import { onMounted } from 'vue';
+
+const authStore = useAuthStore();
 
 const darkModeStore = useDarkModeStore();
+
+onMounted(() => {
+  authStore.initializeAuth();
+});
 </script>
 
 <template>
@@ -33,19 +41,6 @@ const darkModeStore = useDarkModeStore();
   display: flex;
   flex-direction: column;
   transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
 }
 
 main {

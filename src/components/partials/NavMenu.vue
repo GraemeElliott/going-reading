@@ -3,9 +3,13 @@ import { ref, toRef } from 'vue';
 import { useDarkModeStore } from '@/store/store';
 import ThemeSwitch from './ThemeSwitch.vue';
 import Logo from '@/components/logo/Logo.vue';
+import LogOutButton from './LogOutButton.vue';
+import { useAuthStore } from '@/store/auth-store';
 
 const darkModeStore = useDarkModeStore();
 const darkMode = toRef(darkModeStore, 'darkMode');
+
+const authStore = useAuthStore();
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
@@ -71,6 +75,14 @@ const closeMenuIfOpen = () => {
         <span :class="{ 'active-link': isActive }">My Books</span>
       </router-link>
       <router-link
+        to="/register"
+        class="block px-3 py-2"
+        @click="toggleMenu"
+        v-slot="{ isActive }"
+      >
+        <span :class="{ 'active-link': isActive }">Register</span>
+      </router-link>
+      <router-link
         to="/sign-in"
         class="block px-3 py-2"
         @click="toggleMenu"
@@ -93,9 +105,31 @@ const closeMenuIfOpen = () => {
             <router-link to="/my-books" class="" v-slot="{ isActive }">
               <span :class="{ 'active-link': isActive }">My Books</span>
             </router-link>
-            <router-link to="/sign-in" class="" v-slot="{ isActive }">
+            <router-link
+              v-if="!authStore.user"
+              to="/register"
+              class=""
+              v-slot="{ isActive }"
+            >
+              <span :class="{ 'active-link': isActive }">Register</span>
+            </router-link>
+            <router-link
+              v-if="!authStore.user"
+              to="/sign-in"
+              class=""
+              v-slot="{ isActive }"
+            >
               <span :class="{ 'active-link': isActive }">Sign In</span>
             </router-link>
+            <router-link
+              v-if="authStore.userMetadata.isAdmin"
+              to="/admin"
+              class=""
+              v-slot="{ isActive }"
+            >
+              <span :class="{ 'active-link': isActive }">Admin Portal</span>
+            </router-link>
+            <LogOutButton v-if="authStore.user" />
             <ThemeSwitch />
           </div>
         </div>

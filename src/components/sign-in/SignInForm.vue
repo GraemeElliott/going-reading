@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate';
-import { toTypedSchema } from '@vee-validate/zod';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
 import {
@@ -19,42 +17,48 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card/';
+import { useAuthStore } from '@/store/auth-store';
+import { useRouter } from 'vue-router';
 
-// Define the form schema with zod
-const formSchema = toTypedSchema(
-  z.object({
-    email: z.string().email('Invalid email address'),
-    password: z.string(),
-  })
-);
+const authStore = useAuthStore();
+const router = useRouter();
 
-// Initialize the form using useForm and the defined schema
 const { handleSubmit, resetForm } = useForm({
-  validationSchema: formSchema,
+  validationSchema: authStore.singInFormSchema,
 });
 
-// Define the submit handler
-const onSubmit = handleSubmit(() => {
-  toast({
-    title: 'Logged in',
-    description: 'Account successfully logged in.',
-    variant: 'success',
-  });
-  resetForm();
+const onSubmit = handleSubmit(async (formData) => {
+  try {
+    await authStore.handleSignIn(formData);
+
+    toast({
+      title: 'Logged in',
+      description: 'Account successfully logged in.',
+      variant: 'success',
+    });
+
+    router.push('/my-books');
+    resetForm();
+  } catch (error) {
+    toast({
+      title: 'Log in error',
+      description: authStore.errorMessage || 'Log in failed. Please try again.',
+      variant: 'destructive',
+    });
+  }
 });
 </script>
 
 <template>
-  <Card class="h-full">
+  <Card class="h-full flex flex-col justify-center border-none">
     <CardHeader class="space-y-1">
-      <CardTitle class="text-2xl"> Create an account </CardTitle>
-      <CardDescription> Sign up to create your account </CardDescription>
+      <CardTitle class="text-2xl"> Sign in to your account </CardTitle>
+      <CardDescription>
+        Sign in to your account to track books and see stats
+      </CardDescription>
     </CardHeader>
 
-    <!-- Form structure -->
     <form @submit="onSubmit">
-      <!-- First Name -->
-
       <!-- Email -->
       <FormField v-slot="{ componentField }" name="email">
         <FormItem>
@@ -83,7 +87,7 @@ const onSubmit = handleSubmit(() => {
 
       <!-- Submit button -->
       <CardFooter class="flex flex-col mt-7">
-        <Button type="submit"> Submit </Button>
+        <Button type="submit" class="w-full"> Submit </Button>
       </CardFooter>
     </form>
   </Card>
