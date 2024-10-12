@@ -16,7 +16,7 @@ onMounted(() => {
 
 <template>
   <div>
-    <div class="flex flex-col-reverse md:flex-row">
+    <div class="flex flex-col md:flex-row">
       <Skeleton
         class="h-100 relative inline-block w-full md:w-1/2 mr-4 rounded-xl"
         v-if="isLoading"
