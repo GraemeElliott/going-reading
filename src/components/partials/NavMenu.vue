@@ -2,7 +2,7 @@
 import { ref, toRef } from 'vue';
 import { useDarkModeStore } from '@/store/store';
 import ThemeSwitch from './ThemeSwitch.vue';
-import Logo from '@/components/logo/Logo.vue';
+import Logo from '@/components/partials/Logo.vue';
 import LogOutButton from './LogOutButton.vue';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -67,7 +67,7 @@ const closeMenuIfOpen = () => {
         <span :class="{ 'active-link': isActive }">Home</span>
       </router-link>
       <router-link
-        to="/my-books"
+        to="/user/:username/my-books"
         class="block px-3 py-2"
         @click="toggleMenu"
         v-slot="{ isActive }"
@@ -102,7 +102,11 @@ const closeMenuIfOpen = () => {
             <router-link to="/" class="" v-slot="{ isActive }">
               <span :class="{ 'active-link': isActive }">Home</span>
             </router-link>
-            <router-link to="/my-books" class="" v-slot="{ isActive }">
+            <router-link
+              to="/user/:username/my-books"
+              class=""
+              v-slot="{ isActive }"
+            >
               <span :class="{ 'active-link': isActive }">My Books</span>
             </router-link>
             <router-link

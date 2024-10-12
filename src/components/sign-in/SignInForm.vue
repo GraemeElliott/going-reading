@@ -18,10 +18,11 @@ import {
   CardTitle,
 } from '@/components/ui/card/';
 import { useAuthStore } from '@/store/auth-store';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 
 const { handleSubmit, resetForm } = useForm({
   validationSchema: authStore.singInFormSchema,
@@ -37,7 +38,17 @@ const onSubmit = handleSubmit(async (formData) => {
       variant: 'success',
     });
 
-    router.push('/my-books');
+    let redirectPath = route.query.redirect;
+
+    if (Array.isArray(redirectPath)) {
+      redirectPath = redirectPath[0];
+    }
+
+    redirectPath =
+      redirectPath || `/user/${authStore.userMetadata.username}/my-books`;
+
+    await router.push(redirectPath);
+
     resetForm();
   } catch (error) {
     toast({
@@ -45,6 +56,7 @@ const onSubmit = handleSubmit(async (formData) => {
       description: authStore.errorMessage || 'Log in failed. Please try again.',
       variant: 'destructive',
     });
+    console.error(error);
   }
 });
 </script>
