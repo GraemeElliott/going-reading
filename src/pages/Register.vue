@@ -31,7 +31,7 @@ onMounted(() => {
           >
             <font-awesome-icon
               icon="fa-solid fa-bookmark"
-              class="fa-2xl mx-2 text-white"
+              class="fa-2xl mx-2"
             />
             <p class="rounded-lg p-4 text-center font-thin sm: text-4xl">
               Benefits for account holders
