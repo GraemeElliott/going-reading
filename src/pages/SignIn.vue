@@ -20,15 +20,12 @@ onMounted(() => {
 
 <template>
   <div>
-    <div class="flex flex-col md:flex-row">
+    <div class="flex flex-col-reverse md:flex-row">
       <Skeleton
         class="h-100 relative inline-block w-full md:w-1/2 mr-4 rounded-xl"
         v-if="isLoading"
       />
-      <div
-        v-else
-        class="homepage-create-account relative inline-block w-full md:w-1/2 mr-4"
-      >
+      <div v-else class="sign-in relative inline-block w-full md:w-1/2 mr-4">
         <img :src="homeImage" class="block w-full h-full" />
         <div
           class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-30"
