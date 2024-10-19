@@ -6,7 +6,7 @@
       <p :class="['kanit-thin text-2xl']">Going</p>
       <font-awesome-icon
         icon="fa-solid fa-bookmark"
-        class="fa-1xl mx-1 text-cyan-800"
+        class="fa-1xl mx-1 text-goingTeal"
       />
       <p :class="['kanit-regular text-2xl']">Reading</p>
     </div>

@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/card/';
 import { useAuthStore } from '@/store/auth-store';
 import { useRouter } from 'vue-router';
+import { ref } from 'vue';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -27,7 +28,10 @@ const { handleSubmit, resetForm } = useForm({
   validationSchema: authStore.formSchema,
 });
 
+const isLoading = ref(false);
+
 const onSubmit = handleSubmit(async (formData) => {
+  isLoading.value = true;
   try {
     await authStore.handleRegister(formData);
 
@@ -46,6 +50,8 @@ const onSubmit = handleSubmit(async (formData) => {
         authStore.errorMessage || 'Registration failed. Please try again.',
       variant: 'destructive',
     });
+  } finally {
+    isLoading.value = false;
   }
 });
 </script>
@@ -134,9 +140,16 @@ const onSubmit = handleSubmit(async (formData) => {
 
       <!-- Submit button -->
       <CardFooter class="flex flex-col mt-7">
-        <Button type="submit" class="w-full"> Submit </Button>
+        <Button type="submit" class="w-full" :disabled="isLoading">
+          {{ isLoading ? 'Submitting...' : 'Submit' }}
+        </Button>
         <div class="mt-3">
-          <p>Already a member? <span>Sign-in</span></p>
+          <p>
+            Already a member?
+            <router-link to="/sign-in" class="text-goingTeal">
+              <span>Sign In</span>
+            </router-link>
+          </p>
         </div>
       </CardFooter>
     </form>

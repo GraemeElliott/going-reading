@@ -33,8 +33,8 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/user/:username/my-account',
-      name: 'my-account',
+      path: '/user/:username/account',
+      name: 'account',
       component: MyAccount,
       meta: { requiresAuth: true, requiresOwner: true },
     },
@@ -56,31 +56,24 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
-  // Ensure that the auth store is initialized
   if (!authStore.user) {
-    await authStore.initializeAuth(); // Initialize auth state if not already done
+    await authStore.initializeAuth();
   }
 
-  const isAuthenticated = authStore.user; // Check if the user is authenticated
-  const currentUsername = authStore.userMetadata?.username; // Get the logged-in user's username
+  const isAuthenticated = authStore.user;
+  const currentUsername = authStore.userMetadata?.username;
 
-  // Check if the route requires authentication
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!isAuthenticated) {
-      // If not authenticated, redirect to sign-in page and pass the intended route as a query
       return next({ name: 'sign-in', query: { redirect: to.fullPath } });
     }
 
-    // Check if the route requires the logged-in user to own the account
     if (to.matched.some((record) => record.meta.requiresOwner)) {
-      // If the username in the URL does not match the logged-in user's username, redirect to home
       if (to.params.username !== currentUsername) {
         return next({ name: 'home' });
       }
     }
   }
-
-  // Allow navigation to proceed
   next();
 });
 

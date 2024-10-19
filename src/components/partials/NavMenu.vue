@@ -5,6 +5,9 @@ import ThemeSwitch from './ThemeSwitch.vue';
 import Logo from '@/components/partials/Logo.vue';
 import LogOutButton from './LogOutButton.vue';
 import { useAuthStore } from '@/store/auth-store';
+import SearchBar from './SearchBar.vue';
+import RegisterButton from './RegisterButton.vue';
+import SignInButton from './SignInButton.vue';
 
 const darkModeStore = useDarkModeStore();
 const darkMode = toRef(darkModeStore, 'darkMode');
@@ -31,7 +34,9 @@ const closeMenuIfOpen = () => {
     <div class="flex flex-row justify-center items-center md:hidden">
       <div class="flex items-center justify-between w-full max-w-screen-lg">
         <router-link to="/" @click="closeMenuIfOpen">
-          <Logo />
+          <router-link to="/">
+            <Logo class="hover:cursor-pointer" />
+          </router-link>
         </router-link>
         <div class="flex items-center">
           <ThemeSwitch class="mr-1.5" />
@@ -58,72 +63,68 @@ const closeMenuIfOpen = () => {
       class="md:hidden flex flex-col items-center mt-10 z-50 transition-all dropdown-transition"
       style="top: 0; left: 0"
     >
+      <div class="flex flex-row space-x-3">
+        <RegisterButton v-if="!authStore.user" @click="toggleMenu" class="" />
+        <SignInButton v-if="!authStore.user" @click="toggleMenu" class="" />
+      </div>
+
       <router-link
-        to="/"
-        class="block px-3 py-2"
-        @click="toggleMenu"
-        v-slot="{ isActive }"
-      >
-        <span :class="{ 'active-link': isActive }">Home</span>
-      </router-link>
-      <router-link
-        to="/user/:username/my-books"
+        v-if="authStore.user"
+        :to="`/user/${authStore.userMetadata.username}/my-books`"
         class="block px-3 py-2"
         @click="toggleMenu"
         v-slot="{ isActive }"
       >
         <span :class="{ 'active-link': isActive }">My Books</span>
       </router-link>
+
       <router-link
-        to="/register"
+        v-if="authStore.user"
+        :to="`/user/${authStore.userMetadata.username}/account`"
         class="block px-3 py-2"
         @click="toggleMenu"
         v-slot="{ isActive }"
       >
-        <span :class="{ 'active-link': isActive }">Register</span>
+        <span :class="{ 'active-link': isActive }">Account</span>
       </router-link>
+
       <router-link
-        to="/sign-in"
+        v-if="authStore.userMetadata.isAdmin"
+        to="/admin"
         class="block px-3 py-2"
-        @click="toggleMenu"
         v-slot="{ isActive }"
       >
-        <span :class="{ 'active-link': isActive }">Sign In</span>
+        <span :class="{ 'active-link': isActive }">Admin Portal</span>
       </router-link>
     </div>
     <!-- Desktop and Tablet Navbar -->
     <div class="hidden md:block w-full max-w-screen-xl mx-auto">
       <div class="flex items-center">
         <div class="justify-start">
-          <Logo class="object-contain w-full" />
+          <router-link to="/">
+            <Logo class="object-contain w-full hover:cursor-pointer" />
+          </router-link>
         </div>
+        <SearchBar class="ml-5" />
         <div class="flex-grow flex justify-end">
-          <div class="space-x-10">
-            <router-link to="/" class="" v-slot="{ isActive }">
-              <span :class="{ 'active-link': isActive }">Home</span>
-            </router-link>
+          <div class="space-x-5">
+            <RegisterButton v-if="!authStore.user" />
+            <SignInButton v-if="!authStore.user" />
             <router-link
-              to="/user/:username/my-books"
+              v-if="authStore.user"
+              :to="`/user/${authStore.userMetadata.username}/my-books`"
               class=""
               v-slot="{ isActive }"
             >
               <span :class="{ 'active-link': isActive }">My Books</span>
             </router-link>
-            <router-link
-              v-if="!authStore.user"
-              to="/register"
+            <!-- <router-link
+              v-if="authStore.user"
+              :to="`/user/${authStore.userMetadata.username}/account`"
               class=""
               v-slot="{ isActive }"
             >
-              <span :class="{ 'active-link': isActive }">Register</span>
-            </router-link>
-            <router-link
-              v-if="!authStore.user"
-              to="/sign-in"
-              class=""
-              v-slot="{ isActive }"
-            >
-              <span :class="{ 'active-link': isActive }">Sign In</span>
+              <span :class="{ 'active-link': isActive }">Account</span>
             </router-link>
             <router-link
               v-if="authStore.userMetadata.isAdmin"
@@ -132,7 +133,7 @@ const closeMenuIfOpen = () => {
               v-slot="{ isActive }"
             >
               <span :class="{ 'active-link': isActive }">Admin Portal</span>
-            </router-link>
+            </router-link> -->
             <LogOutButton v-if="authStore.user" />
             <ThemeSwitch />
           </div>

@@ -27,21 +27,61 @@ onMounted(() => {
       >
         <div class="flex flex-col items-center justify-center bg-opacity-30">
           <div
-            class="flex flex-col items-center justify-center md:absolute inset-0"
+            class="flex flex-col justify-center items-center md:absolute inset-0"
           >
             <font-awesome-icon
               icon="fa-solid fa-bookmark"
-              class="fa-2xl mx-2"
+              class="fa-2xl mx-2 p4"
             />
-            <p class="rounded-lg p-4 text-center font-thin sm: text-4xl">
+            <p class="rounded-lg p-4 font-thin sm: text-4xl">
               Benefits for account holders
             </p>
-            <p>Create lists</p>
-            <p>Track your reading</p>
-            <p>Analyse reading stats</p>
-            <p>Set reading challenges</p>
-            <p>Get recommendations</p>
-            <p>Follow other users</p>
+            <div class="p-4">
+              <ul>
+                <li class="flex items-center space-x-2">
+                  <font-awesome-icon
+                    icon="fa-solid fa-check"
+                    class="text-green-600"
+                  />
+                  <span>Create lists</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <font-awesome-icon
+                    icon="fa-solid fa-check"
+                    class="text-green-600"
+                  />
+                  <span>Track your reading</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <font-awesome-icon
+                    icon="fa-solid fa-check"
+                    class="text-green-600"
+                  />
+                  <span>Analyse reading stats</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <font-awesome-icon
+                    icon="fa-solid fa-check"
+                    class="text-green-600"
+                  />
+                  <span>Set reading challenges</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <font-awesome-icon
+                    icon="fa-solid fa-check"
+                    class="text-green-600"
+                  />
+                  <span>Get recommendations</span>
+                </li>
+                <li class="flex items-center space-x-2">
+                  <font-awesome-icon
+                    icon="fa-solid fa-check"
+                    class="text-green-600"
+                  />
+                  <span>Follow other users</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

@@ -2,9 +2,9 @@
 import { storeToRefs } from 'pinia';
 import { useLoadingStore } from '@/store/store';
 import { Skeleton } from '@/components/ui/skeleton';
-import homeImage from '@/assets/images/home-image.jpg';
+import signInImage from '@/assets/images/sign-in-image.jpg';
 import SignInForm from '@/components/sign-in/SignInForm.vue';
-import { onMounted } from 'vue';
+import { onMounted, nextTick } from 'vue';
 
 const loadingStore = useLoadingStore();
 const { isLoading } = storeToRefs(loadingStore);
@@ -12,21 +12,24 @@ const { isLoading } = storeToRefs(loadingStore);
 onMounted(() => {
   loadingStore.setLoading(true);
 
-  setTimeout(() => {
+  // Consider using nextTick instead of setTimeout
+  nextTick(() => {
     loadingStore.setLoading(false);
-  }, 500);
+  });
 });
 </script>
 
 <template>
-  <div>
-    <div class="flex flex-col-reverse md:flex-row">
+  <div class="flex flex-col-reverse md:flex-row">
+    <template v-if="isLoading">
       <Skeleton
         class="h-100 relative inline-block w-full md:w-1/2 mr-4 rounded-xl"
-        v-if="isLoading"
       />
-      <div v-else class="sign-in relative inline-block w-full md:w-1/2 mr-4">
-        <img :src="homeImage" class="block w-full h-full" />
+      <Skeleton class="w-full md:w-1/2 mt-4 md:mt-0 h-[600px] rounded-xl" />
+    </template>
+    <template v-else>
+      <div class="sign-in relative inline-block w-full md:w-1/2 mr-4">
+        <img :src="signInImage" class="block w-full h-full" />
         <div
           class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-30"
         >
@@ -42,10 +45,9 @@ onMounted(() => {
         </div>
       </div>
       <div class="w-full md:w-1/2 mt-4 md:mt-0">
-        <Skeleton class="h-[600px] rounded-xl" v-if="isLoading" />
-        <SignInForm v-else />
+        <SignInForm />
       </div>
-    </div>
+    </template>
   </div>
 </template>
 

@@ -39,7 +39,7 @@ const rawSchema = z
 const formSchema = toTypedSchema(rawSchema);
 
 // Sign-in form validation schema using Zod
-const singInFormSchema = toTypedSchema(
+const signInFormSchema = toTypedSchema(
   z.object({
     email: z.string().email('Invalid email address.'),
     password: z.string(),
@@ -72,7 +72,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (!parsed.success) {
       const errors = parsed.error.format();
       errorMessage.value = Object.values(errors)
-        .map((err) => err._errors[0])
+        .flatMap((err) => (Array.isArray(err) ? err : err._errors || []))
         .join(', ');
       throw new Error(errorMessage.value);
     }
@@ -110,7 +110,9 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       // Check if the username already exists in the users table
-      await checkIfUsernameExists(username);
+      if (username) {
+        await checkIfUsernameExists(username);
+      }
 
       // Proceed with Supabase signup
       const { data, error } = await supabase.auth.signUp({
@@ -131,7 +133,12 @@ export const useAuthStore = defineStore('auth', () => {
 
       // Set user data on successful registration
       user.value = data.user;
-      userMetadata.value = { firstName, lastName, username };
+      userMetadata.value = {
+        firstName: firstName ?? '',
+        lastName: lastName ?? '',
+        username: username ?? '',
+        isAdmin: false,
+      };
       errorMessage.value = '';
     } catch (err: any) {
       errorMessage.value = err.message || 'Registration failed.';
@@ -246,7 +253,12 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await supabase.auth.signOut();
       user.value = null;
-      userMetadata.value = {};
+      userMetadata.value = {
+        firstName: '',
+        lastName: '',
+        username: '',
+        isAdmin: false,
+      };
       errorMessage.value = '';
     } catch (err: any) {
       errorMessage.value = 'Logout failed.';
@@ -260,7 +272,7 @@ export const useAuthStore = defineStore('auth', () => {
     username?: string;
   }) => {
     try {
-      const { data, error } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         data: newMetadata,
       });
 
@@ -285,6 +297,6 @@ export const useAuthStore = defineStore('auth', () => {
     handleLogOut,
     updateProfile,
     formSchema,
-    singInFormSchema,
+    signInFormSchema,
   };
 });

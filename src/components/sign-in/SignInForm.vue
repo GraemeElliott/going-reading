@@ -25,7 +25,7 @@ const router = useRouter();
 const route = useRoute();
 
 const { handleSubmit, resetForm } = useForm({
-  validationSchema: authStore.singInFormSchema,
+  validationSchema: authStore.signInFormSchema,
 });
 
 const onSubmit = handleSubmit(async (formData) => {
@@ -72,14 +72,15 @@ const onSubmit = handleSubmit(async (formData) => {
 
     <form @submit="onSubmit">
       <!-- Email -->
-      <FormField v-slot="{ componentField }" name="email">
+      <FormField v-slot="{ value, handleChange }" name="email">
         <FormItem>
           <FormLabel required>Email</FormLabel>
           <FormControl>
             <Input
               type="email"
               placeholder="john.smith@email.com"
-              v-bind="componentField"
+              :value="value"
+              @input="handleChange"
             />
           </FormControl>
           <FormMessage />
@@ -87,11 +88,15 @@ const onSubmit = handleSubmit(async (formData) => {
       </FormField>
 
       <!-- Password -->
-      <FormField v-slot="{ componentField }" name="password">
+      <FormField v-slot="{ value, handleChange }" name="password">
         <FormItem>
           <FormLabel required>Password</FormLabel>
           <FormControl>
-            <Input type="password" v-bind="componentField" />
+            <Input 
+              type="password" 
+              :value="value"
+              @input="handleChange"
+            />
           </FormControl>
           <FormMessage />
         </FormItem>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Button from '../ui/button/Button.vue';
+import Button from '@/components/ui/button/Button.vue';
 import { toast } from '@/components/ui/toast';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth-store';
