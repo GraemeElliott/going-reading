@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { supabase } from '../supabase.ts';
 import * as z from 'zod';
 import { toTypedSchema } from '@vee-validate/zod';
+const defaultAvatarURL = import.meta.env.VITE_DEFAULT_AVATAR_IMAGE_URL;
 
 // Register form validation schema using Zod
 const rawSchema = z
@@ -62,6 +63,7 @@ export const useAuthStore = defineStore('auth', () => {
     firstName: '',
     lastName: '',
     username: '',
+    avatarURL: '',
     isAdmin: false,
   });
 
@@ -120,9 +122,10 @@ export const useAuthStore = defineStore('auth', () => {
         password,
         options: {
           data: {
-            username,
             firstName,
             lastName,
+            username,
+            avatar_url: defaultAvatarURL,
           },
         },
       });
@@ -137,6 +140,8 @@ export const useAuthStore = defineStore('auth', () => {
         firstName: firstName ?? '',
         lastName: lastName ?? '',
         username: username ?? '',
+        email: email ?? '',
+        avatarURL: defaultAvatarURL ?? '',
         isAdmin: false,
       };
       errorMessage.value = '';
@@ -166,6 +171,7 @@ export const useAuthStore = defineStore('auth', () => {
           firstName: userProfile.firstname,
           lastName: userProfile.lastname,
           username: userProfile.username,
+          avatarURL: userProfile.avatar_url,
           isAdmin: userProfile.is_admin,
         };
       }
@@ -214,6 +220,7 @@ export const useAuthStore = defineStore('auth', () => {
       firstName: userProfile.firstname,
       lastName: userProfile.lastname,
       username: userProfile.username,
+      avatarURL: userProfile.avatar_url,
       isAdmin: userProfile.is_admin,
     };
 

@@ -106,37 +106,39 @@ const closeMenuIfOpen = () => {
           </router-link>
         </div>
         <SearchBar class="ml-5" />
-        <div class="flex-grow flex justify-end">
-          <div class="space-x-5">
-            <RegisterButton v-if="!authStore.user" />
-            <SignInButton v-if="!authStore.user" />
+
+        <div class="flex-grow flex justify-end items-center space-x-5">
+          <RegisterButton v-if="!authStore.user" />
+          <SignInButton v-if="!authStore.user" />
+
+          <router-link
+            v-if="authStore.user"
+            :to="`/user/${authStore.userMetadata.username}/my-books`"
+            class="flex items-center space-x-3"
+            v-slot="{ isActive }"
+          >
+            <span :class="{ 'active-link': isActive }">My Books</span>
             <router-link
-              v-if="authStore.user"
-              :to="`/user/${authStore.userMetadata.username}/my-books`"
-              class=""
-              v-slot="{ isActive }"
-            >
-              <span :class="{ 'active-link': isActive }">My Books</span>
-            </router-link>
-            <!-- <router-link
-              v-if="authStore.user"
               :to="`/user/${authStore.userMetadata.username}/account`"
-              class=""
-              v-slot="{ isActive }"
             >
-              <span :class="{ 'active-link': isActive }">Account</span>
+              <img
+                v-if="authStore.user"
+                :src="authStore.userMetadata.avatarURL"
+                class="w-10 h-10 rounded-full"
+              />
             </router-link>
-            <router-link
-              v-if="authStore.userMetadata.isAdmin"
-              to="/admin"
-              class=""
-              v-slot="{ isActive }"
-            >
-              <span :class="{ 'active-link': isActive }">Admin Portal</span>
-            </router-link> -->
-            <LogOutButton v-if="authStore.user" />
-            <ThemeSwitch />
-          </div>
+          </router-link>
+          <router-link
+            v-if="authStore.userMetadata.isAdmin"
+            to="/admin"
+            class=""
+            v-slot="{ isActive }"
+          >
+            <span :class="{ 'active-link': isActive }">Admin Portal</span>
+          </router-link>
+
+          <LogOutButton v-if="authStore.user" />
+          <ThemeSwitch />
         </div>
       </div>
     </div>
