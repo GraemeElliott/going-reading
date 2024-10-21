@@ -23,10 +23,16 @@ const props = withDefaults(defineProps<Props>(), {
     :as="as"
     :as-child="asChild"
     :class="
-      cn(buttonVariants({ variant, size }), props.class, {
-        'bg-white hover:bg-white text-black': darkModeStore.darkMode, // Dark mode classes
-        'bg-gray-900 hover:bg-gray-900 text-white': !darkModeStore.darkMode, // Light mode classes
-      })
+      cn(
+        buttonVariants({ variant, size }),
+        darkModeStore.darkMode && variant === 'outline'
+          ? 'bg-gray-900 text-white'
+          : '',
+        darkModeStore.darkMode && variant === undefined
+          ? 'bg-white text-black'
+          : '',
+        props.class
+      )
     "
   >
     <slot />
