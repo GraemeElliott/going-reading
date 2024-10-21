@@ -96,10 +96,7 @@ const onSubmit = handleSubmit((values) => {
         <FormControl>
           <Input type="text" placeholder="shadcn" v-bind="componentField" />
         </FormControl>
-        <FormDescription>
-          This is your public display name. It can be your real name or a
-          pseudonym. You can only change this once every 30 days.
-        </FormDescription>
+        <FormDescription> This is your public display name. </FormDescription>
         <FormMessage />
       </FormItem>
     </FormField>
