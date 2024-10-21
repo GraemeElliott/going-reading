@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, toRef } from 'vue';
-import { useDarkModeStore } from '@/store/store';
+import { ref } from 'vue';
+
 import ThemeSwitch from './ThemeSwitch.vue';
 import Logo from '@/components/partials/Logo.vue';
 import LogOutButton from './LogOutButton.vue';
@@ -8,9 +8,6 @@ import { useAuthStore } from '@/store/auth-store';
 import SearchBar from './SearchBar.vue';
 import RegisterButton from './RegisterButton.vue';
 import SignInButton from './SignInButton.vue';
-
-const darkModeStore = useDarkModeStore();
-const darkMode = toRef(darkModeStore, 'darkMode');
 
 const authStore = useAuthStore();
 
@@ -31,23 +28,26 @@ const closeMenuIfOpen = () => {
 <template>
   <nav class="mb-8">
     <!-- Mobile Navbar -->
-    <div class="flex flex-row justify-center items-center md:hidden">
-      <div class="flex items-center justify-between w-full max-w-screen-lg">
+    <div class="flex flex-row justify-center items-center md:hidden w-full">
+      <div
+        class="flex items-center justify-between w-full max-w-screen-lg space-x-3"
+      >
         <router-link to="/" @click="closeMenuIfOpen">
-          <router-link to="/">
-            <Logo class="hover:cursor-pointer" />
-          </router-link>
+          <Logo class="hover:cursor-pointer" />
         </router-link>
-        <div class="flex items-center">
-          <ThemeSwitch class="mr-1.5" />
-          <div class="w-8 flex justify-center items-center">
-            <button @click="toggleMenu" link>
-              <font-awesome-icon
-                :icon="isMenuOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars'"
-                class="fa-lg"
-              />
-            </button>
-          </div>
+
+        <div class="flex justify-center items-center space-x-5">
+          <font-awesome-icon
+            icon="fa-solid fa-magnifying-glass"
+            class="fa-lg"
+          />
+          <ThemeSwitch />
+          <button @click="toggleMenu" link>
+            <font-awesome-icon
+              :icon="isMenuOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars'"
+              class="fa-lg"
+            />
+          </button>
         </div>
       </div>
     </div>
@@ -56,89 +56,75 @@ const closeMenuIfOpen = () => {
       :class="{
         block: isMenuOpen,
         hidden: !isMenuOpen,
-        'bg-white text-black': !darkMode,
-        'bg-gray-900 text-white': darkMode,
         'inset-0 h-screen overflow-hidden': isMenuOpen,
       }"
-      class="md:hidden flex flex-col items-center mt-10 z-50 transition-all dropdown-transition"
+      class="md:hidden flex flex-col mt-10 z-50 transition-all dropdown-transition space-y-5"
       style="top: 0; left: 0"
     >
-      <div class="flex flex-row space-x-3">
+      <div class="flex flex-row space-x-5 justify-center">
         <RegisterButton v-if="!authStore.user" @click="toggleMenu" class="" />
         <SignInButton v-if="!authStore.user" @click="toggleMenu" class="" />
       </div>
+      <div class="flex flex-col items-center space-y-5">
+        <router-link :to="`/user/${authStore.userMetadata.username}/account`">
+          <img
+            v-if="authStore.user"
+            :src="authStore.userMetadata.avatarURL"
+            class="w-10 h-10 rounded-full"
+            @click="toggleMenu"
+          />
+        </router-link>
+        <p>{{ authStore.userMetadata.username }}</p>
 
-      <router-link
-        v-if="authStore.user"
-        :to="`/user/${authStore.userMetadata.username}/my-books`"
-        class="block px-3 py-2"
-        @click="toggleMenu"
-        v-slot="{ isActive }"
-      >
-        <span :class="{ 'active-link': isActive }">My Books</span>
-      </router-link>
+        <router-link
+          v-if="authStore.user"
+          :to="`/user/${authStore.userMetadata.username}/my-books`"
+          class=""
+          @click="toggleMenu"
+          v-slot="{ isActive }"
+        >
+          <span :class="{ 'active-link': isActive }">My Books</span>
+        </router-link>
 
-      <router-link
-        v-if="authStore.user"
-        :to="`/user/${authStore.userMetadata.username}/account`"
-        class="block px-3 py-2"
-        @click="toggleMenu"
-        v-slot="{ isActive }"
-      >
-        <span :class="{ 'active-link': isActive }">Account</span>
-      </router-link>
-
-      <router-link
-        v-if="authStore.userMetadata.isAdmin"
-        to="/admin"
-        class="block px-3 py-2"
-        v-slot="{ isActive }"
-      >
-        <span :class="{ 'active-link': isActive }">Admin Portal</span>
-      </router-link>
+        <font-awesome-icon
+          v-if="authStore.userMetadata.isAdmin"
+          icon="fa-solid fa-gear"
+          class="fa-xl"
+          @click="toggleMenu"
+        />
+      </div>
+      <LogOutButton v-if="authStore.user" @click="toggleMenu" />
     </div>
     <!-- Desktop and Tablet Navbar -->
-    <div class="hidden md:block w-full max-w-screen-xl mx-auto">
-      <div class="flex items-center">
-        <div class="justify-start">
-          <router-link to="/">
-            <Logo class="object-contain w-full hover:cursor-pointer" />
+    <div class="hidden md:block flex-row w-full max-w-screen-xl mx-auto">
+      <div
+        class="flex items-center justify-between w-full max-w-screen-lg space-x-5"
+      >
+        <div class="flex flex-row flex-grow space-x-5">
+          <router-link to="/" @click="closeMenuIfOpen">
+            <Logo class="hover:cursor-pointer" />
           </router-link>
+          <SearchBar />
         </div>
-        <SearchBar class="ml-5" />
-
-        <div class="flex-grow flex justify-end items-center space-x-5">
+        <div class="flex justify-end items-center max-w-screen-xl space-x-5">
           <RegisterButton v-if="!authStore.user" />
           <SignInButton v-if="!authStore.user" />
 
-          <router-link
-            v-if="authStore.user"
-            :to="`/user/${authStore.userMetadata.username}/my-books`"
-            class="flex items-center space-x-3"
-            v-slot="{ isActive }"
-          >
-            <span :class="{ 'active-link': isActive }">My Books</span>
-            <router-link
-              :to="`/user/${authStore.userMetadata.username}/account`"
-            >
-              <img
-                v-if="authStore.user"
-                :src="authStore.userMetadata.avatarURL"
-                class="w-10 h-10 rounded-full"
-              />
-            </router-link>
+          <router-link :to="`/user/${authStore.userMetadata.username}/account`">
+            <img
+              v-if="authStore.user"
+              :src="authStore.userMetadata.avatarURL"
+              class="w-10 h-10 rounded-full"
+            />
           </router-link>
-          <router-link
+          <font-awesome-icon
             v-if="authStore.userMetadata.isAdmin"
-            to="/admin"
-            class=""
-            v-slot="{ isActive }"
-          >
-            <span :class="{ 'active-link': isActive }">Admin Portal</span>
-          </router-link>
+            icon="fa-solid fa-gear"
+            class="fa-xl"
+          />
 
           <LogOutButton v-if="authStore.user" />
-          <ThemeSwitch />
+          <ThemeSwitch class="mr-1.5" />
         </div>
       </div>
     </div>

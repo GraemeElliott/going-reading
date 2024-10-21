@@ -72,14 +72,14 @@ const onSubmit = handleSubmit(async (formData) => {
 
     <form @submit="onSubmit">
       <!-- Email -->
-      <FormField v-slot="{ value, handleChange }" name="email">
+      <FormField v-slot="{ componentField, handleChange }" name="email">
         <FormItem>
           <FormLabel required>Email</FormLabel>
           <FormControl>
             <Input
               type="email"
               placeholder="john.smith@email.com"
-              :value="value"
+              v-bind="componentField"
               @input="handleChange"
             />
           </FormControl>
@@ -88,13 +88,13 @@ const onSubmit = handleSubmit(async (formData) => {
       </FormField>
 
       <!-- Password -->
-      <FormField v-slot="{ value, handleChange }" name="password">
+      <FormField v-slot="{ componentField, handleChange }" name="password">
         <FormItem>
           <FormLabel required>Password</FormLabel>
           <FormControl>
-            <Input 
-              type="password" 
-              :value="value"
+            <Input
+              type="password"
+              v-bind="componentField"
               @input="handleChange"
             />
           </FormControl>

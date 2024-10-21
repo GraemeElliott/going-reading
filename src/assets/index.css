@@ -68,14 +68,17 @@
 
     --ring: 212.7 26.8% 83.9%;
   }
-}
-
-@layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+  input,
+  textarea,
+  select,
+  button {
+    @apply text-base !important;
   }
 }
 
