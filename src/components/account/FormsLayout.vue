@@ -9,8 +9,8 @@ defineProps<{
 </script>
 
 <template>
-  <div class="md:hidden"></div>
-  <div class="hidden space-y-6 pb-16 md:block">
+  <div class=""></div>
+  <div class="space-y-6 pb-16 md:block">
     <div class="space-y-0.5">
       <h2 class="text-2xl font-bold tracking-tight">My Account</h2>
       <p class="text-muted-foreground">
