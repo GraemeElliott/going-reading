@@ -64,6 +64,8 @@ export const useAuthStore = defineStore('auth', () => {
     lastName: '',
     username: '',
     avatarURL: '',
+    email: '',
+    bio: '',
     isAdmin: false,
   });
 
@@ -110,6 +112,8 @@ export const useAuthStore = defineStore('auth', () => {
 
     const { email, password, username, firstName, lastName } = credentials;
 
+    const bio = '';
+
     try {
       // Check if the username already exists in the users table
       if (username) {
@@ -125,6 +129,7 @@ export const useAuthStore = defineStore('auth', () => {
             firstName,
             lastName,
             username,
+            bio,
             avatar_url: defaultAvatarURL,
           },
         },
@@ -141,6 +146,7 @@ export const useAuthStore = defineStore('auth', () => {
         lastName: lastName ?? '',
         username: username ?? '',
         email: email ?? '',
+        bio: bio,
         avatarURL: defaultAvatarURL ?? '',
         isAdmin: false,
       };
@@ -172,6 +178,8 @@ export const useAuthStore = defineStore('auth', () => {
           lastName: userProfile.lastname,
           username: userProfile.username,
           avatarURL: userProfile.avatar_url,
+          email: userProfile.email,
+          bio: userProfile.bio,
           isAdmin: userProfile.is_admin,
         };
       }
@@ -220,7 +228,9 @@ export const useAuthStore = defineStore('auth', () => {
       firstName: userProfile.firstname,
       lastName: userProfile.lastname,
       username: userProfile.username,
+      email: userProfile.email,
       avatarURL: userProfile.avatar_url,
+      bio: userProfile.bio,
       isAdmin: userProfile.is_admin,
     };
 
@@ -264,6 +274,7 @@ export const useAuthStore = defineStore('auth', () => {
         firstName: '',
         lastName: '',
         username: '',
+        bio: '',
         isAdmin: false,
       };
       errorMessage.value = '';
@@ -273,18 +284,42 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   //Handle update profile
-  const updateProfile = async (newMetadata: {
+  const updateAccount = async (newMetadata: {
     firstName?: string;
     lastName?: string;
     username?: string;
+    bio?: string;
+    email?: string;
+    avatarURL?: string;
   }) => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: newMetadata,
+      // Update authentication user data in Supabase
+      const { error: authError } = await supabase.auth.updateUser({
+        email: newMetadata.email,
       });
 
-      if (error) {
-        throw error;
+      if (authError) {
+        throw authError;
+      }
+
+      // Update profile information in the users table
+      const userId = user.value?.id; // Get user ID from the current session
+
+      if (userId) {
+        const { error: dbError } = await supabase
+          .from('users')
+          .update({
+            firstname: newMetadata.firstName,
+            lastname: newMetadata.lastName,
+            username: newMetadata.username,
+            bio: newMetadata.bio,
+            avatar_url: newMetadata.avatarURL,
+          })
+          .eq('id', userId);
+
+        if (dbError) {
+          throw dbError;
+        }
       }
 
       // Update the store with new user metadata
@@ -302,7 +337,7 @@ export const useAuthStore = defineStore('auth', () => {
     initializeAuth,
     handleSignIn,
     handleLogOut,
-    updateProfile,
+    updateAccount,
     formSchema,
     signInFormSchema,
   };

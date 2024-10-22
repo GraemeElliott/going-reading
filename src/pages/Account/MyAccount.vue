@@ -6,15 +6,15 @@ import Notifications from './account-form/Notifications.vue';
 import FormsLayout from '@/components/account/FormsLayout.vue';
 import SidebarNav from '@/components/account/SidebarNav.vue';
 
-const selectedOption = ref('Profile');
+const selectedOption = ref('Account');
 
 const handleOptionSelect = (option: string) => {
   selectedOption.value = option;
 };
 
 const sidebarNavItems = [
-  { title: 'Profile', href: '#profile' },
   { title: 'Account', href: '#account' },
+  { title: 'Profile', href: '#profile' },
   { title: 'Notifications', href: '#notifications' },
 ];
 </script>
@@ -37,10 +37,10 @@ const sidebarNavItems = [
 
     <component
       :is="
-        selectedOption === 'Profile'
-          ? Profile
-          : selectedOption === 'Account'
+        selectedOption === 'Account'
           ? Account
+          : selectedOption === 'Profile'
+          ? Profile
           : Notifications
       "
     />
