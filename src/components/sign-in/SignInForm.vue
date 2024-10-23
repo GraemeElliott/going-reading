@@ -19,13 +19,15 @@ import {
 } from '@/components/ui/card/';
 import { useAuthStore } from '@/store/auth-store';
 import { useRouter, useRoute } from 'vue-router';
+import { signInFormSchema } from '@/store/validation-schemas';
+import { errorMessages } from '@/store/error-handler';
 
 const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
 const { handleSubmit, resetForm } = useForm({
-  validationSchema: authStore.signInFormSchema,
+  validationSchema: signInFormSchema,
 });
 
 const onSubmit = handleSubmit(async (formData) => {
@@ -53,7 +55,7 @@ const onSubmit = handleSubmit(async (formData) => {
   } catch (error) {
     toast({
       title: 'Log in error',
-      description: authStore.errorMessage || 'Log in failed. Please try again.',
+      description: authStore.errorMessage || errorMessages.loginFailed,
       variant: 'destructive',
     });
     console.error(error);
@@ -63,14 +65,14 @@ const onSubmit = handleSubmit(async (formData) => {
 
 <template>
   <Card class="h-full flex flex-col justify-center border-none">
-    <CardHeader class="space-y-1">
+    <CardHeader class="space-y-1 pl-0 md:p-6">
       <CardTitle class="text-2xl"> Sign in to your account </CardTitle>
       <CardDescription>
         Sign in to your account to track books and see stats
       </CardDescription>
     </CardHeader>
 
-    <form @submit="onSubmit">
+    <form @submit="onSubmit" class="md:pl-6">
       <!-- Email -->
       <FormField v-slot="{ componentField, handleChange }" name="email">
         <FormItem>

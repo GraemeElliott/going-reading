@@ -1,0 +1,69 @@
+<script setup lang="ts">
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/toast';
+import { useForm } from 'vee-validate';
+import { useAuthStore } from '@/store/auth-store';
+import { passwordFormSchema } from '@/store/validation-schemas';
+import { errorMessages } from '@/store/error-handler';
+
+const authStore = useAuthStore();
+
+const { handleSubmit: handlePasswordSubmit, resetForm: resetPasswordForm } =
+  useForm({
+    validationSchema: passwordFormSchema,
+  });
+
+const onPasswordSubmit = handlePasswordSubmit(async (values) => {
+  try {
+    await authStore.updatePassword(values.password);
+    toast({
+      title: 'Password updated',
+      description: 'Password successfully updated.',
+      variant: 'success',
+    });
+    resetPasswordForm();
+  } catch (error: any) {
+    toast({
+      title: 'Error updating password',
+      description: error.message || errorMessages.unknownError,
+      variant: 'destructive',
+    });
+  }
+});
+</script>
+
+<template>
+  <form class="space-y-8" @submit.prevent="onPasswordSubmit">
+    <FormField v-slot="{ field }" name="password">
+      <FormItem>
+        <FormLabel>New Password</FormLabel>
+        <FormControl>
+          <Input type="password" v-bind="field" />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    </FormField>
+
+    <FormField v-slot="{ field }" name="confirmPassword">
+      <FormItem>
+        <FormLabel>Confirm New Password</FormLabel>
+        <FormControl>
+          <Input type="password" v-bind="field" />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    </FormField>
+
+    <div class="flex gap-2 justify-start">
+      <Button type="submit" class="mt-5"> Update Password </Button>
+    </div>
+  </form>
+</template>

@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import Cookies from 'js-cookie';
-import { ref } from 'vue';
 
 // Loading store
 export const useLoadingStore = defineStore('loading', {

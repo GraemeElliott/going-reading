@@ -70,7 +70,7 @@ const closeMenuIfOpen = () => {
           <img
             v-if="authStore.user"
             :src="authStore.userMetadata.avatarURL"
-            class="w-10 h-10 rounded-full"
+            class="w-10 h-10 rounded-full object-cover"
             @click="toggleMenu"
           />
         </router-link>
@@ -114,7 +114,7 @@ const closeMenuIfOpen = () => {
             <img
               v-if="authStore.user"
               :src="authStore.userMetadata.avatarURL"
-              class="w-10 h-10 rounded-full"
+              class="w-10 h-10 rounded-full object-cover"
             />
           </router-link>
           <font-awesome-icon
