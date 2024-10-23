@@ -3,49 +3,14 @@ import { ref } from 'vue';
 import { supabase } from '../supabase.ts';
 import * as z from 'zod';
 import { toTypedSchema } from '@vee-validate/zod';
+import {
+  registerFormSchema,
+  signInFormSchema,
+  accountFormSchema,
+  passwordFormSchema,
+} from './validation-schemas.ts';
+
 const defaultAvatarURL = import.meta.env.VITE_DEFAULT_AVATAR_IMAGE_URL;
-
-// Register form validation schema using Zod
-const rawSchema = z
-  .object({
-    firstName: z
-      .string()
-      .min(2, 'First name must be at least 2 characters.')
-      .max(30, 'First name can have a maximum of 30 characters.'),
-    lastName: z
-      .string()
-      .min(2, 'Last name must be at least 2 characters.')
-      .max(30, 'Last name can have a maximum of 30 characters.'),
-    username: z
-      .string()
-      .min(5, 'Username must be at least 5 characters.')
-      .max(20, 'Username can have a maximum of 30 characters.')
-      .regex(
-        /^[a-zA-Z0-9]+$/,
-        'Username must contain only letters and numbers.'
-      ),
-    email: z.string().email('Invalid email address.'),
-    password: z
-      .string()
-      .min(6, 'Password must be at least 6 characters.')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter.')
-      .regex(/[\W_]/, 'Password must contain at least one special character.'),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords must match.',
-    path: ['confirmPassword'],
-  });
-
-const formSchema = toTypedSchema(rawSchema);
-
-// Sign-in form validation schema using Zod
-const signInFormSchema = toTypedSchema(
-  z.object({
-    email: z.string().email('Invalid email address.'),
-    password: z.string(),
-  })
-);
 
 interface Credentials {
   email: string;
@@ -283,6 +248,22 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
+  const updateAccountDetails = async (values: {
+    firstName: string;
+    lastName: string;
+    username: string;
+    email: string;
+    bio?: string;
+  }) => {
+    try {
+      // Update user information in Supabase auth and users table
+      await updateAccount(values);
+      return 'Account details successfully updated.';
+    } catch (err: any) {
+      throw err.message || 'Profile update failed.';
+    }
+  };
+
   //Handle update profile
   const updateAccount = async (newMetadata: {
     firstName?: string;
@@ -325,7 +306,52 @@ export const useAuthStore = defineStore('auth', () => {
       // Update the store with new user metadata
       userMetadata.value = { ...userMetadata.value, ...newMetadata };
     } catch (err: any) {
-      errorMessage.value = err.message || 'Profile update failed.';
+      errorMessage.value = err.message || 'Account update failed.';
+    }
+  };
+
+  const updateAvatar = async (selectedAvatar: File) => {
+    try {
+      const fileName = `${user.value.id}-${selectedAvatar.name}`;
+      const { error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, selectedAvatar, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const { data: publicURLData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+      if (publicURLData?.publicUrl) {
+        await updateAccount({ avatarURL: publicURLData.publicUrl });
+      }
+    } catch (err: any) {
+      errorMessage.value = err.message || 'Avatar update failed.';
+      throw err;
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      // Update authentication user password in Supabase
+      const { error: authError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (authError) {
+        throw authError;
+      }
+
+      // If there are any user data updates needed in the users table, you can do that here.
+      // In this case, updating the password does not require additional updates in the users table.
+    } catch (err: any) {
+      errorMessage.value = err.message || 'Password update failed.';
+      throw err; // Throw error to let the caller handle the toast message
     }
   };
 
@@ -338,7 +364,8 @@ export const useAuthStore = defineStore('auth', () => {
     handleSignIn,
     handleLogOut,
     updateAccount,
-    formSchema,
-    signInFormSchema,
+    updateAvatar,
+    updateAccountDetails,
+    updatePassword,
   };
 });

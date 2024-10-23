@@ -25,7 +25,7 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const { handleSubmit, resetForm } = useForm({
-  validationSchema: authStore.formSchema,
+  validationSchema: authStore.registerFormSchema,
 });
 
 const isLoading = ref(false);
