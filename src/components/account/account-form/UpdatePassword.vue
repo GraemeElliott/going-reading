@@ -11,12 +11,13 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
 import { useForm } from 'vee-validate';
 import { useAuthStore } from '@/store/auth-store';
+import { passwordFormSchema } from '@/store/validation-schemas';
 
 const authStore = useAuthStore();
 
 const { handleSubmit: handlePasswordSubmit, resetForm: resetPasswordForm } =
   useForm({
-    validationSchema: authStore.passwordFormSchema,
+    validationSchema: passwordFormSchema,
   });
 
 const onPasswordSubmit = handlePasswordSubmit(async (values) => {

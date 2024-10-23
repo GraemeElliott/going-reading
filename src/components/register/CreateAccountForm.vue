@@ -18,6 +18,8 @@ import {
   CardTitle,
 } from '@/components/ui/card/';
 import { useAuthStore } from '@/store/auth-store';
+import { registerFormSchema } from '@/store/validation-schemas';
+
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
 
@@ -25,7 +27,7 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const { handleSubmit, resetForm } = useForm({
-  validationSchema: authStore.registerFormSchema,
+  validationSchema: registerFormSchema,
 });
 
 const isLoading = ref(false);
@@ -58,12 +60,12 @@ const onSubmit = handleSubmit(async (formData) => {
 
 <template>
   <Card class="h-full border-none">
-    <CardHeader class="space-y-1">
+    <CardHeader class="space-y-1 pl-0 md:p-6">
       <CardTitle class="text-2xl"> Create an account </CardTitle>
       <CardDescription> Sign up to create your account </CardDescription>
     </CardHeader>
 
-    <form @submit.prevent="onSubmit">
+    <form @submit.prevent="onSubmit" class="md:pl-6">
       <!-- First Name -->
       <FormField v-slot="{ componentField }" name="firstName">
         <FormItem>

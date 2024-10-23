@@ -2,7 +2,7 @@ import * as z from 'zod';
 import { toTypedSchema } from '@vee-validate/zod';
 
 // Register form validation schema using Zod
-const rawSchema = z
+export const rawSchema = z
   .object({
     firstName: z
       .string()

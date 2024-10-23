@@ -1,14 +1,19 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { supabase } from '../supabase.ts';
-import * as z from 'zod';
-import { toTypedSchema } from '@vee-validate/zod';
+
 import {
-  registerFormSchema,
-  signInFormSchema,
-  accountFormSchema,
-  passwordFormSchema,
-} from './validation-schemas.ts';
+  validateRegistrationForm,
+  checkIfUsernameExists,
+  ensureEmailExists,
+  handleSignupError,
+} from './auth-utils.ts';
+
+import {
+  handleError,
+  handleSupabaseError,
+  errorMessages,
+} from './error-handler.ts';
 
 const defaultAvatarURL = import.meta.env.VITE_DEFAULT_AVATAR_IMAGE_URL;
 
@@ -20,11 +25,26 @@ interface Credentials {
   lastName?: string;
 }
 
+interface User {
+  id: string;
+  email: string;
+}
+
+interface UserMetadata {
+  firstName: string;
+  lastName: string;
+  username: string;
+  avatarURL: string;
+  email: string;
+  bio: string;
+  isAdmin: boolean;
+}
+
 // Authentication store
 export const useAuthStore = defineStore('auth', () => {
   const errorMessage = ref<string>('');
-  const user = ref<any>(null);
-  const userMetadata = ref({
+  const user = ref<User | null>(null);
+  const userMetadata = ref<UserMetadata>({
     firstName: '',
     lastName: '',
     username: '',
@@ -34,45 +54,8 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin: false,
   });
 
-  // Validate the registration form
-  const validateRegistrationForm = (credentials: Credentials) => {
-    const parsed = rawSchema.safeParse(credentials);
-
-    if (!parsed.success) {
-      const errors = parsed.error.format();
-      errorMessage.value = Object.values(errors)
-        .flatMap((err) => (Array.isArray(err) ? err : err._errors || []))
-        .join(', ');
-      throw new Error(errorMessage.value);
-    }
-  };
-
-  // Check if a username already exists
-  const checkIfUsernameExists = async (username: string) => {
-    const { data: existingUsername } = await supabase
-      .from('users')
-      .select('id')
-      .eq('username', username)
-      .maybeSingle()
-      .throwOnError();
-
-    if (existingUsername) {
-      throw new Error('Username already exists.');
-    }
-  };
-
-  // Handle sign-up errors
-  const handleSignupError = (error: any) => {
-    if (error.message.includes('User already registered.')) {
-      throw new Error('Email address is already registered.');
-    } else {
-      throw new Error(error.message);
-    }
-  };
-
   // Handle registration
-  const handleRegister = async (credentials: Credentials) => {
-    // Validate form data using Zod and throw error if invalid
+  const handleRegister = async (credentials: Credentials): Promise<void> => {
     validateRegistrationForm(credentials);
 
     const { email, password, username, firstName, lastName } = credentials;
@@ -84,8 +67,6 @@ export const useAuthStore = defineStore('auth', () => {
       if (username) {
         await checkIfUsernameExists(username);
       }
-
-      // Proceed with Supabase signup
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -104,8 +85,9 @@ export const useAuthStore = defineStore('auth', () => {
         handleSignupError(error);
       }
 
-      // Set user data on successful registration
-      user.value = data.user;
+      user.value = data.user
+        ? { id: data.user.id, email: data.user.email }
+        : null;
       userMetadata.value = {
         firstName: firstName ?? '',
         lastName: lastName ?? '',
@@ -117,121 +99,112 @@ export const useAuthStore = defineStore('auth', () => {
       };
       errorMessage.value = '';
     } catch (err: any) {
-      errorMessage.value = err.message || 'Registration failed.';
+      errorMessage.value = handleError(err, errorMessages.registrationFailed);
       throw err;
     }
   };
 
   // Initialize store by checking for an existing session
-  const initializeAuth = async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      const sessionUser = data.session.user;
+  const initializeAuth = async (): Promise<void> => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        const sessionUser = data.session.user;
 
-      user.value = sessionUser;
+        user.value = sessionUser;
 
-      // Fetch user metadata from users table
-      const { data: userProfile, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', sessionUser.id)
-        .maybeSingle();
+        // Fetch user metadata from users table
+        const { data: userProfile, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', sessionUser.id)
+          .maybeSingle();
 
-      if (userProfile) {
-        userMetadata.value = {
-          firstName: userProfile.firstname,
-          lastName: userProfile.lastname,
-          username: userProfile.username,
-          avatarURL: userProfile.avatar_url,
-          email: userProfile.email,
-          bio: userProfile.bio,
-          isAdmin: userProfile.is_admin,
-        };
+        if (userProfile) {
+          userMetadata.value = {
+            firstName: userProfile.firstname,
+            lastName: userProfile.lastname,
+            username: userProfile.username,
+            avatarURL: userProfile.avatar_url,
+            email: userProfile.email,
+            bio: userProfile.bio,
+            isAdmin: userProfile.is_admin,
+          };
+        }
+
+        if (error) {
+          console.error(
+            handleError(error, errorMessages.fetchUserDetailsFailed)
+          );
+        }
       }
-
-      if (error) {
-        console.error('Error fetching user details.', error.message);
-      }
-    }
-  };
-
-  // Check if the email address exists
-  const ensureEmailExists = async (email: string) => {
-    const { data: existingUser, error: emailError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle();
-
-    if (emailError) {
-      throw new Error('Error checking email existence.');
-    }
-
-    if (!existingUser) {
-      throw new Error('An account with this email address does not exist.');
+    } catch (err: any) {
+      console.error(handleError(err, errorMessages.initializeAuthFailed));
     }
   };
 
   // Fetch the user's details
-  const fetchUserProfile = async (userId: string) => {
-    const { data: userProfile, error: profileError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
+  const fetchUserProfile = async (userId: string): Promise<void> => {
+    try {
+      const { data: userProfile, error: profileError } = await supabase
+        .from('users')
+        .select<UserMetadata>('*')
+        .eq('id', userId)
+        .maybeSingle();
 
-    if (profileError) {
-      throw new Error(profileError.message || 'Unable to fetch user data.');
+      if (profileError) {
+        throw new Error(
+          handleError(profileError, errorMessages.fetchUserFailed)
+        );
+      }
+
+      if (!userProfile) {
+        throw new Error(errorMessages.noUserFound);
+      }
+
+      userMetadata.value = {
+        firstName: userProfile.firstname,
+        lastName: userProfile.lastname,
+        username: userProfile.username,
+        email: userProfile.email,
+        avatarURL: userProfile.avatar_url,
+        bio: userProfile.bio,
+        isAdmin: userProfile.is_admin,
+      };
+
+      user.value = { id: userId, email: userProfile.email };
+    } catch (err: any) {
+      throw new Error(handleError(err, errorMessages.fetchUserFailed));
     }
-
-    if (!userProfile) {
-      throw new Error('No user found.');
-    }
-
-    // Update the store with the user's profile from the users table
-    userMetadata.value = {
-      firstName: userProfile.firstname,
-      lastName: userProfile.lastname,
-      username: userProfile.username,
-      email: userProfile.email,
-      avatarURL: userProfile.avatar_url,
-      bio: userProfile.bio,
-      isAdmin: userProfile.is_admin,
-    };
-
-    user.value = { id: userId };
   };
 
   // Handle sign-in
-  const handleSignIn = async (credentials: Credentials) => {
+  const handleSignIn = async (credentials: Credentials): Promise<void> => {
     const { email, password } = credentials;
 
     try {
-      // Check if the email exists before attempting to sign in
       await ensureEmailExists(email);
 
-      // Sign in the user with Supabase authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        throw new Error(error.message || 'Invalid login credentials.');
+        throw new Error(handleError(error, errorMessages.loginFailed));
       }
 
-      // Fetch the user's profile after successful authentication
       await fetchUserProfile(data.user.id);
 
-      errorMessage.value = ''; // Clear error message on success
+      errorMessage.value = '';
     } catch (err: any) {
-      errorMessage.value = err.message || 'Login failed.';
+      errorMessage.value = handleError(err, errorMessages.loginFailed);
       throw err;
     }
   };
 
   // Handle logout
-  const handleLogOut = async () => {
+  const handleLogOut = async (): Promise<void> => {
     try {
       await supabase.auth.signOut();
       user.value = null;
@@ -244,7 +217,7 @@ export const useAuthStore = defineStore('auth', () => {
       };
       errorMessage.value = '';
     } catch (err: any) {
-      errorMessage.value = 'Logout failed.';
+      errorMessage.value = handleError(err, errorMessages.logoutFailed);
     }
   };
 
@@ -256,35 +229,27 @@ export const useAuthStore = defineStore('auth', () => {
     bio?: string;
   }) => {
     try {
-      // Update user information in Supabase auth and users table
       await updateAccount(values);
       return 'Account details successfully updated.';
     } catch (err: any) {
-      throw err.message || 'Profile update failed.';
+      throw new Error(handleError(err, errorMessages.accountUpdateFailed));
     }
   };
 
   //Handle update profile
-  const updateAccount = async (newMetadata: {
-    firstName?: string;
-    lastName?: string;
-    username?: string;
-    bio?: string;
-    email?: string;
-    avatarURL?: string;
-  }) => {
+  const updateAccount = async (
+    newMetadata: Partial<UserMetadata>
+  ): Promise<void> => {
     try {
-      // Update authentication user data in Supabase
       const { error: authError } = await supabase.auth.updateUser({
         email: newMetadata.email,
       });
 
       if (authError) {
-        throw authError;
+        handleSupabaseError(authError, 'update user email');
       }
 
-      // Update profile information in the users table
-      const userId = user.value?.id; // Get user ID from the current session
+      const userId = user.value?.id;
 
       if (userId) {
         const { error: dbError } = await supabase
@@ -299,17 +264,17 @@ export const useAuthStore = defineStore('auth', () => {
           .eq('id', userId);
 
         if (dbError) {
-          throw dbError;
+          handleSupabaseError(dbError, 'update user profile');
         }
       }
 
-      // Update the store with new user metadata
       userMetadata.value = { ...userMetadata.value, ...newMetadata };
     } catch (err: any) {
-      errorMessage.value = err.message || 'Account update failed.';
+      errorMessage.value = handleError(err, errorMessages.accountUpdateFailed);
     }
   };
 
+  //Handle update avatar
   const updateAvatar = async (selectedAvatar: File) => {
     try {
       const fileName = `${user.value.id}-${selectedAvatar.name}`;
@@ -321,7 +286,7 @@ export const useAuthStore = defineStore('auth', () => {
         });
 
       if (error) {
-        throw new Error(error.message);
+        throw new Error(handleError(error, errorMessages.avatarUpdateFailed));
       }
 
       const { data: publicURLData } = supabase.storage
@@ -331,27 +296,26 @@ export const useAuthStore = defineStore('auth', () => {
         await updateAccount({ avatarURL: publicURLData.publicUrl });
       }
     } catch (err: any) {
-      errorMessage.value = err.message || 'Avatar update failed.';
+      errorMessage.value = handleError(err, errorMessages.avatarUpdateFailed);
       throw err;
     }
   };
 
+  //Handle update password
   const updatePassword = async (newPassword: string) => {
     try {
-      // Update authentication user password in Supabase
       const { error: authError } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
       if (authError) {
-        throw authError;
+        throw new Error(
+          handleError(authError, errorMessages.passwordUpdateFailed)
+        );
       }
-
-      // If there are any user data updates needed in the users table, you can do that here.
-      // In this case, updating the password does not require additional updates in the users table.
     } catch (err: any) {
-      errorMessage.value = err.message || 'Password update failed.';
-      throw err; // Throw error to let the caller handle the toast message
+      errorMessage.value = handleError(err, errorMessages.passwordUpdateFailed);
+      throw err;
     }
   };
 
