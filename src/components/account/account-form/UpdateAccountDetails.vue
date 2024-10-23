@@ -14,6 +14,7 @@ import { useForm } from 'vee-validate';
 import { watch } from 'vue';
 import { useAuthStore } from '@/store/auth-store';
 import { accountFormSchema } from '@/store/validation-schemas';
+import { errorMessages } from '@/store/error-handler';
 
 const authStore = useAuthStore();
 
@@ -52,7 +53,7 @@ const onSubmit = handleSubmit(async (values) => {
     });
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : 'An unknown error occurred';
+      error instanceof Error ? error.message : errorMessages.unknownError;
     toast({
       title: 'Error updating account',
       description: errorMessage,

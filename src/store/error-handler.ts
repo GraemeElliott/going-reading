@@ -14,8 +14,8 @@ export const errorMessages = {
   usernameExists: 'Username already exists.',
   noUserFound: 'No user found.',
   emailExists: 'An account with this email address does not exist.',
-  registrationFailed: 'Registration failed.',
-  loginFailed: 'Login failed.',
+  registrationFailed: 'Registration failed. Please try again.',
+  loginFailed: 'Log in failed. Please try again.',
   logoutFailed: 'Logout failed.',
   accountUpdateFailed: 'Account update failed.',
   avatarUpdateFailed: 'Failed to upload avatar.',
@@ -23,4 +23,5 @@ export const errorMessages = {
   fetchUserFailed: 'Unable to fetch user data.',
   fetchUserDetailsFailed: 'Error fetching user details.',
   initializeAuthFailed: 'Failed to initialise authentication.',
+  unknownError: 'An unknown error occurred',
 };

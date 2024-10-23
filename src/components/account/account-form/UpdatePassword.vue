@@ -12,6 +12,7 @@ import { toast } from '@/components/ui/toast';
 import { useForm } from 'vee-validate';
 import { useAuthStore } from '@/store/auth-store';
 import { passwordFormSchema } from '@/store/validation-schemas';
+import { errorMessages } from '@/store/error-handler';
 
 const authStore = useAuthStore();
 
@@ -32,7 +33,7 @@ const onPasswordSubmit = handlePasswordSubmit(async (values) => {
   } catch (error: any) {
     toast({
       title: 'Error updating password',
-      description: error.message || 'An unknown error occurred',
+      description: error.message || errorMessages.unknownError,
       variant: 'destructive',
     });
   }

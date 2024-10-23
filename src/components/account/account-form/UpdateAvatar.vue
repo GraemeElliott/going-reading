@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useAuthStore } from '@/store/auth-store';
 import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
+import { errorMessages } from '@/store/error-handler';
 
 const authStore = useAuthStore();
 const selectedAvatar = ref<File | null>(null);
@@ -28,7 +29,7 @@ const onSubmit = async () => {
     } catch (error: any) {
       toast({
         title: 'Error uploading avatar',
-        description: error.message || 'An unknown error occurred',
+        description: error.message || errorMessages.unknownError,
         variant: 'destructive',
       });
     }

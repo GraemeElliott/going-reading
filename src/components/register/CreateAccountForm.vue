@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/card/';
 import { useAuthStore } from '@/store/auth-store';
 import { registerFormSchema } from '@/store/validation-schemas';
+import { errorMessages } from '@/store/error-handler';
 
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
@@ -48,8 +49,7 @@ const onSubmit = handleSubmit(async (formData) => {
   } catch (error) {
     toast({
       title: 'Registration error',
-      description:
-        authStore.errorMessage || 'Registration failed. Please try again.',
+      description: authStore.errorMessage || errorMessages.registrationFailed,
       variant: 'destructive',
     });
   } finally {

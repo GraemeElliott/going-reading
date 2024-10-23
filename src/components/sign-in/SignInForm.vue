@@ -20,6 +20,7 @@ import {
 import { useAuthStore } from '@/store/auth-store';
 import { useRouter, useRoute } from 'vue-router';
 import { signInFormSchema } from '@/store/validation-schemas';
+import { errorMessages } from '@/store/error-handler';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -54,7 +55,7 @@ const onSubmit = handleSubmit(async (formData) => {
   } catch (error) {
     toast({
       title: 'Log in error',
-      description: authStore.errorMessage || 'Log in failed. Please try again.',
+      description: authStore.errorMessage || errorMessages.loginFailed,
       variant: 'destructive',
     });
     console.error(error);
