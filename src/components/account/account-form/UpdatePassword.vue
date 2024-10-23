@@ -28,6 +28,7 @@ const onPasswordSubmit = handlePasswordSubmit(async (values) => {
       title: 'Password updated',
       description: 'Password successfully updated.',
       variant: 'success',
+      duration: 2000,
     });
     resetPasswordForm();
   } catch (error: any) {
@@ -35,6 +36,7 @@ const onPasswordSubmit = handlePasswordSubmit(async (values) => {
       title: 'Error updating password',
       description: error.message || errorMessages.unknownError,
       variant: 'destructive',
+      duration: 2000,
     });
   }
 });

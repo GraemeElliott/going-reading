@@ -15,6 +15,7 @@ const handleLogOut = async () => {
       title: 'Logged out',
       description: 'Account has successfully logged out.',
       variant: 'success',
+      duration: 2000,
     });
 
     router.push('/');
@@ -23,6 +24,7 @@ const handleLogOut = async () => {
       title: 'Log out error',
       description: 'Failed to log out. Please try again.',
       variant: 'destructive',
+      duration: 2000,
     });
   }
 };

@@ -50,6 +50,7 @@ const onSubmit = handleSubmit(async (values) => {
       title: 'Account details updated',
       description: successMessage,
       variant: 'success',
+      duration: 2000,
     });
   } catch (error) {
     const errorMessage =
@@ -58,6 +59,7 @@ const onSubmit = handleSubmit(async (values) => {
       title: 'Error updating account',
       description: errorMessage,
       variant: 'destructive',
+      duration: 2000,
     });
   }
 });

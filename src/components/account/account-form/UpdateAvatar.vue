@@ -25,12 +25,14 @@ const onSubmit = async () => {
         title: 'Avatar updated',
         description: 'Avatar successfully updated.',
         variant: 'success',
+        duration: 2000,
       });
     } catch (error: any) {
       toast({
         title: 'Error uploading avatar',
         description: error.message || errorMessages.unknownError,
         variant: 'destructive',
+        duration: 2000,
       });
     }
   }

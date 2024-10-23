@@ -42,6 +42,7 @@ const onSubmit = handleSubmit(async (formData) => {
       title: 'Account created',
       description: 'Account successfully created.',
       variant: 'success',
+      duration: 2000,
     });
 
     router.push('/my-books');
@@ -51,6 +52,7 @@ const onSubmit = handleSubmit(async (formData) => {
       title: 'Registration error',
       description: authStore.errorMessage || errorMessages.registrationFailed,
       variant: 'destructive',
+      duration: 2000,
     });
   } finally {
     isLoading.value = false;

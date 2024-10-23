@@ -38,6 +38,7 @@ const onSubmit = handleSubmit(async (formData) => {
       title: 'Logged in',
       description: 'Account successfully logged in.',
       variant: 'success',
+      duration: 2000,
     });
 
     let redirectPath = route.query.redirect;
@@ -57,6 +58,7 @@ const onSubmit = handleSubmit(async (formData) => {
       title: 'Log in error',
       description: authStore.errorMessage || errorMessages.loginFailed,
       variant: 'destructive',
+      duration: 2000,
     });
     console.error(error);
   }

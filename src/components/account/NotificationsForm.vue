@@ -50,6 +50,7 @@ const onSubmit = handleSubmit((values) => {
       { class: 'mt-2 w-[340px] rounded-md bg-slate-950 p-4' },
       h('code', { class: 'text-white' }, JSON.stringify(values, null, 2))
     ),
+    duration: 2000,
   });
 });
 </script>
