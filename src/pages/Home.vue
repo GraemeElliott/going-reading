@@ -20,8 +20,8 @@ const authStore = useAuthStore();
 
     <!-- Use v-if to check if user is loaded before generating the links -->
     <router-link
-      v-if="authStore.userMetadata?.username"
-      :to="`/user/${authStore.userMetadata.username}/my-account`"
+      v-if="authStore.user && authStore.userMetadata.username"
+      :to="`/user/${authStore.userMetadata.username}/account`"
     >
       My Account
     </router-link>

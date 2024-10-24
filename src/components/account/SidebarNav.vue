@@ -7,10 +7,10 @@ defineProps<{
   selectedOption: string;
 }>();
 
-const emit = defineEmits(['option-selected']);
+const emit = defineEmits(['optionSelected']);
 
 const handleClick = (title: string) => {
-  emit('option-selected', title);
+  emit('optionSelected', title);
 };
 </script>
 

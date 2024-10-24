@@ -66,7 +66,10 @@ const closeMenuIfOpen = () => {
         <SignInButton v-if="!authStore.user" @click="toggleMenu" class="" />
       </div>
       <div class="flex flex-col items-center space-y-5">
-        <router-link :to="`/user/${authStore.userMetadata.username}/account`">
+        <router-link
+          v-if="authStore.user && authStore.userMetadata.username"
+          :to="`/user/${authStore.userMetadata.username}/account`"
+        >
           <img
             v-if="authStore.user"
             :src="authStore.userMetadata.avatarURL"
@@ -77,9 +80,8 @@ const closeMenuIfOpen = () => {
         <p>{{ authStore.userMetadata.username }}</p>
 
         <router-link
-          v-if="authStore.user"
+          v-if="authStore.user && authStore.userMetadata.username"
           :to="`/user/${authStore.userMetadata.username}/my-books`"
-          class=""
           @click="toggleMenu"
           v-slot="{ isActive }"
         >
@@ -110,7 +112,10 @@ const closeMenuIfOpen = () => {
           <RegisterButton v-if="!authStore.user" />
           <SignInButton v-if="!authStore.user" />
 
-          <router-link :to="`/user/${authStore.userMetadata.username}/account`">
+          <router-link
+            v-if="authStore.user && authStore.userMetadata.username"
+            :to="`/user/${authStore.userMetadata.username}/account`"
+          >
             <img
               v-if="authStore.user"
               :src="authStore.userMetadata.avatarURL"

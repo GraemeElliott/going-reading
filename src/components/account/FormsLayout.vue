@@ -2,6 +2,8 @@
 import { Separator } from '@/components/ui/separator';
 import SidebarNav from '@/components/account/SidebarNav.vue';
 
+const emit = defineEmits(['optionSelected']);
+
 defineProps<{
   sidebarNavItems: { title: string }[];
   selectedOption: string;
@@ -24,6 +26,7 @@ defineProps<{
           <SidebarNav
             :items="sidebarNavItems"
             :selectedOption="selectedOption"
+            @option-selected="emit('optionSelected', $event)"
           />
         </slot>
       </aside>
