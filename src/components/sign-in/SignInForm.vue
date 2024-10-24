@@ -60,7 +60,6 @@ const onSubmit = handleSubmit(async (formData) => {
       variant: 'destructive',
       duration: 2000,
     });
-    console.error(error);
   }
 });
 </script>

@@ -5,8 +5,7 @@ import { supabase } from '../supabase.ts';
 import {
   validateRegistrationForm,
   checkIfUsernameExists,
-  ensureEmailExists,
-  handleSignupError,
+  checkIfEmailExists,
 } from './auth-utils.ts';
 
 import {
@@ -63,9 +62,12 @@ export const useAuthStore = defineStore('auth', () => {
     const bio = '';
 
     try {
+      // Ensure the username is lowercase
+      const lowercaseUsername = username ? username.toLowerCase() : '';
+
       // Check if the username already exists in the users table
-      if (username) {
-        await checkIfUsernameExists(username);
+      if (lowercaseUsername) {
+        await checkIfUsernameExists(lowercaseUsername);
       }
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -74,7 +76,7 @@ export const useAuthStore = defineStore('auth', () => {
           data: {
             firstName,
             lastName,
-            username,
+            username: lowercaseUsername,
             bio,
             avatar_url: defaultAvatarURL,
           },
@@ -82,7 +84,11 @@ export const useAuthStore = defineStore('auth', () => {
       });
 
       if (error) {
-        handleSignupError(error);
+        if (error.message.toLowerCase().includes('user already registered')) {
+          throw new Error(errorMessages.emailExists); // Use the existing error message for email registration
+        } else {
+          throw new Error(error.message);
+        }
       }
 
       user.value = data.user
@@ -91,7 +97,7 @@ export const useAuthStore = defineStore('auth', () => {
       userMetadata.value = {
         firstName: firstName ?? '',
         lastName: lastName ?? '',
-        username: username ?? '',
+        username: lowercaseUsername ?? '',
         email: email ?? '',
         bio: bio,
         avatarURL: defaultAvatarURL ?? '',
@@ -183,7 +189,7 @@ export const useAuthStore = defineStore('auth', () => {
     const { email, password } = credentials;
 
     try {
-      await ensureEmailExists(email);
+      await checkIfEmailExists(email, false);
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -229,7 +235,23 @@ export const useAuthStore = defineStore('auth', () => {
     bio?: string;
   }) => {
     try {
+      // Check if the email already exists (excluding the current user's email)
+      if (values.email !== userMetadata.value.email) {
+        await checkIfEmailExists(values.email, true).catch(() => {
+          throw new Error(errorMessages.emailExists);
+        });
+      }
+
+      // Check if the username already exists (excluding the current user's username)
+      if (values.username !== userMetadata.value.username) {
+        await checkIfUsernameExists(values.username).catch(() => {
+          throw new Error(errorMessages.usernameExists);
+        });
+      }
+
+      // Proceed with updating account details if validation passes
       await updateAccount(values);
+
       return 'Account details successfully updated.';
     } catch (err: any) {
       throw new Error(handleError(err, errorMessages.accountUpdateFailed));

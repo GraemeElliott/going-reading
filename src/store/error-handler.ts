@@ -13,7 +13,8 @@ export const handleSupabaseError = (error: any, action: string): never => {
 export const errorMessages = {
   usernameExists: 'Username already exists.',
   noUserFound: 'No user found.',
-  emailExists: 'An account with this email address does not exist.',
+  emailExists: 'An account with this email address already exists.',
+  emailDoesNotExist: 'An account with this email address does not exist.',
   registrationFailed: 'Registration failed. Please try again.',
   loginFailed: 'Log in failed. Please try again.',
   logoutFailed: 'Logout failed.',

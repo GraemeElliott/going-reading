@@ -1,6 +1,6 @@
 import { rawSchema } from './validation-schemas.ts';
-
 import { supabase } from '../supabase.ts';
+import { errorMessages } from './error-handler.ts';
 
 interface Credentials {
   email: string;
@@ -29,37 +29,35 @@ export const checkIfUsernameExists = async (username: string) => {
   const { data: existingUsername } = await supabase
     .from('users')
     .select('id')
-    .eq('username', username)
+    .ilike('username', username)
     .maybeSingle()
     .throwOnError();
 
   if (existingUsername) {
-    throw new Error('Username already exists.');
+    throw new Error(errorMessages.usernameExists);
   }
 };
 
 // Check if the email address exists
-export const ensureEmailExists = async (email: string) => {
-  const { data: existingUser, error: emailError } = await supabase
+export const checkIfEmailExists = async (
+  email: string,
+  forRegistrationUpdate: boolean = true
+) => {
+  const { data: existingEmail, error: emailError } = await supabase
     .from('users')
     .select('id')
     .eq('email', email)
     .maybeSingle();
 
   if (emailError) {
-    throw new Error('Error checking email existence.');
+    throw new Error(errorMessages.unknownError);
   }
 
-  if (!existingUser) {
-    throw new Error('An account with this email address does not exist.');
+  if (forRegistrationUpdate && existingEmail) {
+    throw new Error(errorMessages.emailExists);
   }
-};
 
-// Handle sign-up errors
-export const handleSignupError = (error: any) => {
-  if (error.message.includes('User already registered.')) {
-    throw new Error('Email address is already registered.');
-  } else {
-    throw new Error(error.message);
+  if (forRegistrationUpdate && !existingEmail) {
+    throw new Error(errorMessages.emailDoesNotExist);
   }
 };
