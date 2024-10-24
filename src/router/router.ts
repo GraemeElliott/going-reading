@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, RouteLocationNormalized, NavigationGuardNext } from 'vue-router';
 import { useAuthStore } from '@/store/auth-store';
 import Home from '@/pages/Home.vue';
 import Register from '@/pages/Register.vue';
@@ -53,7 +53,7 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
   const authStore = useAuthStore();
 
   if (!authStore.user) {

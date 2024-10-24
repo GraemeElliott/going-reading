@@ -92,7 +92,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       user.value = data.user
-        ? { id: data.user.id, email: data.user.email }
+        ? { id: data.user.id, email: data.user.email ?? '' }
         : null;
       userMetadata.value = {
         firstName: firstName ?? '',
@@ -117,7 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (data.session) {
         const sessionUser = data.session.user;
 
-        user.value = sessionUser;
+        user.value = { id: sessionUser.id, email: sessionUser.email ?? '' };
 
         // Fetch user metadata from users table
         const { data: userProfile, error } = await supabase
@@ -154,7 +154,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const { data: userProfile, error: profileError } = await supabase
         .from('users')
-        .select<UserMetadata>('*')
+        .select('*')
         .eq('id', userId)
         .maybeSingle();
 
@@ -218,6 +218,8 @@ export const useAuthStore = defineStore('auth', () => {
         firstName: '',
         lastName: '',
         username: '',
+        avatarURL: '',
+        email: '',
         bio: '',
         isAdmin: false,
       };
@@ -299,6 +301,9 @@ export const useAuthStore = defineStore('auth', () => {
   //Handle update avatar
   const updateAvatar = async (selectedAvatar: File) => {
     try {
+      if (!user.value) {
+        throw new Error('User is not logged in.');
+      }
       const fileName = `${user.value.id}-${selectedAvatar.name}`;
       const { error } = await supabase.storage
         .from('avatars')

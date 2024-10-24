@@ -1,6 +1,7 @@
 import { rawSchema } from './validation-schemas.ts';
 import { supabase } from '../supabase.ts';
 import { errorMessages } from './error-handler.ts';
+import { ref } from 'vue';
 
 interface Credentials {
   email: string;
