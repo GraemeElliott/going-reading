@@ -82,15 +82,15 @@
   }
 }
 
-html,
-body {
-  height: 100vh;
-}
-
 .kanit-thin {
   font-family: 'Kanit', sans-serif;
   font-weight: 100;
   font-style: normal;
+}
+
+html {
+  overflow-x: hidden;
+  margin-right: calc(-1 * (100vw - 100%));
 }
 
 .kanit-extralight {

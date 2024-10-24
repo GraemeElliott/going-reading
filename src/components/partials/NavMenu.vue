@@ -98,7 +98,7 @@ const closeMenuIfOpen = () => {
       <LogOutButton v-if="authStore.user" @click="toggleMenu" />
     </div>
     <!-- Desktop and Tablet Navbar -->
-    <div class="hidden md:block flex-row w-full max-w-screen-xl mx-auto">
+    <div class="hidden md:block flex-row w-full mx-auto">
       <div
         class="flex items-center justify-between w-full max-w-screen-lg space-x-5"
       >

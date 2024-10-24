@@ -11,7 +11,6 @@ defineProps<{
 </script>
 
 <template>
-  <div class=""></div>
   <div class="space-y-6 pb-16 md:block">
     <div class="space-y-0.5">
       <h2 class="text-2xl font-bold tracking-tight">My Account</h2>
@@ -30,7 +29,7 @@ defineProps<{
           />
         </slot>
       </aside>
-      <div class="flex-1 lg:max-w-2xl">
+      <div class="flex-1">
         <div class="space-y-6">
           <slot />
         </div>
