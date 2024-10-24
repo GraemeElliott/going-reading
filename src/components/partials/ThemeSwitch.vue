@@ -15,7 +15,11 @@ const toggleDarkMode = () => {
 </script>
 
 <template>
-  <button @click="toggleDarkMode" class="toggle-theme-btn">
+  <button
+    @click="toggleDarkMode"
+    class="toggle-theme-btn"
+    style="width: 24px; height: 24px"
+  >
     <template v-if="darkMode">
       <font-awesome-icon icon="fa-solid fa-moon" class="fa-lg" />
     </template>
