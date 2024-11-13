@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { supabase } from '@/supabase/supabase';
 import { useAuth } from '@/composables/useAuth';
 import { useUserProfile } from '@/composables/useUserProfile';
-import { useProfileUpdate } from '@/composables/useProfileUpdate';
+import { useUserProfileUpdate } from '@/composables/useUserProfileUpdate';
 import {
   handleError,
   fetchUserDetailsErrorMessages,
@@ -17,14 +17,14 @@ export const useAuthStore = defineStore('auth', () => {
     handleSignOut,
   } = useAuth();
 
-  const { userMetadata, fetchUserProfile } = useUserProfile();
+  const { user, fetchUserProfile } = useUserProfile();
 
   const {
     errorMessage: updateError,
     updateAccountDetails,
     updateAvatar,
     updatePassword,
-  } = useProfileUpdate(userMetadata);
+  } = useUserProfileUpdate(user);
 
   const initializeAuth = async () => {
     try {
@@ -40,7 +40,7 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   return {
-    userMetadata,
+    user,
     errorMessage: computed(() => authError.value || updateError.value),
 
     initializeAuth,

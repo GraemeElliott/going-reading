@@ -10,9 +10,9 @@ import {
 } from '@/store/error-handler';
 import { Ref } from 'vue';
 
-export function useProfileUpdate(userMetadata: Ref<UserMetadata>) {
+export function useUserProfileUpdate(user: Ref<UserMetadata>) {
   const errorMessage = ref<string>('');
-  const user = ref<UserPartialData | null>(null);
+  const partialUser = ref<UserPartialData | null>(null);
 
   const updateAccountDetails = async (values: {
     firstName: string;
@@ -22,19 +22,19 @@ export function useProfileUpdate(userMetadata: Ref<UserMetadata>) {
     bio?: string;
   }) => {
     try {
-      if (values.email !== userMetadata.value.email) {
+      if (values.email !== user.value.email) {
         await checkIfEmailExists(values.email, true);
       }
 
-      if (values.username !== userMetadata.value.username) {
+      if (values.username !== user.value.username) {
         await checkIfUsernameExists(values.username);
       }
 
       await updateAccount(values);
       return 'Account details successfully updated.';
-    } catch (err: any) {
+    } catch (error: any) {
       throw new Error(
-        handleError(err, updateUserDetailsErrorMessages.accountUpdateFailed)
+        handleError(error, updateUserDetailsErrorMessages.accountUpdateFailed)
       );
     }
   };
@@ -58,16 +58,16 @@ export function useProfileUpdate(userMetadata: Ref<UserMetadata>) {
           bio: newMetadata.bio,
           avatar_url: newMetadata.avatarURL,
         })
-        .eq('id', user.value?.id);
+        .eq('id', partialUser.value?.id);
 
       if (dbError) {
         handleSupabaseError(dbError, 'update user profile');
       }
 
-      userMetadata.value = { ...userMetadata.value, ...newMetadata };
-    } catch (err: any) {
+      user.value = { ...user.value, ...newMetadata };
+    } catch (error: any) {
       errorMessage.value = handleError(
-        err,
+        error,
         updateUserDetailsErrorMessages.accountUpdateFailed
       );
     }
@@ -75,10 +75,10 @@ export function useProfileUpdate(userMetadata: Ref<UserMetadata>) {
 
   const updateAvatar = async (selectedAvatar: File) => {
     try {
-      if (!user.value) {
+      if (!partialUser.value) {
         throw new Error('User is not logged in.');
       }
-      const fileName = `${user.value.id}-${selectedAvatar.name}`;
+      const fileName = `${partialUser.value.id}-${selectedAvatar.name}`;
       const { error } = await supabase.storage
         .from('avatars')
         .upload(fileName, selectedAvatar, {
@@ -99,12 +99,12 @@ export function useProfileUpdate(userMetadata: Ref<UserMetadata>) {
       if (publicURLData?.publicUrl) {
         await updateAccount({ avatarURL: publicURLData.publicUrl });
       }
-    } catch (err: any) {
+    } catch (error: any) {
       errorMessage.value = handleError(
-        err,
+        error,
         updateUserDetailsErrorMessages.avatarUpdateFailed
       );
-      throw err;
+      throw error;
     }
   };
 
@@ -122,12 +122,12 @@ export function useProfileUpdate(userMetadata: Ref<UserMetadata>) {
           )
         );
       }
-    } catch (err: any) {
+    } catch (error: any) {
       errorMessage.value = handleError(
-        err,
+        error,
         updateUserDetailsErrorMessages.passwordUpdateFailed
       );
-      throw err;
+      throw error;
     }
   };
 

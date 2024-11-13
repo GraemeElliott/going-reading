@@ -54,12 +54,12 @@ export function useAuth() {
         }
         throw new Error(error.message);
       }
-    } catch (err: any) {
+    } catch (error: any) {
       errorMessage.value = handleError(
-        err,
+        error,
         registrationErrorMessages.registrationFailed
       );
-      throw err;
+      throw error;
     }
   };
 
@@ -80,9 +80,9 @@ export function useAuth() {
 
       await fetchUserProfile(data.user.id);
       errorMessage.value = '';
-    } catch (err: any) {
-      errorMessage.value = handleError(err, signinErrorMessages.signinFailed);
-      throw err;
+    } catch (error: any) {
+      errorMessage.value = handleError(error, signinErrorMessages.signinFailed);
+      throw error;
     }
   };
 
@@ -90,8 +90,8 @@ export function useAuth() {
     try {
       await supabase.auth.signOut();
       errorMessage.value = '';
-    } catch (err: any) {
-      errorMessage.value = handleError(err, logoutErrorMessages.logoutFailed);
+    } catch (error: any) {
+      errorMessage.value = handleError(error, logoutErrorMessages.logoutFailed);
     }
   };
 

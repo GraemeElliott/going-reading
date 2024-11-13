@@ -8,7 +8,7 @@ import {
 import { UserMetadata } from '@/types/user';
 
 export function useUserProfile() {
-  const userMetadata = ref<UserMetadata>({
+  const user = ref<UserMetadata>({
     firstName: '',
     lastName: '',
     username: '',
@@ -39,7 +39,7 @@ export function useUserProfile() {
         throw new Error(fetchUserDetailsErrorMessages.noUserFound);
       }
 
-      userMetadata.value = {
+      user.value = {
         firstName: userProfile.firstname,
         lastName: userProfile.lastname,
         username: userProfile.username,
@@ -48,15 +48,15 @@ export function useUserProfile() {
         bio: userProfile.bio,
         isAdmin: userProfile.is_admin,
       };
-    } catch (err: any) {
+    } catch (error: any) {
       throw new Error(
-        handleError(err, fetchUserDetailsErrorMessages.fetchUserFailed)
+        handleError(error, fetchUserDetailsErrorMessages.fetchUserFailed)
       );
     }
   };
 
   return {
-    userMetadata,
+    user,
     fetchUserProfile,
   };
 }

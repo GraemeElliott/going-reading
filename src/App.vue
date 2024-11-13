@@ -2,6 +2,7 @@
 import { onMounted } from 'vue';
 import Toaster from '@/components/ui/toast/Toaster.vue';
 import { useAuthStore } from './store/auth-store';
+import Container from './components/partials/Container.vue';
 
 const authStore = useAuthStore();
 
@@ -12,10 +13,12 @@ onMounted(() => {
 
 <template>
   <div>
-    <main class="relative">
-      <router-view></router-view>
-      <Toaster />
-    </main>
+    <Container>
+      <main class="relative">
+        <router-view></router-view>
+        <Toaster />
+      </main>
+    </Container>
   </div>
 </template>
 

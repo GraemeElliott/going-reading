@@ -5,7 +5,7 @@ import SignInForm from '@/components/authentication/SignInForm.vue';
 </script>
 
 <template>
-  <div class="ml-20 mt-10">
+  <div class="">
     <Tabs default-value="register" class="w-[400px]">
       <TabsList class="grid w-full grid-cols-2">
         <TabsTrigger value="register"> Register </TabsTrigger>

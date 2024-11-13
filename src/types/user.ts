@@ -7,10 +7,10 @@ export interface UserCredentials {
 }
 
 export interface UserMetadata {
-  email: string;
   firstName: string;
   lastName: string;
   username: string;
+  email: string;
   avatarURL: string;
   bio: string;
   isAdmin: boolean;
