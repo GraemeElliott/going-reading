@@ -26,12 +26,32 @@ export const useAuthStore = defineStore('auth', () => {
     updatePassword,
   } = useUserProfileUpdate(user);
 
+  const authListener = () => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        await fetchUserProfile(session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        // User signed out - clear the user data
+        user.value = {
+          firstName: '',
+          lastName: '',
+          username: '',
+          avatarURL: '',
+          email: '',
+          bio: '',
+          isAdmin: false,
+        };
+      }
+    });
+  };
+
   const initializeAuth = async () => {
     try {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         await fetchUserProfile(data.session.user.id);
       }
+      authListener();
     } catch (error) {
       throw new Error(
         handleError(error, fetchUserDetailsErrorMessages.initializeAuthFailed)
