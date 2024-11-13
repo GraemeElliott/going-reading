@@ -48,8 +48,7 @@ const onSubmit = handleSubmit(async (formData) => {
       redirectPath = redirectPath[0];
     }
 
-    redirectPath =
-      redirectPath || `/user/${authStore.userMetadata.username}/my-books`;
+    redirectPath = redirectPath || `/user/${authStore.user.username}/my-books`;
 
     await router.push(redirectPath);
 
