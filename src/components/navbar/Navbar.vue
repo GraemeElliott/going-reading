@@ -44,10 +44,6 @@ const handleSearchComplete = () => {
       @toggle-search="toggleSearch"
       @handle-search-complete="handleSearchComplete"
     />
-    <DesktopNavMenu
-      :should-clear-search="shouldClearSearch"
-      @close-menu-if-open="closeMenuIfOpen"
-      @handle-search-complete="handleSearchComplete"
-    />
+    <DesktopNavMenu @close-menu-if-open="closeMenuIfOpen" />
   </nav>
 </template>

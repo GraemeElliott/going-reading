@@ -7,25 +7,10 @@ import SearchBar from '@/components/search/SearchBar.vue';
 import { ref, watch } from 'vue';
 
 const authStore = useAuthStore();
-const searchBarRef = ref();
-
-const props = defineProps<{
-  shouldClearSearch: boolean;
-}>();
 
 const emit = defineEmits<{
   (e: 'closeMenuIfOpen'): void;
-  (e: 'handleSearchComplete'): void;
 }>();
-
-watch(
-  () => props.shouldClearSearch,
-  (newValue) => {
-    if (newValue && searchBarRef.value) {
-      searchBarRef.value.clearSearch();
-    }
-  }
-);
 </script>
 
 <template>
@@ -37,10 +22,7 @@ watch(
         <router-link to="/" @click="emit('closeMenuIfOpen')">
           <Logo class="hover:cursor-pointer" />
         </router-link>
-        <SearchBar
-          ref="searchBarRef"
-          @search-complete="emit('handleSearchComplete')"
-        />
+        <SearchBar />
       </div>
       <div class="flex justify-end items-center max-w-screen-xl space-x-5">
         <router-link
