@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -9,20 +9,102 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import isbndbService from '@/services/isbndbService';
+import { debounce } from 'lodash';
+import type { Book } from '@/types/book';
+import type { Author } from '@/types/author';
+import SearchResults from '@/components/search/SearchResults.vue';
 import { useDarkModeStore } from '@/store/store';
 
 type SearchType = 'title' | 'author' | 'isbn';
-const searchType = ref<SearchType>('title');
+
+const searchTypes: SearchType[] = ['title', 'author', 'isbn'];
 
 const darkModeStore = useDarkModeStore();
+const searchQuery = ref<string>('');
+const searchResults = ref<(Book | Author)[]>([]);
+const isSearching = ref(false);
+const totalResults = ref(0);
+const isInputFocused = ref(false);
+const searchType = ref<SearchType>('title');
+const searchContainer = ref<HTMLDivElement | null>(null);
+
+const emit = defineEmits(['search-complete']);
+
+const performSearch = debounce(async (newQuery: string) => {
+  if (!newQuery || newQuery.length < 3) {
+    searchResults.value = [];
+    isSearching.value = false;
+    return;
+  }
+
+  isSearching.value = true;
+
+  try {
+    const { results, total } = await isbndbService.searchQuery(
+      newQuery,
+      searchType.value
+    );
+    searchResults.value = results;
+    totalResults.value = total;
+  } catch (error) {
+    console.error('Search error:', error);
+    searchResults.value = [];
+  } finally {
+    isSearching.value = false;
+  }
+}, 500);
+
+const clearSearch = () => {
+  searchQuery.value = '';
+  searchResults.value = [];
+  totalResults.value = 0;
+};
+
+const handleFocus = () => {
+  isInputFocused.value = true;
+};
+
+const handleBlur = () => {
+  setTimeout(() => {
+    isInputFocused.value = false;
+  }, 200); // Small delay to allow click events on results
+};
+
+const setSearchType = (value: string) => {
+  if (searchTypes.includes(value as SearchType)) {
+    searchType.value = value as SearchType;
+  }
+};
+
+// Watch for changes in searchQuery
+watch(searchQuery, (newQuery) => {
+  searchResults.value = [];
+  totalResults.value = 0;
+  performSearch(newQuery);
+});
+
+// Watch for changes in searchType
+watch(searchType, () => {
+  clearSearch();
+});
+
+// Expose the clearSearch method
+defineExpose({
+  clearSearch,
+});
 </script>
 
 <template>
-  <div class="w-full">
-    <div class="relative flex gap-2">
-      <Select defaultValue="title">
+  <div class="relative w-full" ref="searchContainer">
+    <div class="flex gap-2">
+      <Select :model-value="searchType" @update:model-value="setSearchType">
         <SelectTrigger class="w-[100px]">
-          <SelectValue />
+          <SelectValue
+            :placeholder="
+              searchType.charAt(0).toUpperCase() + searchType.slice(1)
+            "
+          />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
@@ -37,7 +119,36 @@ const darkModeStore = useDarkModeStore();
           icon="fa-solid fa-magnifying-glass"
           class="absolute left-2 top-3 size-4 text-muted-foreground"
         />
-        <Input type="search" placeholder="Search" class="pl-8 w-full" />
+        <Input
+          v-model="searchQuery"
+          type="search"
+          placeholder="Search"
+          class="pl-8 w-full"
+          @focus="handleFocus"
+          @blur="handleBlur"
+        />
+        <!-- Search Results -->
+        <div
+          v-if="
+            searchQuery.length >= 3 &&
+            isInputFocused &&
+            (totalResults > 0 || isSearching)
+          "
+          class="absolute w-full left-0 right-0 mt-2 border border-gray-200 shadow-lg z-50 rounded-md overflow-hidden"
+          :class="{
+            'bg-white text-black': !darkModeStore.darkMode,
+            'bg-gray-900 text-white hover:bg-gray-900': darkModeStore.darkMode,
+          }"
+        >
+          <SearchResults
+            :searchQuery="searchQuery"
+            :searchResults="searchResults"
+            :totalResults="totalResults"
+            :isSearching="isSearching"
+            :searchType="searchType"
+            @search-complete="clearSearch"
+          />
+        </div>
       </div>
     </div>
   </div>

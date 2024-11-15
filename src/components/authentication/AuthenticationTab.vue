@@ -2,6 +2,9 @@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RegisterForm from '@/components/authentication/RegisterForm.vue';
 import SignInForm from '@/components/authentication/SignInForm.vue';
+import { useAuthStore } from '@/store/auth-store';
+
+const authStore = useAuthStore();
 </script>
 
 <template>
