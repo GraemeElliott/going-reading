@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -13,7 +13,7 @@ import isbndbService from '@/services/isbndbService';
 import { debounce } from 'lodash';
 import type { Book } from '@/types/book';
 import type { Author } from '@/types/author';
-import SearchResults from '@/components/search/SearchResults.vue';
+import SearchBarResults from '@/components/search/SearchBarResults.vue';
 import { useDarkModeStore } from '@/store/store';
 
 type SearchType = 'title' | 'author' | 'isbn';
@@ -35,18 +35,16 @@ const performSearch = debounce(async (newQuery: string) => {
   if (!newQuery || newQuery.length < 3) {
     searchResults.value = [];
     isSearching.value = false;
+    totalResults.value = 0;
     return;
   }
 
   isSearching.value = true;
 
   try {
-    const { results, total } = await isbndbService.searchQuery(
-      newQuery,
-      searchType.value
-    );
-    searchResults.value = results;
-    totalResults.value = total;
+    const data = await isbndbService.searchQuery(newQuery, searchType.value);
+    totalResults.value = data.length;
+    searchResults.value = data.slice(0, 5);
   } catch (error) {
     console.error('Search error:', error);
     searchResults.value = [];
@@ -140,7 +138,7 @@ defineExpose({
             'bg-gray-900 text-white hover:bg-gray-900': darkModeStore.darkMode,
           }"
         >
-          <SearchResults
+          <SearchBarResults
             :searchQuery="searchQuery"
             :searchResults="searchResults"
             :totalResults="totalResults"

@@ -196,16 +196,13 @@ const searchByIsbn = async (isbn: string): Promise<Book[]> => {
 const getCachedResults = (
   cacheKey: string,
   searchType: 'title' | 'author' | 'isbn'
-): { results: (Book | Author)[]; total: number } | null => {
+): (Book | Author)[] | null => {
   const cached = searchCache.get(cacheKey);
   const duration =
     searchType === 'author' ? AUTHOR_CACHE_DURATION : CACHE_DURATION;
 
   if (cached && Date.now() - cached.timestamp < duration) {
-    return {
-      results: cached.results.slice(0, 5), // Only slice when retrieving from cache
-      total: cached.results.length,
-    };
+    return cached.results;
   }
 
   return null;
@@ -227,9 +224,9 @@ const isbndbService = {
     query: string,
     searchType: 'title' | 'author' | 'isbn' = 'title',
     page: number = 1
-  ): Promise<{ results: (Book | Author)[]; total: number }> {
+  ): Promise<(Book | Author)[]> {
     if (!query || query.length < 3) {
-      return { results: [], total: 0 };
+      return [];
     }
 
     const cacheKey = `${searchType}:${query}:${page}`;
@@ -254,15 +251,11 @@ const isbndbService = {
           results = await searchByTitle(query, page);
       }
 
-      setCacheResults(cacheKey, results); // Store full results
-
-      return {
-        results: results.slice(0, 5), // Only slice when returning
-        total: results.length,
-      };
+      setCacheResults(cacheKey, results);
+      return results;
     } catch (error) {
       console.error('Search error:', error);
-      return { results: [], total: 0 };
+      return [];
     }
   },
 

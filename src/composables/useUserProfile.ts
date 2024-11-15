@@ -9,6 +9,7 @@ import { UserMetadata } from '@/types/user';
 
 export function useUserProfile() {
   const user = ref<UserMetadata>({
+    id: '',
     firstName: '',
     lastName: '',
     username: '',
@@ -40,6 +41,7 @@ export function useUserProfile() {
       }
 
       user.value = {
+        id: userProfile.id,
         firstName: userProfile.firstname,
         lastName: userProfile.lastname,
         username: userProfile.username,

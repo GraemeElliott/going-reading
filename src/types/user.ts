@@ -7,6 +7,7 @@ export interface UserCredentials {
 }
 
 export interface UserMetadata {
+  id: string;
   firstName: string;
   lastName: string;
   username: string;

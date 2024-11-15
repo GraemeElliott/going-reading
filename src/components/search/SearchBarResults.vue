@@ -41,11 +41,14 @@ const handleResultClick = async (result: Book | Author) => {
 };
 
 const handleSeeMore = () => {
-  const encodedQuery = encodeURIComponent(props.searchQuery);
   router.push({
-    path: `/search/${encodedQuery}`,
-    query: { type: props.searchType },
+    path: '/search',
+    query: {
+      q: props.searchQuery,
+      type: props.searchType,
+    },
   });
+  emit('search-complete');
 };
 </script>
 

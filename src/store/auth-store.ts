@@ -33,6 +33,7 @@ export const useAuthStore = defineStore('auth', () => {
       } else if (event === 'SIGNED_OUT') {
         // User signed out - clear the user data
         user.value = {
+          id: '',
           firstName: '',
           lastName: '',
           username: '',
