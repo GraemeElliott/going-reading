@@ -149,7 +149,7 @@ watch(
 
     <div
       v-if="hasMoreResults && !loading && results.length > 0"
-      class="text-center mt-8"
+      class="text-center my-8"
     >
       <Button @click="loadMore" class="px-6 py-2 rounded transition-colors">
         Load More Results

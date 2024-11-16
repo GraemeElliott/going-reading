@@ -258,20 +258,6 @@ const isbndbService = {
       return [];
     }
   },
-
-  async getBookByIsbn(isbn: string): Promise<Book | null> {
-    if (!isbn) {
-      return null;
-    }
-
-    try {
-      const books = await searchByIsbn(isbn);
-      return books[0] || null;
-    } catch (error) {
-      console.error('ISBN lookup error:', error);
-      return null;
-    }
-  },
 };
 
 export default isbndbService;

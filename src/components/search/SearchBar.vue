@@ -10,9 +10,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import isbndbService from '@/services/isbndbService';
-import { debounce } from 'lodash';
 import type { Book } from '@/types/book';
 import type { Author } from '@/types/author';
+import { debounce } from 'lodash';
 import SearchBarResults from '@/components/search/SearchBarResults.vue';
 import { useDarkModeStore } from '@/store/store';
 
@@ -85,11 +85,6 @@ watch(searchQuery, (newQuery) => {
 // Watch for changes in searchType
 watch(searchType, () => {
   clearSearch();
-});
-
-// Expose the clearSearch method
-defineExpose({
-  clearSearch,
 });
 </script>
 
