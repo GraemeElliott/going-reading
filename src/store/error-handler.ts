@@ -42,3 +42,11 @@ export const fetchUserDetailsErrorMessages = {
   fetchUserDetailsFailed: 'Error fetching user details.',
   initializeAuthFailed: 'Failed to initialise authentication.',
 };
+
+export const updateBookErrorMessages = {
+  userNotLoggedInProgress: 'User must be logged in to update book progress.',
+  userNotLoggedInStatus: 'User must be logged in to update book status.',
+  userNotLoggedInDeleteBook: 'User must be logged in to delete a book.',
+  bookNotFound: 'Book not found in user library.',
+  fullBookInfoRequired: 'Full book info required for new books.',
+};

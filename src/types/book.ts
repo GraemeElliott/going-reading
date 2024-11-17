@@ -22,6 +22,17 @@ export interface ScoredBook extends Book {
   score: number;
 }
 
+// Basic book info type for UserStatus table
+export interface BookBasicInfo {
+  isbn: string;
+  title: string;
+  authors: string[];
+  image: string;
+  date_published?: string;
+  publisher?: string;
+  pages?: number;
+}
+
 export interface Book {
   isbn: string;
   title: string;
