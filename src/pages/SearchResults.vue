@@ -19,13 +19,14 @@ const route = useRoute();
 const query = ref((route.query.q as string) || '');
 const searchType = ref<SearchType>((route.query.type as SearchType) || 'title');
 const results = ref<(Book | Author)[]>([]);
-const loading = ref(true); // Start with loading true
+const loading = ref(true);
 const error = ref<string | null>(null);
 const hasMoreResults = ref(true);
 const currentPage = ref(1);
 const hasSearched = ref(false);
 const userBooksStore = useUserBooksStore();
 const authStore = useAuthStore();
+const authInitialized = ref(false);
 
 // Compute visible results based on current page
 const visibleResults = computed(() => {
@@ -56,7 +57,7 @@ const fetchResults = async (searchQuery: string, page: number = 1) => {
 
   if (page === 1) {
     results.value = [];
-    loading.value = true; // Set loading true immediately for first page
+    loading.value = true;
     hasSearched.value = false;
   }
 
@@ -75,7 +76,11 @@ const fetchResults = async (searchQuery: string, page: number = 1) => {
       const processResults = async () => {
         const processedResults = await Promise.all(
           newResults.map(async (result) => {
-            if (!isAuthor(result)) {
+            if (
+              !isAuthor(result) &&
+              authInitialized.value &&
+              authStore.user?.id
+            ) {
               const status = userBooksStore.getUserBookStatus(result.isbn);
               return {
                 ...result,
@@ -132,12 +137,26 @@ watch(
   }
 );
 
-// Initialize store and fetch results
+// Initialise store and fetch results
 onMounted(async () => {
-  loading.value = true; // Ensure loading is true on mount
-  if (authStore.user) {
-    await userBooksStore.initialize();
+  loading.value = true;
+
+  try {
+    // Initialize auth first
+    await authStore.initializeAuth();
+    authInitialized.value = true;
+
+    // Only initialize userBooksStore if user is authenticated
+    if (authStore.user?.id) {
+      try {
+        await userBooksStore.initialize();
+      } catch (e) {}
+    }
+  } catch (e) {
+    // Handle auth initialization error silently
+    console.error('Auth initialization failed:', e);
   }
+
   if (query.value) {
     await fetchResults(query.value);
   } else {
