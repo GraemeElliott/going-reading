@@ -82,6 +82,15 @@ export type BookStatus =
   | 'did-not-finish'
   | '';
 
+// Status display names mapping
+export const STATUS_DISPLAY_NAMES: Record<BookStatus, string> = {
+  'want-to-read': 'Want To Read',
+  'currently-reading': 'Currently Reading',
+  read: 'Read',
+  'did-not-finish': 'Did Not Finish',
+  '': '',
+};
+
 // Cache entry type for search results
 export interface CacheEntry {
   timestamp: number;

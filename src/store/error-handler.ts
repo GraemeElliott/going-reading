@@ -49,4 +49,5 @@ export const updateBookErrorMessages = {
   userNotLoggedInDeleteBook: 'User must be logged in to delete a book.',
   bookNotFound: 'Book not found in user library.',
   fullBookInfoRequired: 'Full book info required for new books.',
+  unknownError: 'An unknown error occurred. Please try again.',
 };
