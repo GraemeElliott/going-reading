@@ -9,6 +9,7 @@ import AddToCustomList from '@/components/user-books/AddToCustomList.vue';
 import UserRating from '@/components/user-books/UserRating.vue';
 import { useAuthStore } from '@/store/auth-store';
 import { useUserBooksStore } from '@/store/user-books-store';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const authStore = useAuthStore();
 const userBooksStore = useUserBooksStore();
@@ -16,19 +17,18 @@ const route = useRoute();
 const book = ref<Book | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
-const authInitialized = ref(false);
 
 // Get the book's status from the store
 const bookStatus = computed({
   get: () => {
-    if (!book.value || !authInitialized.value || !authStore.user?.id) return '';
+    if (!book.value || !authStore.user?.id) return '';
     const userBook = Object.values(userBooksStore.groupedBooks)
       .flat()
       .find((b) => b.isbn === book.value?.isbn);
     return userBook?.status || '';
   },
   set: async (newStatus: BookStatus) => {
-    if (!book.value || !authInitialized.value || !authStore.user?.id) return;
+    if (!book.value || !authStore.user?.id) return;
     try {
       const bookInfo: BookBasicInfo = {
         isbn: book.value.isbn,
@@ -93,45 +93,63 @@ onMounted(async () => {
     return;
   }
 
-  try {
-    // Initialize auth first
-    await authStore.initializeAuth();
-    authInitialized.value = true;
-
-    // Only initialize userBooksStore if user is authenticated
-    if (authStore.user?.id) {
-      try {
-        await userBooksStore.initialize();
-      } catch (e) {
-        // Silently handle user books initialization error
-        // We still want to show book details even if user books fail to load
-      }
+  // Only initialize userBooksStore if user is authenticated
+  if (authStore.user?.id) {
+    try {
+      await userBooksStore.initialize();
+    } catch (e) {
+      console.error('Failed to initialize user books:', e);
     }
-
-    await fetchBookDetails(isbn);
-  } catch (e) {
-    // Handle auth initialization error silently
-    console.error('Auth initialization failed:', e);
-    // Still try to fetch book details even if auth fails
-    await fetchBookDetails(isbn);
-  } finally {
-    loading.value = false;
   }
+
+  await fetchBookDetails(isbn);
 });
 </script>
 
 <template>
   <div class="container mx-auto px-4 py-8">
-    <div v-if="loading" class="text-center">
-      <div class="animate-spin h-12 w-12 mx-auto"></div>
+    <!-- Loading State -->
+    <div v-if="loading" class="space-y-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex flex-col md:flex-row">
+          <!-- Book Image Skeleton -->
+          <div class="w-full md:w-1/3 p-6">
+            <Skeleton class="w-full h-[400px] rounded-lg" />
+            <div class="hidden md:flex flex-col items-center gap-4 mt-8">
+              <Skeleton class="w-[180px] h-10" />
+              <Skeleton class="w-[180px] h-10" />
+              <Skeleton class="w-[120px] h-10" />
+            </div>
+          </div>
+
+          <!-- Book Details Skeleton -->
+          <div class="w-full md:w-2/3 p-6">
+            <Skeleton class="h-10 w-3/4 mb-4" />
+            <Skeleton class="h-6 w-1/2 mb-6" />
+            <div class="space-y-4">
+              <Skeleton class="h-4 w-1/3" />
+              <Skeleton class="h-4 w-1/4" />
+              <Skeleton class="h-4 w-1/2" />
+              <Skeleton class="h-4 w-1/3" />
+            </div>
+            <div class="mt-8">
+              <Skeleton class="h-4 w-full" />
+              <Skeleton class="h-4 w-full mt-2" />
+              <Skeleton class="h-4 w-3/4 mt-2" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
+    <!-- Error State -->
     <div v-else-if="error" class="text-center">
       <div class="bg-red-50 border border-red-200 rounded-lg p-4">
         <p class="text-red-600">{{ error }}</p>
       </div>
     </div>
 
+    <!-- Content -->
     <div v-else-if="book" class="max-w-4xl mx-auto">
       <div class="overflow-hidden">
         <div class="flex flex-col md:flex-row">
@@ -144,7 +162,7 @@ onMounted(async () => {
             />
             <!-- User Interaction Section --Desktop -->
             <div
-              v-if="authInitialized && authStore.user?.id"
+              v-if="authStore.user?.id"
               class="hidden md:flex flex-col items-center justify-start gap-6 mt-8"
             >
               <UserBookStatusSelect
@@ -210,7 +228,7 @@ onMounted(async () => {
               </div>
               <!-- User Interaction Section --Mobile -->
               <div
-                v-if="authInitialized && authStore.user?.id"
+                v-if="authStore.user?.id"
                 class="md:hidden flex flex-col items-center justify-start gap-6 mt-6"
               >
                 <UserBookStatusSelect

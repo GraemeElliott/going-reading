@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { onMounted, computed, ref } from 'vue';
 import { useAuthStore } from '@/store/auth-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,47 +8,40 @@ import BookStatusNavigation from '@/components/my-books/BookStatusNavigation.vue
 import ListsNavigation from '@/components/my-books/ListsNavigation.vue';
 import ReadingActivityNavigation from '@/components/my-books/ReadingActivityNavigation.vue';
 
-const router = useRouter();
 const authStore = useAuthStore();
 const userBooksStore = useUserBooksStore();
-const authInitialized = ref(false);
 
-const isLoading = computed(
-  () => userBooksStore.loading || !authInitialized.value
-);
+const isInitializing = ref(true);
+const isLoading = computed(() => userBooksStore.loading);
 const error = computed(() => userBooksStore.error);
+const hasBooks = computed(() => userBooksStore.userBooks.length > 0);
 
-// Initialize data in parallel
-const initializeData = async () => {
+onMounted(async () => {
   try {
-    // Initialize auth first
-    await authStore.initializeAuth();
-    authInitialized.value = true;
-
-    // Check if user is authenticated
-    if (!authStore.user?.id) {
-      router.push('/auth');
-      return;
+    // If we have a user and no books loaded (even from persistence), fetch them
+    if (authStore.user?.id && !hasBooks.value) {
+      await userBooksStore.fetchUserBooks();
     }
-
-    // Initialize user books store with a small delay to ensure auth is ready
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    await userBooksStore.initialize();
-  } catch (e) {
-    console.error('Initialization failed:', e);
-    router.push('/auth');
+  } catch (error) {
+    console.error('Failed to initialize books:', error);
+  } finally {
+    isInitializing.value = false;
   }
-};
-
-onMounted(() => {
-  initializeData();
 });
 </script>
 
 <template>
   <div class="mx-auto py-1">
-    <!-- Loading State -->
-    <div v-if="isLoading" class="space-y-6">
+    <!-- Initialization Loading State -->
+    <div v-if="isInitializing" class="space-y-6">
+      <div class="mb-8">
+        <Skeleton class="h-8 w-32 mb-6" />
+        <Skeleton class="h-4 w-48" />
+      </div>
+    </div>
+
+    <!-- Store Loading State -->
+    <div v-else-if="isLoading" class="space-y-6">
       <!-- Header Skeleton -->
       <div class="mb-8">
         <Skeleton class="h-8 w-32 mb-6" />
@@ -106,7 +98,7 @@ onMounted(() => {
     </div>
 
     <!-- Content -->
-    <div v-else-if="authInitialized && authStore.user?.id">
+    <div v-else>
       <!-- User Header -->
       <div class="mb-8">
         <h2 class="text-2xl font-bold tracking-tight mb-6">My Books</h2>

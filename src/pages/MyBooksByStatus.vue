@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/store/auth-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { STATUS_DISPLAY_NAMES, type BookStatus } from '@/types/book';
 import UserBookCard from '@/components/user-books/UserBookCard.vue';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const route = useRoute();
 const username = route.params.username;
@@ -12,8 +13,10 @@ const status = route.params.status as BookStatus;
 const authStore = useAuthStore();
 const userBooksStore = useUserBooksStore();
 
+const isInitializing = ref(true);
 const isLoading = computed(() => userBooksStore.loading);
 const error = computed(() => userBooksStore.error);
+const hasBooks = computed(() => userBooksStore.userBooks.length > 0);
 const books = computed(() => {
   const allBooks = userBooksStore.groupedBooks;
   return allBooks[status] || [];
@@ -28,17 +31,64 @@ const handleBookDelete = async (isbn: string) => {
 };
 
 onMounted(async () => {
-  if (authStore.user) {
-    await userBooksStore.initialize();
+  try {
+    // If we have a user and no books loaded (even from persistence), fetch them
+    if (authStore.user?.id && !hasBooks.value) {
+      await userBooksStore.fetchUserBooks();
+    }
+  } catch (error) {
+    console.error('Failed to initialize books:', error);
+  } finally {
+    isInitializing.value = false;
   }
 });
 </script>
 
 <template>
   <div class="mx-auto py-8">
+    <!-- Initialization Loading State -->
+    <div v-if="isInitializing" class="space-y-6">
+      <div class="mb-8">
+        <Skeleton class="h-10 w-64 mb-2" />
+      </div>
+      <div class="space-y-4">
+        <div v-for="n in 2" :key="n">
+          <Skeleton class="h-24 w-full" />
+        </div>
+      </div>
+    </div>
+
     <!-- Loading State -->
-    <div v-if="isLoading" class="text-center">
-      <div class="animate-spin h-12 w-12 mx-auto"></div>
+    <div v-else-if="isLoading" class="space-y-6">
+      <!-- Header Skeleton -->
+      <div class="mb-8">
+        <Skeleton class="h-10 w-64 mb-2" />
+      </div>
+
+      <!-- Books List Skeleton -->
+      <div class="space-y-4">
+        <div v-for="n in 3" :key="n" class="w-full">
+          <div
+            class="relative flex flex-col md:flex-row items-start justify-between py-4 w-full border-b"
+          >
+            <div class="flex items-start w-full gap-4">
+              <Skeleton class="w-24 h-36 rounded" />
+              <div class="flex-grow space-y-2">
+                <Skeleton class="h-6 w-3/4" />
+                <Skeleton class="h-4 w-1/2" />
+                <div class="space-y-1 mt-2">
+                  <Skeleton class="h-4 w-1/4" />
+                  <Skeleton class="h-4 w-1/3" />
+                </div>
+              </div>
+            </div>
+            <div class="flex space-x-3 mt-5 md:mt-0 self-center">
+              <Skeleton class="w-[180px] h-10 rounded" />
+              <Skeleton class="w-10 h-10 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -81,23 +131,3 @@ onMounted(async () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.animate-spin {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-</style>

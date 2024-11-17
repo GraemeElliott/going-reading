@@ -26,7 +26,6 @@ const currentPage = ref(1);
 const hasSearched = ref(false);
 const userBooksStore = useUserBooksStore();
 const authStore = useAuthStore();
-const authInitialized = ref(false);
 
 // Compute visible results based on current page
 const visibleResults = computed(() => {
@@ -76,11 +75,7 @@ const fetchResults = async (searchQuery: string, page: number = 1) => {
       const processResults = async () => {
         const processedResults = await Promise.all(
           newResults.map(async (result) => {
-            if (
-              !isAuthor(result) &&
-              authInitialized.value &&
-              authStore.user?.id
-            ) {
+            if (!isAuthor(result) && authStore.user?.id) {
               const status = userBooksStore.getUserBookStatus(result.isbn);
               return {
                 ...result,
@@ -137,24 +132,17 @@ watch(
   }
 );
 
-// Initialise store and fetch results
+// Initialize store and fetch results
 onMounted(async () => {
   loading.value = true;
 
-  try {
-    // Initialize auth first
-    await authStore.initializeAuth();
-    authInitialized.value = true;
-
-    // Only initialize userBooksStore if user is authenticated
-    if (authStore.user?.id) {
-      try {
-        await userBooksStore.initialize();
-      } catch (e) {}
+  // Only initialize userBooksStore if user is authenticated
+  if (authStore.user?.id) {
+    try {
+      await userBooksStore.initialize();
+    } catch (e) {
+      console.error('Failed to initialize user books:', e);
     }
-  } catch (e) {
-    // Handle auth initialization error silently
-    console.error('Auth initialization failed:', e);
   }
 
   if (query.value) {
