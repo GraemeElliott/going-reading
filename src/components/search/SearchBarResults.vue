@@ -54,11 +54,27 @@ const handleSeeMore = () => {
 
 <template>
   <ul>
-    <div v-if="isSearching" class="flex flex-row p-2">
-      <Skeleton class="h-12 w-12 rounded-full mr-2" />
-      <div class="space-y-2 mt-2">
-        <Skeleton class="h-4 w-[250px]" />
-        <Skeleton class="h-4 w-[200px]" />
+    <div v-if="isSearching" class="flex flex-col p-2">
+      <div class="flex flex-row p-2">
+        <Skeleton class="h-9 w-9 rounded-full mr-2" />
+        <div class="space-y-2 mt-2">
+          <Skeleton class="h-4 w-[250px]" />
+          <Skeleton class="h-4 w-[200px]" />
+        </div>
+      </div>
+      <div class="flex flex-row p-2">
+        <Skeleton class="h-9 w-9 rounded-full mr-2" />
+        <div class="space-y-2 mt-2">
+          <Skeleton class="h-4 w-[250px]" />
+          <Skeleton class="h-4 w-[200px]" />
+        </div>
+      </div>
+      <div class="flex flex-row p-2">
+        <Skeleton class="h-9 w-9 rounded-full mr-2" />
+        <div class="space-y-2 mt-2">
+          <Skeleton class="h-4 w-[250px]" />
+          <Skeleton class="h-4 w-[200px]" />
+        </div>
       </div>
     </div>
     <li

@@ -6,6 +6,7 @@ import {
 } from 'vue-router';
 import Home from '@/pages/Home.vue';
 import SearchResults from '@/pages/SearchResults.vue';
+import BookDetails from '@/pages/BookDetails.vue';
 import MyBooks from '@/pages/MyBooks.vue';
 
 const router = createRouter({
@@ -20,6 +21,12 @@ const router = createRouter({
       path: '/search/',
       name: 'search-results',
       component: SearchResults,
+    },
+    {
+      path: '/book/:isbn',
+      name: 'book-details',
+      component: BookDetails,
+      props: true,
     },
     {
       path: '/my-books',

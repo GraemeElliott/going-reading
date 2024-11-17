@@ -1,0 +1,240 @@
+<script setup lang="ts">
+import { ref, onMounted, watch, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import isbndbService from '@/services/isbndbService';
+import type { Book, BookStatus, BookBasicInfo } from '@/types/book';
+import { Separator } from '@/components/ui/separator';
+import UserBookStatusSelect from '@/components/user-books/UserBookStatusSelect.vue';
+import AddToCustomList from '@/components/user-books/AddToCustomList.vue';
+import UserRating from '@/components/user-books/UserRating.vue';
+import { useAuthStore } from '@/store/auth-store';
+import { useUserBooksStore } from '@/store/user-books-store';
+
+const authStore = useAuthStore();
+const userBooksStore = useUserBooksStore();
+const route = useRoute();
+const book = ref<Book | null>(null);
+const loading = ref(true);
+const error = ref<string | null>(null);
+const authInitialized = ref(false);
+
+// Get the book's status from the store
+const bookStatus = computed({
+  get: () => {
+    if (!book.value || !authInitialized.value || !authStore.user?.id) return '';
+    const userBook = Object.values(userBooksStore.groupedBooks)
+      .flat()
+      .find((b) => b.isbn === book.value?.isbn);
+    return userBook?.status || '';
+  },
+  set: async (newStatus: BookStatus) => {
+    if (!book.value || !authInitialized.value || !authStore.user?.id) return;
+    try {
+      const bookInfo: BookBasicInfo = {
+        isbn: book.value.isbn,
+        title: book.value.title,
+        authors: book.value.authors,
+        image: book.value.image,
+        date_published: book.value.date_published,
+        publisher: book.value.publisher,
+        pages: book.value.pages,
+      };
+      await userBooksStore.updateBookStatus(bookInfo, newStatus);
+    } catch (err) {
+      console.error('Failed to update book status:', err);
+    }
+  },
+});
+
+const fetchBookDetails = async (isbn: string) => {
+  loading.value = true;
+  error.value = null;
+  try {
+    const bookData = await isbndbService.getBookByIsbn(isbn);
+    if (bookData) {
+      book.value = bookData;
+    } else {
+      error.value = 'Book not found';
+    }
+  } catch (e) {
+    error.value = 'Error loading book details';
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const formatYear = (dateString: string) => {
+  // If it's already just a year (4 digits)
+  if (/^\d{4}$/.test(dateString)) {
+    return dateString;
+  }
+
+  // For date formats like 01-01-2020 or similar
+  const matches = dateString.match(/\d{4}/);
+  return matches ? matches[0] : dateString;
+};
+
+// Watch for route changes
+watch(
+  () => route.params.isbn,
+  (newIsbn) => {
+    if (newIsbn && typeof newIsbn === 'string') {
+      fetchBookDetails(newIsbn);
+    }
+  }
+);
+
+onMounted(async () => {
+  const isbn = route.params.isbn;
+  if (!isbn || typeof isbn !== 'string') {
+    error.value = 'Invalid ISBN';
+    loading.value = false;
+    return;
+  }
+
+  try {
+    // Initialize auth first
+    await authStore.initializeAuth();
+    authInitialized.value = true;
+
+    // Only initialize userBooksStore if user is authenticated
+    if (authStore.user?.id) {
+      try {
+        await userBooksStore.initialize();
+      } catch (e) {
+        // Silently handle user books initialization error
+        // We still want to show book details even if user books fail to load
+      }
+    }
+
+    await fetchBookDetails(isbn);
+  } catch (e) {
+    // Handle auth initialization error silently
+    console.error('Auth initialization failed:', e);
+    // Still try to fetch book details even if auth fails
+    await fetchBookDetails(isbn);
+  } finally {
+    loading.value = false;
+  }
+});
+</script>
+
+<template>
+  <div class="container mx-auto px-4 py-8">
+    <div v-if="loading" class="text-center">
+      <div class="animate-spin h-12 w-12 mx-auto"></div>
+    </div>
+
+    <div v-else-if="error" class="text-center">
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p class="text-red-600">{{ error }}</p>
+      </div>
+    </div>
+
+    <div v-else-if="book" class="max-w-4xl mx-auto">
+      <div class="overflow-hidden">
+        <div class="flex flex-col md:flex-row">
+          <div class="w-full md:w-1/3 p-6">
+            <img
+              :src="book.image"
+              :alt="book.title"
+              class="w-full rounded-lg object-cover mx-auto"
+              @error="book.image = '/default-book-cover.jpg'"
+            />
+            <!-- User Interaction Section --Desktop -->
+            <div
+              v-if="authInitialized && authStore.user?.id"
+              class="hidden md:flex flex-col items-center justify-start gap-6 mt-8"
+            >
+              <UserBookStatusSelect
+                v-model="bookStatus"
+                :book="{
+                  isbn: book.isbn,
+                  title: book.title,
+                  authors: book.authors,
+                  image: book.image,
+                  date_published: book.date_published,
+                  publisher: book.publisher,
+                  pages: book.pages,
+                }"
+              />
+              <AddToCustomList :isbn="book.isbn" :book="book" />
+              <div class="flex flex-col items-center">
+                <UserRating />
+                <span class="pt-1">Your Rating</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full md:w-2/3 p-6">
+            <h1 class="text-3xl font-bold mb-4">
+              {{ book.title }}
+            </h1>
+            <div class="text-lg text-gray-600 mb-4">
+              by
+              <router-link
+                :to="`/author/${encodeURIComponent(book.authors.join(', '))}`"
+                class="flex-shrink-0"
+              >
+                <span class="font-medium">{{ book.authors.join(', ') }}</span>
+              </router-link>
+              <div class="py-4">
+                <div class="flex flex-col text-sm text-gray-500">
+                  <div>
+                    <span class="font-medium mr-2">ISBN:</span>
+                    <span>{{ book.isbn }}</span>
+                  </div>
+                  <div>
+                    <span class="font-medium mr-2">Publisher:</span>
+                    <span>{{ book.publisher }}</span>
+                  </div>
+                  <div>
+                    <span class="font-medium mr-2">Year Published:</span>
+                    <span>{{
+                      book.date_published ? formatYear(book.date_published) : ''
+                    }}</span>
+                  </div>
+                  <div>
+                    <span class="font-medium mr-2">Pages:</span>
+                    <span>{{ book.pages }}</span>
+                  </div>
+                  <div class="mt-5">
+                    <p>{{ book.subjects.join(', ') }}</p>
+                  </div>
+                </div>
+              </div>
+              <Separator />
+              <div class="py-4 flex flex-col">
+                <p class="text-md" v-html="book.synopsis"></p>
+              </div>
+              <!-- User Interaction Section --Mobile -->
+              <div
+                v-if="authInitialized && authStore.user?.id"
+                class="md:hidden flex flex-col items-center justify-start gap-6 mt-6"
+              >
+                <UserBookStatusSelect
+                  v-model="bookStatus"
+                  :book="{
+                    isbn: book.isbn,
+                    title: book.title,
+                    authors: book.authors,
+                    image: book.image,
+                    date_published: book.date_published,
+                    publisher: book.publisher,
+                    pages: book.pages,
+                  }"
+                />
+                <AddToCustomList :isbn="book.isbn" :book="book" />
+                <div class="flex flex-col items-center">
+                  <UserRating />
+                  <span class="pt-1">Your Rating</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
