@@ -67,6 +67,7 @@ export interface UserBook {
   image: string;
   date_added: string;
   date_updated: string;
+  date_finished?: string | null;
   userRating?: number;
   date_published?: string;
   publisher?: string;

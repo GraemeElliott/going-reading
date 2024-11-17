@@ -150,12 +150,21 @@ export const useUserBooksStore = defineStore(
             return;
           }
 
+          const updateData: any = {
+            status,
+            date_updated: now,
+          };
+
+          // Set date_finished when status is 'read'
+          if (status === 'read') {
+            updateData.date_finished = now;
+          } else {
+            updateData.date_finished = null; // Clear date_finished for other statuses
+          }
+
           const { error: updateError } = await supabase
             .from('user_books')
-            .update({
-              status,
-              date_updated: now,
-            })
+            .update(updateData)
             .eq('user_id', userId)
             .eq('isbn', isbn);
 
@@ -163,27 +172,35 @@ export const useUserBooksStore = defineStore(
 
           existingBook.status = status;
           existingBook.date_updated = now;
+          existingBook.date_finished = status === 'read' ? now : null;
           booksMap.value.set(isbn, existingBook);
         } else {
           if (typeof bookOrIsbn === 'string') {
             throw new Error(updateBookErrorMessages.fullBookInfoRequired);
           }
 
+          const newBookData: any = {
+            user_id: userId,
+            isbn: bookOrIsbn.isbn,
+            status,
+            title: bookOrIsbn.title,
+            authors: bookOrIsbn.authors,
+            image: bookOrIsbn.image,
+            date_added: now,
+            date_updated: now,
+            date_published: bookOrIsbn.date_published,
+            publisher: bookOrIsbn.publisher,
+            pages: bookOrIsbn.pages,
+          };
+
+          // Set date_finished for new books marked as read
+          if (status === 'read') {
+            newBookData.date_finished = now;
+          }
+
           const { data: newBook, error: insertError } = await supabase
             .from('user_books')
-            .insert({
-              user_id: userId,
-              isbn: bookOrIsbn.isbn,
-              status,
-              title: bookOrIsbn.title,
-              authors: bookOrIsbn.authors,
-              image: bookOrIsbn.image,
-              date_added: now,
-              date_updated: now,
-              date_published: bookOrIsbn.date_published,
-              publisher: bookOrIsbn.publisher,
-              pages: bookOrIsbn.pages,
-            })
+            .insert(newBookData)
             .select()
             .single();
 
