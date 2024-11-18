@@ -17,15 +17,13 @@ const route = useRoute();
 const book = ref<Book | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+const storeInitialized = ref(false);
 
 // Get the book's status from the store
 const bookStatus = computed({
   get: () => {
-    if (!book.value || !authStore.user?.id) return '';
-    const userBook = Object.values(userBooksStore.groupedBooks)
-      .flat()
-      .find((b) => b.isbn === book.value?.isbn);
-    return userBook?.status || '';
+    if (!book.value || !storeInitialized.value) return '';
+    return userBooksStore.getUserBookStatus(book.value.isbn);
   },
   set: async (newStatus: BookStatus) => {
     if (!book.value || !authStore.user?.id) return;
@@ -86,20 +84,19 @@ watch(
 );
 
 onMounted(async () => {
+  // Always initialize the store first
+  try {
+    await userBooksStore.initialize();
+    storeInitialized.value = true;
+  } catch (e) {
+    console.error('Failed to initialize user books:', e);
+  }
+
   const isbn = route.params.isbn;
   if (!isbn || typeof isbn !== 'string') {
     error.value = 'Invalid ISBN';
     loading.value = false;
     return;
-  }
-
-  // Only initialize userBooksStore if user is authenticated
-  if (authStore.user?.id) {
-    try {
-      await userBooksStore.initialize();
-    } catch (e) {
-      console.error('Failed to initialize user books:', e);
-    }
   }
 
   await fetchBookDetails(isbn);

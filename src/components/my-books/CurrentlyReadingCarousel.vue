@@ -53,11 +53,11 @@ async function handleBookUpdate(
     </div>
     <Separator class="my-6" />
     <Carousel class="w-full max-w-5xl mx-auto">
-      <CarouselContent>
+      <CarouselContent class="flex flex-row items-center">
         <CarouselItem
           v-for="book in currentlyReadingBooks"
           :key="book.isbn"
-          class="basis-1/2 md:basis-1/4 lg:basis-1/5"
+          class="basis-1/2 md:basis-1/3 lg:basis-1/3"
         >
           <CurrentlyReadingBookItem :book="book" @update="handleBookUpdate" />
         </CarouselItem>

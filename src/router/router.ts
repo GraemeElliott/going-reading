@@ -6,6 +6,7 @@ import {
 } from 'vue-router';
 import { useAuthStore } from '@/store/auth-store';
 import Home from '@/pages/Home.vue';
+import MyAccount from '@/pages/Account/MyAccount.vue';
 import SearchResults from '@/pages/SearchResults.vue';
 import BookDetails from '@/pages/BookDetails.vue';
 import MyBooks from '@/pages/MyBooks.vue';
@@ -18,6 +19,12 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: Home,
+    },
+    {
+      path: '/user/:username/account',
+      name: 'account',
+      component: MyAccount,
+      meta: { requiresAuth: true, requiresOwner: true },
     },
     {
       path: '/search/',

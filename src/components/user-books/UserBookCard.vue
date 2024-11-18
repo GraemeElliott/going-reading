@@ -110,6 +110,11 @@ const handleStatusChange = async (newStatus: BookStatus) => {
                   Added: {{ new Date(book.date_added).toLocaleDateString() }}
                 </p>
 
+                <p v-if="book.date_finished" class="text-xs text-gray-500">
+                  Finished:
+                  {{ new Date(book.date_finished).toLocaleDateString() }}
+                </p>
+
                 <div class="flex flex-row">
                   <span class="text-sm font-semibold text-gray-600 mr-2"
                     >Your Rating:</span
@@ -124,6 +129,10 @@ const handleStatusChange = async (newStatus: BookStatus) => {
       <div class="mt-4 space-y-2 md:hidden">
         <p class="text-xs text-gray-500">
           Added: {{ new Date(book.date_added).toLocaleDateString() }}
+        </p>
+
+        <p v-if="book.date_finished" class="text-xs text-gray-500">
+          Finished: {{ new Date(book.date_finished).toLocaleDateString() }}
         </p>
 
         <div class="flex flex-row">

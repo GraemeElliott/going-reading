@@ -25,8 +25,11 @@ const emit = defineEmits<{
 const userBooksStore = useUserBooksStore();
 const authStore = useAuthStore();
 const isUpdating = ref(false);
-const currentStatus = ref<BookStatus>(
-  props.modelValue || userBooksStore.getUserBookStatus(props.book.isbn) || ''
+
+// Changed from ref to computed to make it reactive to store changes
+const currentStatus = computed<BookStatus>(
+  () =>
+    props.modelValue || userBooksStore.getUserBookStatus(props.book.isbn) || ''
 );
 
 const isAuthenticated = computed(() => !!authStore.user);
@@ -62,15 +65,10 @@ const handleStatusChange = async (value: string) => {
 
   isUpdating.value = true;
   try {
-    // Update local state immediately for better UX
-    currentStatus.value = newStatus;
     emit('update:modelValue', newStatus);
-
-    // Then update the store
     await userBooksStore.updateBookStatus(props.book, newStatus);
   } catch (error) {
     // Revert on error
-    currentStatus.value = props.modelValue || '';
     emit('update:modelValue', currentStatus.value);
     console.error('Failed to update status:', error);
   } finally {

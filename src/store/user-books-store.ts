@@ -15,6 +15,11 @@ export const useUserBooksStore = defineStore(
     const statusUpdateInProgress = ref(new Set<string>()); // Track books with status updates in progress
     const authStore = useAuthStore();
 
+    // Convert Map to array for persistence
+    const serializedBooks = computed(() =>
+      Array.from(booksMap.value.entries())
+    );
+
     const userBooks = computed(() => Array.from(booksMap.value.values()));
 
     const groupedBooks = computed(() => {
@@ -32,11 +37,28 @@ export const useUserBooksStore = defineStore(
         }
       });
 
+      // Sort each group based on status
       Object.keys(groups).forEach((status) => {
-        groups[status as BookStatus].sort(
-          (a, b) =>
-            new Date(b.date_added).getTime() - new Date(a.date_added).getTime()
-        );
+        if (status === 'read') {
+          // Sort read books by date_finished (most recent first)
+          // If date_finished is null, use date_added as fallback
+          groups[status as BookStatus].sort((a, b) => {
+            const dateA = a.date_finished
+              ? new Date(a.date_finished).getTime()
+              : new Date(a.date_added).getTime();
+            const dateB = b.date_finished
+              ? new Date(b.date_finished).getTime()
+              : new Date(b.date_added).getTime();
+            return dateB - dateA;
+          });
+        } else {
+          // Sort other statuses by date_added (most recent first)
+          groups[status as BookStatus].sort(
+            (a, b) =>
+              new Date(b.date_added).getTime() -
+              new Date(a.date_added).getTime()
+          );
+        }
       });
 
       return groups;
@@ -261,9 +283,28 @@ export const useUserBooksStore = defineStore(
       updateBookProgress,
       getUserBookStatus,
       deleteBook,
+      serializedBooks,
     };
   },
   {
-    persist: true,
+    persist: {
+      storage: localStorage,
+      serializer: {
+        deserialize: (data) => {
+          const parsed = JSON.parse(data);
+          return {
+            ...parsed,
+            booksMap: new Map(parsed.serializedBooks || []),
+          };
+        },
+        serialize: (state) => {
+          const serialized = {
+            ...state,
+            serializedBooks: Array.from(state.booksMap.entries()),
+          };
+          return JSON.stringify(serialized);
+        },
+      },
+    },
   }
 );
