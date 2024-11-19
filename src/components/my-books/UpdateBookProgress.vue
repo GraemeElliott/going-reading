@@ -134,7 +134,7 @@ async function handleFinish() {
             <Button
               @click="handleFinish"
               variant="default"
-              class="justify-self-start"
+              class="justify-self-start bg-goingGreen"
               >I've Finished</Button
             >
           </DialogClose>
@@ -142,7 +142,7 @@ async function handleFinish() {
             <Button
               @click="handleUpdate"
               variant="outline"
-              class="justify-self-end"
+              class="justify-self-end bg-black text-white"
               >Save Progress</Button
             >
           </DialogClose>
