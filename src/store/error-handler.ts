@@ -34,6 +34,8 @@ export const updateUserDetailsErrorMessages = {
   accountUpdateFailed: 'Account update failed.',
   avatarUpdateFailed: 'Failed to upload avatar.',
   passwordUpdateFailed: 'Failed to update password.',
+  usernameExists: 'Username already exists.',
+  emailExists: 'An account with this email address already exists.',
 };
 
 export const fetchUserDetailsErrorMessages = {

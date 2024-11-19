@@ -76,7 +76,7 @@ const handleNavClick = () => {
           />
           <ThemeSwitch />
           <button
-            v-if="authStore.user.username"
+            v-if="authStore.userMetadata.username"
             @click="emit('toggleMenu')"
             link
           >
@@ -96,7 +96,7 @@ const handleNavClick = () => {
     >
       <div class="mt-20 h-full flex flex-col">
         <!-- User Profile Section -->
-        <div v-if="authStore.user.username" class="flex flex-row my-5">
+        <div v-if="authStore.userMetadata.username" class="flex flex-row my-5">
           <!-- Skeleton -->
           <div v-show="!hasComponentLoaded" class="flex items-center space-x-4">
             <Skeleton class="h-12 w-12 rounded-full" />
@@ -108,39 +108,39 @@ const handleNavClick = () => {
           <!-- User Content -->
           <div v-show="hasComponentLoaded" class="flex">
             <router-link
-              v-if="authStore.user.username"
-              :to="`/user/${authStore.user.username}/account`"
+              v-if="authStore.userMetadata.username"
+              :to="`/user/${authStore.userMetadata.username}/account`"
               @click="handleNavClick"
             >
               <img
-                :src="authStore.user.avatarURL"
+                :src="authStore.userMetadata.avatarURL"
                 class="w-20 h-20 rounded-full object-cover mr-5"
                 @load="hasComponentLoaded = true"
               />
             </router-link>
             <div class="flex flex-col mt-4">
               <router-link
-                v-if="authStore.user.username"
-                :to="`/user/${authStore.user.username}/account`"
+                v-if="authStore.userMetadata.username"
+                :to="`/user/${authStore.userMetadata.username}/account`"
                 @click="handleNavClick"
               >
                 <p class="text-md font-bold">
-                  {{ authStore.user.username }}
+                  {{ authStore.userMetadata.username }}
                 </p>
               </router-link>
               <p class="text-md font-light">
-                {{ authStore.user.isAdmin ? 'Admin' : 'Reader' }}
+                {{ authStore.userMetadata.isAdmin ? 'Admin' : 'Reader' }}
               </p>
             </div>
           </div>
         </div>
-        <Separator v-if="authStore.user.username" />
+        <Separator v-if="authStore.userMetadata.username" />
 
         <!-- Mobile Navigation Links -->
         <div class="flex flex-col my-8 space-y-8 items-center">
           <router-link
-            v-if="authStore.user && authStore.user.username"
-            :to="`/user/${authStore.user.username}/account`"
+            v-if="authStore.user && authStore.userMetadata.username"
+            :to="`/user/${authStore.userMetadata.username}/account`"
             class="w-full"
             @click="handleNavClick"
           >
@@ -150,8 +150,8 @@ const handleNavClick = () => {
             </div>
           </router-link>
           <router-link
-            v-if="authStore.user && authStore.user.username"
-            :to="`/user/${authStore.user.username}/my-books`"
+            v-if="authStore.user && authStore.userMetadata.username"
+            :to="`/user/${authStore.userMetadata.username}/my-books`"
             class="w-full"
             @click="handleNavClick"
           >
@@ -161,8 +161,8 @@ const handleNavClick = () => {
             </div>
           </router-link>
           <router-link
-            v-if="authStore.user && authStore.user.username"
-            :to="`/user/${authStore.user.username}/lists`"
+            v-if="authStore.user && authStore.userMetadata.username"
+            :to="`/user/${authStore.userMetadata.username}/lists`"
             class="w-full"
             @click="handleNavClick"
           >
@@ -172,8 +172,8 @@ const handleNavClick = () => {
             </div>
           </router-link>
           <router-link
-            v-if="authStore.user && authStore.user.username"
-            :to="`/user/${authStore.user.username}/my-stats`"
+            v-if="authStore.user && authStore.userMetadata.username"
+            :to="`/user/${authStore.userMetadata.username}/my-stats`"
             class="w-full"
             @click="handleNavClick"
           >
@@ -183,7 +183,7 @@ const handleNavClick = () => {
             </div>
           </router-link>
           <div
-            v-if="authStore.user && authStore.user.username"
+            v-if="authStore.user && authStore.userMetadata.username"
             class="flex flex-row space-x-3 items-center w-full"
             @click="handleNavClick"
           >
@@ -193,7 +193,7 @@ const handleNavClick = () => {
 
           <!-- Admin Links -->
           <router-link
-            v-if="authStore.user.isAdmin"
+            v-if="authStore.userMetadata.isAdmin"
             :to="`/admin/dashboard`"
             class="w-full"
             @click="handleNavClick"
@@ -205,7 +205,7 @@ const handleNavClick = () => {
           </router-link>
         </div>
         <SignOutButton
-          v-if="authStore.user.username"
+          v-if="authStore.userMetadata.username"
           class="flex justify-center w-full"
           @click="handleNavClick"
         />

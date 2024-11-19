@@ -1,9 +1,14 @@
 export interface UserCredentials {
-  firstName?: string;
-  lastName?: string;
-  username?: string;
   email: string;
   password: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
 }
 
 export interface UserMetadata {
@@ -11,13 +16,8 @@ export interface UserMetadata {
   firstName: string;
   lastName: string;
   username: string;
-  email: string;
   avatarURL: string;
+  email: string;
   bio: string;
   isAdmin: boolean;
-}
-
-export interface UserPartialData {
-  id: string;
-  email: string;
 }

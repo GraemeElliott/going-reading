@@ -5,203 +5,195 @@ import type { BookStatus, UserBook, BookBasicInfo } from '../types/book';
 import { useAuthStore } from './auth-store';
 import { updateBookErrorMessages } from './error-handler';
 
-export const useUserBooksStore = defineStore(
-  'userBooks',
-  () => {
-    const booksMap = ref<Map<string, UserBook>>(new Map());
-    const loading = ref(false);
-    const error = ref<string | null>(null);
-    const initialized = ref(false);
-    const statusUpdateInProgress = ref(new Set<string>()); // Track books with status updates in progress
-    const authStore = useAuthStore();
+export const useUserBooksStore = defineStore('userBooks', () => {
+  const booksMap = ref(new Map<string, UserBook>());
+  const loading = ref(false);
+  const error = ref<string | null>(null);
+  const statusUpdateInProgress = ref(new Set<string>()); // Track books with status updates in progress
+  const authStore = useAuthStore();
 
-    // Convert Map to array for persistence
-    const serializedBooks = computed(() =>
-      Array.from(booksMap.value.entries())
-    );
+  const userBooks = computed(() => Array.from(booksMap.value.values()));
 
-    const userBooks = computed(() => Array.from(booksMap.value.values()));
+  const groupedBooks = computed(() => {
+    const groups: Record<BookStatus, UserBook[]> = {
+      'want-to-read': [],
+      'currently-reading': [],
+      read: [],
+      'did-not-finish': [],
+      '': [],
+    };
 
-    const groupedBooks = computed(() => {
-      const groups: Record<BookStatus, UserBook[]> = {
-        'want-to-read': [],
-        'currently-reading': [],
-        read: [],
-        'did-not-finish': [],
-        '': [],
-      };
-
-      userBooks.value.forEach((book) => {
-        if (book.status in groups) {
-          groups[book.status].push(book);
-        }
-      });
-
-      // Sort each group based on status
-      Object.keys(groups).forEach((status) => {
-        if (status === 'read') {
-          // Sort read books by date_finished (most recent first)
-          // If date_finished is null, use date_added as fallback
-          groups[status as BookStatus].sort((a, b) => {
-            const dateA = a.date_finished
-              ? new Date(a.date_finished).getTime()
-              : new Date(a.date_added).getTime();
-            const dateB = b.date_finished
-              ? new Date(b.date_finished).getTime()
-              : new Date(b.date_added).getTime();
-            return dateB - dateA;
-          });
-        } else {
-          // Sort other statuses by date_added (most recent first)
-          groups[status as BookStatus].sort(
-            (a, b) =>
-              new Date(b.date_added).getTime() -
-              new Date(a.date_added).getTime()
-          );
-        }
-      });
-
-      return groups;
+    userBooks.value.forEach((book) => {
+      if (book.status in groups) {
+        groups[book.status].push(book);
+      }
     });
 
-    const fetchUserBooks = async (): Promise<void> => {
-      if (!authStore.user) {
-        booksMap.value.clear();
-        return;
-      }
-
-      try {
-        loading.value = true;
-        error.value = null;
-
-        const { data, error: fetchError } = await supabase
-          .from('user_books')
-          .select('*')
-          .eq('user_id', authStore.user.id)
-          .order('date_added', { ascending: false });
-
-        if (fetchError) throw fetchError;
-
-        const bookEntries = (data as UserBook[]).map(
-          (book): [string, UserBook] => [book.isbn, book]
+    // Sort each group based on status
+    Object.keys(groups).forEach((status) => {
+      if (status === 'read') {
+        // Sort read books by date_finished (most recent first)
+        // If date_finished is null, use date_added as fallback
+        groups[status as BookStatus].sort((a, b) => {
+          const dateA = a.date_finished
+            ? new Date(a.date_finished).getTime()
+            : new Date(a.date_added).getTime();
+          const dateB = b.date_finished
+            ? new Date(b.date_finished).getTime()
+            : new Date(b.date_added).getTime();
+          return dateB - dateA;
+        });
+      } else {
+        // Sort other statuses by date_added (most recent first)
+        groups[status as BookStatus].sort(
+          (a, b) =>
+            new Date(b.date_added).getTime() - new Date(a.date_added).getTime()
         );
-        booksMap.value = new Map(bookEntries);
-      } catch (err: any) {
-        error.value = err.message;
-        throw err;
-      } finally {
-        loading.value = false;
       }
-    };
+    });
+    return groups;
+  });
 
-    const initialize = async (): Promise<void> => {
-      if (!initialized.value) {
-        await fetchUserBooks();
-        initialized.value = true;
+  const fetchUserBooks = async (): Promise<void> => {
+    if (!authStore.userMetadata) {
+      booksMap.value.clear();
+      return;
+    }
+
+    try {
+      loading.value = true;
+      error.value = null;
+
+      const { data, error: fetchError } = await supabase
+        .from('user_books')
+        .select('*')
+        .eq('user_id', authStore.userMetadata.id)
+        .order('date_added', { ascending: false });
+
+      if (fetchError) throw fetchError;
+
+      booksMap.value = new Map(
+        (data as UserBook[]).map((book) => [book.isbn, book])
+      );
+    } catch (err: any) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const initialize = async (): Promise<void> => {
+    await fetchUserBooks();
+  };
+
+  const updateBookProgress = async (
+    isbn: string,
+    currentPage: number
+  ): Promise<void> => {
+    if (!authStore.user)
+      throw new Error('User must be logged in to update book progress');
+
+    try {
+      loading.value = true;
+      error.value = null;
+
+      const now = new Date().toISOString();
+      const existingBook = booksMap.value.get(isbn);
+
+      if (!existingBook) {
+        throw new Error(updateBookErrorMessages.bookNotFound);
       }
-    };
 
-    const updateBookProgress = async (
-      isbn: string,
-      currentPage: number
-    ): Promise<void> => {
-      if (!authStore.user)
-        throw new Error(updateBookErrorMessages.userNotLoggedInProgress);
+      const { error: updateError } = await supabase
+        .from('user_books')
+        .update({
+          current_page: currentPage,
+          date_updated: now,
+        })
+        .eq('user_id', authStore.user.id)
+        .eq('isbn', isbn);
 
-      try {
-        loading.value = true;
-        error.value = null;
+      if (updateError) throw updateError;
 
-        const now = new Date().toISOString();
-        const existingBook = booksMap.value.get(isbn);
+      existingBook.current_page = currentPage;
+      existingBook.date_updated = now;
+      existingBook.date_updated = now;
+      booksMap.value.set(isbn, existingBook);
+      booksMap.value = new Map(booksMap.value);
+    } catch (err: any) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
 
-        if (!existingBook) {
-          throw new Error(updateBookErrorMessages.bookNotFound);
+  const getUserBookStatus = (isbn: string): BookStatus =>
+    booksMap.value.get(isbn)?.status || '';
+
+  const updateBookStatus = async (
+    bookOrIsbn: BookBasicInfo | string,
+    status: BookStatus
+  ): Promise<void> => {
+    if (!authStore.user)
+      throw new Error(updateBookErrorMessages.userNotLoggedInStatus);
+
+    const isbn = typeof bookOrIsbn === 'string' ? bookOrIsbn : bookOrIsbn.isbn;
+
+    // If a status update is already in progress for this book, skip
+    if (statusUpdateInProgress.value.has(isbn)) {
+      return;
+    }
+
+    try {
+      statusUpdateInProgress.value.add(isbn);
+      loading.value = true;
+      error.value = null;
+      const userId = authStore.user.id;
+      const now = new Date().toISOString();
+      const existingBook = booksMap.value.get(isbn);
+
+      if (existingBook) {
+        // Skip if status hasn't changed
+        if (existingBook.status === status) {
+          return;
+        }
+
+        const updateData: any = {
+          status,
+          date_updated: now,
+        };
+        // Set date_finished when status is 'read'
+        if (status === 'read') {
+          updateData.date_finished = now;
+        } else {
+          updateData.date_finished = null; // Clear date_finished for other statuses
         }
 
         const { error: updateError } = await supabase
           .from('user_books')
           .update({
-            current_page: currentPage,
+            status,
             date_updated: now,
           })
-          .eq('user_id', authStore.user.id)
+          .eq('user_id', userId)
           .eq('isbn', isbn);
 
         if (updateError) throw updateError;
 
-        existingBook.current_page = currentPage;
+        existingBook.status = status;
         existingBook.date_updated = now;
         booksMap.value.set(isbn, existingBook);
-        booksMap.value = new Map(booksMap.value);
-      } catch (err: any) {
-        error.value = err.message;
-        throw err;
-      } finally {
-        loading.value = false;
-      }
-    };
+        existingBook.date_finished = status === 'read' ? now : null;
+      } else {
+        if (typeof bookOrIsbn === 'string') {
+          throw new Error('Full book info required for new books');
+        }
 
-    const updateBookStatus = async (
-      bookOrIsbn: BookBasicInfo | string,
-      status: BookStatus
-    ): Promise<void> => {
-      if (!authStore.user)
-        throw new Error(updateBookErrorMessages.userNotLoggedInStatus);
-
-      const isbn =
-        typeof bookOrIsbn === 'string' ? bookOrIsbn : bookOrIsbn.isbn;
-
-      // If a status update is already in progress for this book, skip
-      if (statusUpdateInProgress.value.has(isbn)) {
-        return;
-      }
-
-      try {
-        statusUpdateInProgress.value.add(isbn);
-        loading.value = true;
-        error.value = null;
-
-        const userId = authStore.user.id;
-        const now = new Date().toISOString();
-        const existingBook = booksMap.value.get(isbn);
-
-        if (existingBook) {
-          // Skip if status hasn't changed
-          if (existingBook.status === status) {
-            return;
-          }
-
-          const updateData: any = {
-            status,
-            date_updated: now,
-          };
-
-          // Set date_finished when status is 'read'
-          if (status === 'read') {
-            updateData.date_finished = now;
-          } else {
-            updateData.date_finished = null; // Clear date_finished for other statuses
-          }
-
-          const { error: updateError } = await supabase
-            .from('user_books')
-            .update(updateData)
-            .eq('user_id', userId)
-            .eq('isbn', isbn);
-
-          if (updateError) throw updateError;
-
-          existingBook.status = status;
-          existingBook.date_updated = now;
-          existingBook.date_finished = status === 'read' ? now : null;
-          booksMap.value.set(isbn, existingBook);
-        } else {
-          if (typeof bookOrIsbn === 'string') {
-            throw new Error(updateBookErrorMessages.fullBookInfoRequired);
-          }
-
-          const newBookData: any = {
+        const { data: newBook, error: insertError } = await supabase
+          .from('user_books')
+          .insert({
             user_id: userId,
             isbn: bookOrIsbn.isbn,
             status,
@@ -213,98 +205,61 @@ export const useUserBooksStore = defineStore(
             date_published: bookOrIsbn.date_published,
             publisher: bookOrIsbn.publisher,
             pages: bookOrIsbn.pages,
-          };
+          })
+          .select()
+          .single();
 
-          // Set date_finished for new books marked as read
-          if (status === 'read') {
-            newBookData.date_finished = now;
-          }
-
-          const { data: newBook, error: insertError } = await supabase
-            .from('user_books')
-            .insert(newBookData)
-            .select()
-            .single();
-
-          if (insertError) throw insertError;
-          if (newBook) {
-            booksMap.value.set(bookOrIsbn.isbn, newBook as UserBook);
-          }
+        if (insertError) throw insertError;
+        if (newBook) {
+          booksMap.value.set(bookOrIsbn.isbn, newBook as UserBook);
         }
-
-        booksMap.value = new Map(booksMap.value);
-      } catch (err: any) {
-        error.value = err.message;
-        throw err;
-      } finally {
-        loading.value = false;
-        statusUpdateInProgress.value.delete(isbn);
       }
-    };
 
-    const getUserBookStatus = (isbn: string): BookStatus =>
-      booksMap.value.get(isbn)?.status || '';
+      booksMap.value = new Map(booksMap.value);
+    } catch (err: any) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      loading.value = false;
+      statusUpdateInProgress.value.delete(isbn);
+    }
+  };
+  const deleteBook = async (isbn: string): Promise<void> => {
+    if (!authStore.user)
+      throw new Error('User must be logged in to delete a book');
 
-    const deleteBook = async (isbn: string): Promise<void> => {
-      if (!authStore.user)
-        throw new Error(updateBookErrorMessages.userNotLoggedInDeleteBook);
+    try {
+      loading.value = true;
+      error.value = null;
 
-      try {
-        loading.value = true;
-        error.value = null;
+      const { error: deleteError } = await supabase
+        .from('user_books')
+        .delete()
+        .eq('user_id', authStore.user.id)
+        .eq('isbn', isbn);
 
-        const { error: deleteError } = await supabase
-          .from('user_books')
-          .delete()
-          .eq('user_id', authStore.user.id)
-          .eq('isbn', isbn);
+      if (deleteError) throw deleteError;
 
-        if (deleteError) throw deleteError;
+      booksMap.value.delete(isbn);
+      booksMap.value = new Map(booksMap.value);
+    } catch (err: any) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
 
-        booksMap.value.delete(isbn);
-        booksMap.value = new Map(booksMap.value);
-      } catch (err: any) {
-        error.value = err.message;
-        throw err;
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    return {
-      userBooks,
-      groupedBooks,
-      loading,
-      error,
-      initialized,
-      fetchUserBooks,
-      initialize,
-      updateBookStatus,
-      updateBookProgress,
-      getUserBookStatus,
-      deleteBook,
-      serializedBooks,
-    };
-  },
-  {
-    persist: {
-      storage: localStorage,
-      serializer: {
-        deserialize: (data) => {
-          const parsed = JSON.parse(data);
-          return {
-            ...parsed,
-            booksMap: new Map(parsed.serializedBooks || []),
-          };
-        },
-        serialize: (state) => {
-          const serialized = {
-            ...state,
-            serializedBooks: Array.from(state.booksMap.entries()),
-          };
-          return JSON.stringify(serialized);
-        },
-      },
-    },
-  }
-);
+  return {
+    userBooks,
+    groupedBooks,
+    loading,
+    error,
+    getUserBookStatus,
+    updateBookStatus,
+    updateBookProgress,
+    fetchUserBooks,
+    initialize,
+    deleteBook,
+  };
+});

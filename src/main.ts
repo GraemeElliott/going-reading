@@ -1,6 +1,5 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import './assets/index.css';
 import App from './App.vue';
 import router from './router/router';
@@ -24,7 +23,6 @@ library.add(fas, fab);
 config.familyDefault = 'classic';
 
 const pinia = createPinia();
-pinia.use(piniaPluginPersistedstate);
 
 createApp(App)
   .component('font-awesome-icon', FontAwesomeIcon)

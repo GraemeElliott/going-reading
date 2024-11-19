@@ -26,37 +26,37 @@ const emit = defineEmits<{
       </div>
       <div class="flex justify-end items-center max-w-screen-xl space-x-5">
         <router-link
-          v-if="authStore.user && authStore.user.username"
-          :to="`/user/${authStore.user.username}/my-books`"
+          v-if="authStore.userMetadata && authStore.userMetadata.username"
+          :to="`/user/${authStore.userMetadata.username}/my-books`"
           @click="emit('closeMenuIfOpen')"
         >
           <font-awesome-icon icon="fa-solid fa-book" class="fa-xl" />
         </router-link>
 
         <font-awesome-icon
-          v-if="authStore.user && authStore.user.username"
+          v-if="authStore.userMetadata && authStore.userMetadata.username"
           icon="fa-solid fa-chart-line"
           class="fa-xl"
           @click="emit('closeMenuIfOpen')"
         />
 
         <router-link
-          v-if="authStore.user && authStore.user.username"
-          :to="`/user/${authStore.user.username}/account`"
+          v-if="authStore.userMetadata && authStore.userMetadata.username"
+          :to="`/user/${authStore.userMetadata.username}/account`"
           @click="emit('closeMenuIfOpen')"
         >
           <font-awesome-icon icon="fa-solid fa-user" class="fa-xl" />
         </router-link>
 
         <font-awesome-icon
-          v-if="authStore.user && authStore.user.username"
+          v-if="authStore.userMetadata && authStore.userMetadata.username"
           icon="fa-solid fa-bell"
           class="fa-xl"
           @click="emit('closeMenuIfOpen')"
         />
 
         <router-link
-          v-if="authStore.user.isAdmin"
+          v-if="authStore.userMetadata.isAdmin"
           :to="`/admin/dashboard`"
           @click="emit('closeMenuIfOpen')"
         >
@@ -64,7 +64,7 @@ const emit = defineEmits<{
         </router-link>
         <ThemeSwitch class="mr-1.5" />
         <SignOutButton
-          v-if="authStore.user.username"
+          v-if="authStore.userMetadata.username"
           @click="emit('closeMenuIfOpen')"
         />
       </div>

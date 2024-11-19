@@ -50,54 +50,41 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresOwner: true },
     },
   ],
+  scrollBehavior(_to, _from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
+    } else {
+      return { top: 0 };
+    }
+  },
 });
 
-let authInitialized = false;
-
-// Navigation guard
 router.beforeEach(
   async (
     to: RouteLocationNormalized,
-    from: RouteLocationNormalized,
+    _from: RouteLocationNormalized,
     next: NavigationGuardNext
   ) => {
     const authStore = useAuthStore();
 
-    // Initialize auth if not already done
-    if (!authInitialized) {
-      try {
-        await authStore.initializeAuth();
-        authInitialized = true;
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-        // Proceed with navigation even if auth fails, the auth store will handle the error state
-      }
+    if (!authStore.user) {
+      await authStore.initializeAuth();
     }
 
-    // Check if route requires authentication
+    const isAuthenticated = authStore.user;
+    const currentUsername = authStore.userMetadata?.username;
+
     if (to.matched.some((record) => record.meta.requiresAuth)) {
-      // Check if user is authenticated
-      if (!authStore.user?.id) {
-        // Redirect to auth page with return URL
-        next({
-          path: '/auth',
-          query: { redirect: to.fullPath },
-        });
-        return;
+      if (!isAuthenticated) {
+        return next({ name: 'sign-in', query: { redirect: to.fullPath } });
       }
 
-      // Check if route requires owner access
-      if (to.meta.requiresOwner) {
-        const username = to.params.username;
-        if (username !== authStore.user.username) {
-          // Redirect to home if user doesn't own the resource
-          next({ name: 'home' });
-          return;
+      if (to.matched.some((record) => record.meta.requiresOwner)) {
+        if (to.params.username !== currentUsername) {
+          return next({ name: 'home' });
         }
       }
     }
-
-    // Proceed with navigation
     next();
   }
 );
