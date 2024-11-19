@@ -104,7 +104,7 @@ onMounted(async () => {
       <div class="mb-8">
         <h1
           class="text-3xl font-bold mb-2"
-          v-if="authStore.user && authStore.user.username === username"
+          v-if="authStore.user && authStore.userMetadata.username === username"
         >
           {{ STATUS_DISPLAY_NAMES[status] }} Books
         </h1>

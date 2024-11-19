@@ -21,16 +21,16 @@ const authStore = useAuthStore();
 const { handleSubmit, resetForm, setValues } = useForm({
   validationSchema: accountFormSchema,
   initialValues: {
-    firstName: authStore.user.firstName,
-    lastName: authStore.user.lastName,
-    username: authStore.user.username,
-    email: authStore.user.email,
-    bio: authStore.user.bio,
+    firstName: authStore.userMetadata.firstName,
+    lastName: authStore.userMetadata.lastName,
+    username: authStore.userMetadata.username,
+    email: authStore.userMetadata.email,
+    bio: authStore.userMetadata.bio,
   },
 });
 
 watch(
-  () => authStore.user,
+  () => authStore.userMetadata,
   (newMetadata) => {
     setValues({
       firstName: newMetadata.firstName,

@@ -7,7 +7,7 @@ import { updateUserDetailsErrorMessages } from '@/store/error-handler';
 
 const authStore = useAuthStore();
 const selectedAvatar = ref<File | null>(null);
-const previewAvatarUrl = ref(authStore.user.avatarURL);
+const previewAvatarUrl = ref(authStore.userMetadata.avatarURL);
 
 const onAvatarSelected = (event: Event) => {
   const files = (event.target as HTMLInputElement).files;

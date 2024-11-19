@@ -212,7 +212,7 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   // Handle logout
-  const handleLogOut = async (): Promise<void> => {
+  const handleSignOut = async (): Promise<void> => {
     try {
       await supabase.auth.signOut();
       user.value = null;
@@ -372,7 +372,7 @@ export const useAuthStore = defineStore('auth', () => {
     handleRegister,
     initializeAuth,
     handleSignIn,
-    handleLogOut,
+    handleSignOut,
     updateAccount,
     updateAvatar,
     updateAccountDetails,

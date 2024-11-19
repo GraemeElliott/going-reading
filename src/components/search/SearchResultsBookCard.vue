@@ -68,7 +68,7 @@ const formatYear = (dateString: string) => {
           </router-link>
 
           <div
-            v-if="authStore.user && authStore.user.username"
+            v-if="authStore.user && authStore.userMetadata.username"
             class="flex flex-row"
           >
             <span class="text-sm font-semibold text-gray-600 mr-2"
