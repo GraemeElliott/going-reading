@@ -11,6 +11,7 @@ import SearchResults from '@/pages/SearchResults.vue';
 import BookDetails from '@/pages/BookDetails.vue';
 import MyBooks from '@/pages/MyBooks.vue';
 import MyBooksByStatus from '@/pages/MyBooksByStatus.vue';
+import AuthorDetails from '@/pages/AuthorDetails.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -36,6 +37,11 @@ const router = createRouter({
       name: 'book-details',
       component: BookDetails,
       props: true,
+    },
+    {
+      path: '/author/:id',
+      name: 'author-details',
+      component: AuthorDetails,
     },
     {
       path: '/user/:username/my-books',

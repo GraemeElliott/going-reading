@@ -96,7 +96,7 @@ export const useListsStore = defineStore('lists', () => {
   ): Promise<boolean> => {
     try {
       const { data, error: checkError } = await supabase
-        .from('book_lists')
+        .from('books_in_lists')
         .select('id')
         .eq('list_id', listId)
         .eq('isbn', isbn);
@@ -125,8 +125,8 @@ export const useListsStore = defineStore('lists', () => {
         return; // Silently succeed if book is already in list
       }
 
-      // Add to book_lists without modifying user_books
-      const { error: addError } = await supabase.from('book_lists').insert({
+      // Add to books_in_lists without modifying user_books
+      const { error: addError } = await supabase.from('books_in_lists').insert({
         list_id: listId,
         isbn,
         user_id: authStore.user.id,
@@ -154,7 +154,7 @@ export const useListsStore = defineStore('lists', () => {
       error.value = null;
 
       const { error: removeError } = await supabase
-        .from('book_lists')
+        .from('books_in_lists')
         .delete()
         .eq('list_id', listId)
         .eq('isbn', isbn)
@@ -202,7 +202,7 @@ export const useListsStore = defineStore('lists', () => {
 
       // First get all book ISBNs in the list
       const { data: bookListData, error: bookListError } = await supabase
-        .from('book_lists')
+        .from('books_in_lists')
         .select('isbn')
         .eq('list_id', listId);
 

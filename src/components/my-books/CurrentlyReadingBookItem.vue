@@ -51,7 +51,7 @@ const readingProgress = computed(() => {
         />
       </div>
       <div class="text-center w-full">
-        <div class="flex flex-row items-center space-x-3">
+        <div class="flex flex-row items-center justify-center space-x-3">
           <Progress
             :model-value="readingProgress"
             class="my-4 [--progress-foreground:#4CAF50]"

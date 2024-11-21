@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useUserBooksStore } from '@/store/user-books-store';
-import BookStatusCovers from '@/components/my-books/BookStatusCovers.vue';
+import BookCovers from '@/components/my-books/BookCovers.vue';
 import { STATUS_DISPLAY_NAMES, BookStatus } from '@/types/book';
 
 const route = useRoute();
@@ -32,7 +32,7 @@ const navigateToStatus = (status: BookStatus) => {
       @click="navigateToStatus(status)"
     >
       <div class="border rounded-lg py-4 px-3 flex flex-row items-center">
-        <BookStatusCovers :status="status" class="mx-2" />
+        <BookCovers :status="status" class="mx-2" />
         <div class="flex-grow ml-10">
           <p class="text-md font-semibold">
             {{ STATUS_DISPLAY_NAMES[status] }}
