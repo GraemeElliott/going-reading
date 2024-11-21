@@ -5,6 +5,7 @@ import { useUserBooksStore } from '@/store/user-books-store';
 import CurrentlyReadingCarousel from '@/components/my-books/CurrentlyReadingCarousel.vue';
 import BookStatusNavigation from '@/components/my-books/BookStatusNavigation.vue';
 import ReadingActivityNavigation from '@/components/my-books/ReadingActivityNavigation.vue';
+import ListsSection from '@/components/my-books/ListsSection.vue';
 
 const authStore = useAuthStore();
 const userBooksStore = useUserBooksStore();
@@ -43,6 +44,8 @@ onMounted(async () => {
 
         <!-- Book Status Navigation -->
         <BookStatusNavigation />
+
+        <ListsSection />
 
         <!-- Reading Activity Navigation -->
         <ReadingActivityNavigation />
