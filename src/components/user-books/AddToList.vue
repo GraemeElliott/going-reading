@@ -120,6 +120,28 @@ const handleAddToList = async (listId: string) => {
   }
 };
 
+const handleRemoveFromList = async (listId: string) => {
+  try {
+    // Find the list name
+    const list = lists.value.find((l) => l.id === listId);
+    const listName = list ? list.name : 'list';
+
+    // Remove from list
+    await listsStore.removeBookFromList(listId, props.isbn);
+    listsContainingBook.value.delete(listId);
+    toast({
+      title: `Book removed from ${listName}`,
+      description: `You have removed ${
+        props.book?.title || 'book'
+      } from ${listName}.`,
+      variant: 'success',
+      duration: 2000,
+    });
+  } catch (error) {
+    showFeedback('Failed to remove book from list', 'error');
+  }
+};
+
 const handleCreateList = async () => {
   if (newListName.value.trim()) {
     try {
@@ -222,27 +244,37 @@ const handleCreateList = async () => {
             No lists created yet
           </div>
           <div v-else class="space-y-2">
-            <button
+            <div
               v-for="list in lists"
               :key="list.id"
-              class="w-full text-left px-2 py-1 text-sm rounded hover:bg-accent flex items-center justify-between"
-              @click="handleAddToList(list.id)"
-              :disabled="isAddingToList"
+              class="flex flex-row items-center"
             >
-              <span>{{ list.name }}</span>
-              <div class="flex items-center gap-2">
-                <span
-                  v-if="list.is_public"
-                  class="text-xs text-muted-foreground"
-                  >Public</span
-                >
-                <span
-                  v-if="listsContainingBook.has(list.id)"
-                  class="text-green-500"
-                  >✓</span
-                >
-              </div>
-            </button>
+              <font-awesome-icon
+                v-if="listsContainingBook.has(list.id)"
+                icon="fa-regular fa-circle-xmark"
+                class="cursor-pointer text-red-500 hover:text-red-700"
+                @click="handleRemoveFromList(list.id)"
+              />
+              <button
+                class="w-full text-left px-2 py-1 text-sm rounded hover:bg-accent flex items-center justify-between"
+                @click="handleAddToList(list.id)"
+                :disabled="isAddingToList"
+              >
+                <span>{{ list.name }}</span>
+                <div class="flex items-center gap-2">
+                  <span
+                    v-if="list.is_public"
+                    class="text-xs text-muted-foreground"
+                    >Public</span
+                  >
+                  <span
+                    v-if="listsContainingBook.has(list.id)"
+                    class="text-green-500"
+                    >✓</span
+                  >
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </div>
