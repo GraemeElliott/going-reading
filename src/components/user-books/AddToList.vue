@@ -143,7 +143,7 @@ const handleCreateList = async () => {
       isPublic.value = false;
       toast({
         title: 'New list created',
-        description: `You have created a new custom list and added ${
+        description: `You have created a new list and added ${
           props.book?.title || 'book'
         } to the list.`,
         variant: 'success',
@@ -173,7 +173,7 @@ const handleCreateList = async () => {
     >
       <div class="grid gap-4">
         <div class="space-y-2">
-          <h4 class="font-medium leading-none">Add to Custom List</h4>
+          <h4 class="font-medium leading-none">Add to List</h4>
           <p class="text-sm text-muted-foreground">
             Choose a list or create a new one
           </p>

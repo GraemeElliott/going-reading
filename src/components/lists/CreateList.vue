@@ -48,7 +48,7 @@ const onSubmit = handleSubmit(async (values) => {
     isPublic.value = false;
     toast({
       title: 'New list created',
-      description: 'You have created a new custom list.',
+      description: 'You have created a new list.',
       variant: 'success',
       duration: 3000,
     });

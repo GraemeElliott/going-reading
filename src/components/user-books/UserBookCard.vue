@@ -2,7 +2,7 @@
 import type { UserBook, BookStatus } from '@/types/book';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import AddToCustomList from '@/components/user-books/AddToCustomList.vue';
+import AddToList from '@/components/user-books/AddToList.vue';
 import UserRating from '@/components/user-books/UserRating.vue';
 import UserBookStatusSelect from '@/components/user-books/UserBookStatusSelect.vue';
 import { useRouter } from 'vue-router';
@@ -162,7 +162,7 @@ const handleStatusChange = async (newStatus: BookStatus) => {
             :disabled="isUpdating"
           />
         </div>
-        <AddToCustomList :isbn="book.isbn" :book="bookBasicInfo" />
+        <AddToList :isbn="book.isbn" :book="bookBasicInfo" />
         <Button
           @click="isDeleting = true"
           class="bg-goingRed text-white w-[180px]"

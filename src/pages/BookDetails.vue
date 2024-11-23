@@ -5,7 +5,7 @@ import isbndbService from '@/services/isbndbService';
 import type { Book, BookStatus, BookBasicInfo } from '@/types/book';
 import { Separator } from '@/components/ui/separator';
 import UserBookStatusSelect from '@/components/user-books/UserBookStatusSelect.vue';
-import AddToCustomList from '@/components/user-books/AddToCustomList.vue';
+import AddToList from '@/components/user-books/AddToList.vue';
 import UserRating from '@/components/user-books/UserRating.vue';
 import { useAuthStore } from '@/store/auth-store';
 import { useUserBooksStore } from '@/store/user-books-store';
@@ -174,7 +174,7 @@ onMounted(async () => {
                   pages: book.pages,
                 }"
               />
-              <AddToCustomList :isbn="book.isbn" :book="book" />
+              <AddToList :isbn="book.isbn" :book="book" />
               <div class="flex flex-col items-center">
                 <UserRating />
                 <span class="pt-1">Your Rating</span>
@@ -240,7 +240,7 @@ onMounted(async () => {
                     pages: book.pages,
                   }"
                 />
-                <AddToCustomList :isbn="book.isbn" :book="book" />
+                <AddToList :isbn="book.isbn" :book="book" />
                 <div class="flex flex-col items-center">
                   <UserRating />
                   <span class="pt-1">Your Rating</span>
