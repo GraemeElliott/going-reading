@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useListsStore } from '@/store/lists-store';
-import ListCard from '@/components/my-lists/ListCard.vue';
+import ListCard from '@/components/lists/ListCard.vue';
 import type { UserBook } from '@/types/book';
 
 const listsStore = useListsStore();
@@ -111,7 +111,9 @@ const handleRemoveBook = async (listId: string, isbn: string) => {
                     :checked="isPublic"
                     @update:checked="handlePublicToggle"
                   />
-                  <span class="text-sm">Public</span>
+                  <span class="text-sm">{{
+                    isPublic ? 'Public' : 'Private'
+                  }}</span>
                 </div>
                 <Button
                   @click="handleCreateList"

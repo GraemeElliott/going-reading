@@ -3,6 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import type { UserBook } from '@/types/book';
 import type { List } from '@/types/list';
+import { useDarkModeStore } from '@/store/store';
+import EditListDetails from '@/components/lists/EditListDetails.vue';
+
+const darkModeStore = useDarkModeStore();
 
 interface Props {
   list: List;
@@ -30,25 +34,40 @@ const getBookCount = (): string => {
 
 <template>
   <div class="overflow-hidden">
-    <div
-      class="p-6 flex items-center justify-between cursor-pointer"
-      @click="emit('toggleExpansion', list.id)"
-    >
-      <div>
+    <div class="p-6 flex items-center justify-between cursor-pointer">
+      <div class="w-full" @click="emit('toggleExpansion', list.id)">
         <h3 class="text-lg font-semibold">{{ list.name }}</h3>
         <div class="flex items-center gap-2 text-sm text-muted-foreground">
           <span>{{ getBookCount() }}</span>
           <span>•</span>
-          <span>{{ list.is_public ? 'Public' : 'Private' }} List</span>
+          <span
+            :class="{
+              'px-2 py-0.5 rounded-full text-xs font-medium': true,
+              'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100':
+                list.is_public,
+              'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100':
+                !list.is_public,
+            }"
+            >{{ list.is_public ? 'Public' : 'Private' }} List</span
+          >
         </div>
+        <p v-if="list.details" class="mt-2 text-sm text-muted-foreground">
+          {{ list.details }}
+        </p>
       </div>
       <div class="flex items-center gap-2">
+        <EditListDetails :list="list" />
         <Button
           size="sm"
-          class="bg-goingRed text-white"
+          class="hover:bg-goingRed hover:text-white"
+          :class="{
+            'bg-white text-black': !darkModeStore.darkMode,
+            'bg-gray-900 text-white border border-white':
+              darkModeStore.darkMode,
+          }"
           @click.stop="emit('deleteList', list.id)"
         >
-          Delete List
+          <font-awesome-icon icon="fa-regular fa-trash-can" />
         </Button>
       </div>
     </div>
@@ -81,30 +100,34 @@ const getBookCount = (): string => {
           <div
             v-for="book in books"
             :key="book.isbn"
-            class="p-4 flex items-center justify-between"
+            class="p-4 flex items-center"
           >
-            <router-link :to="`/book/${book.isbn}`">
+            <router-link :to="`/book/${book.isbn}`" class="flex-grow min-w-0">
               <div class="flex items-center gap-4">
                 <img
                   :src="book.image"
                   :alt="book.title"
-                  class="w-16 h-24 object-cover rounded"
+                  class="w-16 h-24 object-cover rounded shrink-0"
                   @error="book.image = '/default-book-cover.jpg'"
                 />
-                <div>
+                <div class="min-w-0 flex-grow">
                   <h4 class="font-medium">{{ book.title }}</h4>
-                  <p class="text-sm text-muted-foreground">
+                  <p class="text-sm text-muted-foreground truncate">
                     {{ book.authors.join(', ') }}
                   </p>
                 </div>
               </div>
             </router-link>
             <Button
-              variant="ghost"
-              size="sm"
               @click="emit('removeBook', list.id, book.isbn)"
+              class="hover:bg-goingRed hover:text-white"
+              :class="{
+                'bg-white text-black': !darkModeStore.darkMode,
+                'bg-gray-900 text-white border border-white':
+                  darkModeStore.darkMode,
+              }"
             >
-              Remove
+              <font-awesome-icon icon="fa-solid fa-minus" /> Remove
             </Button>
           </div>
         </div>

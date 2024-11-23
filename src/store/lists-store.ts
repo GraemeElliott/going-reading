@@ -8,6 +8,7 @@ interface List {
   id: string;
   user_id: string;
   name: string;
+  details: string;
   is_public: boolean;
   created_at: string;
   updated_at: string;
@@ -82,6 +83,39 @@ export const useListsStore = defineStore('lists', () => {
       lists.value = [newList, ...lists.value];
 
       return newList;
+    } catch (err: any) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const editListDetails = async (
+    listId: string,
+    name: string,
+    details: string
+  ): Promise<void> => {
+    if (!authStore.user) {
+      throw new Error('User must be logged in to edit a list');
+    }
+
+    try {
+      loading.value = true;
+      error.value = null;
+
+      const { error: updateError } = await supabase
+        .from('lists')
+        .update({ name, details })
+        .eq('id', listId)
+        .eq('user_id', authStore.user.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      lists.value = lists.value.map((list) =>
+        list.id === listId ? { ...list, name, details } : list
+      );
     } catch (err: any) {
       error.value = err.message;
       throw err;
@@ -241,6 +275,7 @@ export const useListsStore = defineStore('lists', () => {
     error,
     fetchUserLists,
     createList,
+    editListDetails,
     addBookToList,
     removeBookFromList,
     deleteList,

@@ -6,21 +6,22 @@ import router from './router/router';
 
 // import the fontawesome core
 import { library } from '@fortawesome/fontawesome-svg-core';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 // import fontawesome icon component
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-// import config so we can set a default style
-import { config } from '@fortawesome/fontawesome-svg-core';
-
+// import specific icons
 import { fas } from '@fortawesome/free-solid-svg-icons';
-
+import { far } from '@fortawesome/free-regular-svg-icons';
 import { fab } from '@fortawesome/free-brands-svg-icons';
 
-library.add(fas, fab);
+// Add icon packs to the library
+const solidIcons = Object.values(fas) as IconDefinition[];
+const regularIcons = Object.values(far) as IconDefinition[];
+const brandIcons = Object.values(fab) as IconDefinition[];
 
-// set the default style
-config.familyDefault = 'classic';
+library.add(...solidIcons, ...regularIcons, ...brandIcons);
 
 const pinia = createPinia();
 
