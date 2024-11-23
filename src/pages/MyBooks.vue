@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import { useAuthStore } from '@/store/auth-store';
 import { useUserBooksStore } from '@/store/user-books-store';
+import { useListsStore } from '@/store/lists-store';
 import { Skeleton } from '@/components/ui/skeleton';
 import CurrentlyReadingCarousel from '@/components/my-books/CurrentlyReadingCarousel.vue';
 import BookStatusNavigation from '@/components/my-books/BookStatusNavigation.vue';
@@ -9,13 +10,26 @@ import ListsSection from '@/components/my-books/ListsSection.vue';
 
 const authStore = useAuthStore();
 const userBooksStore = useUserBooksStore();
+const listsStore = useListsStore();
 
-const isLoading = computed(() => userBooksStore.loading);
-const error = computed(() => userBooksStore.error);
+const initialLoadComplete = ref(false);
+
+// Only show loading state during initial load
+const isInitialLoading = computed(() => {
+  return !initialLoadComplete.value;
+});
+
+const error = computed(() => userBooksStore.error || listsStore.error);
 
 onMounted(async () => {
   if (authStore.user) {
-    await userBooksStore.initialize();
+    try {
+      await Promise.all([userBooksStore.initialize(), listsStore.initialize()]);
+    } catch (err) {
+      console.error('Error initializing stores:', err);
+    } finally {
+      initialLoadComplete.value = true;
+    }
   }
 });
 </script>
@@ -23,7 +37,7 @@ onMounted(async () => {
 <template>
   <div class="mx-auto py-1">
     <!-- Loading State -->
-    <div v-if="isLoading">
+    <div v-if="isInitialLoading">
       <h2 class="text-2xl font-bold tracking-tight mb-6">My Books</h2>
 
       <!-- Currently Reading Carousel Skeleton -->

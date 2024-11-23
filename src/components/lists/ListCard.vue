@@ -1,13 +1,18 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { UserBook } from '@/types/book';
 import type { List } from '@/types/list';
 import { useDarkModeStore } from '@/store/store';
+import { useListsStore } from '@/store/lists-store';
+import { toast } from '@/components/ui/toast';
 import EditListDetails from '@/components/lists/EditListDetails.vue';
 
 const darkModeStore = useDarkModeStore();
+const listsStore = useListsStore();
+const removingBookIsbn = ref<string | null>(null);
 
 interface Props {
   list: List;
@@ -19,22 +24,70 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: 'deleteList', listId: string): void;
-  (e: 'removeBook', listId: string, isbn: string): void;
+  (e: 'bookListUpdated', listId: string): void;
+  (e: 'listDeleted', listId: string): void;
   (e: 'toggleExpansion', listId: string): void;
 }>();
 
-const getBookCount = (): string => {
-  if (!props.books) {
-    return '...';
+const handleDeleteList = async (listId: string) => {
+  try {
+    await listsStore.deleteList(listId);
+    emit('listDeleted', listId);
+    toast({
+      title: 'List deleted',
+      description: `You have successfully deleted ${props.list.name}.`,
+      variant: 'success',
+      duration: 2000,
+    });
+  } catch (error) {
+    toast({
+      title: 'Error Deleting List',
+      description: `There has been an error deleting ${props.list.name}: ${error}.`,
+      variant: 'destructive',
+      duration: 4000,
+    });
   }
-  const count = props.books.length;
+};
+
+const handleRemoveBook = async (listId: string, isbn: string) => {
+  if (removingBookIsbn.value) return;
+
+  try {
+    const book = props.books?.find((b) => b.isbn === isbn);
+    if (!book) return;
+
+    removingBookIsbn.value = isbn;
+    await listsStore.removeBookFromList(listId, isbn);
+    emit('bookListUpdated', listId);
+    toast({
+      title: 'Book Removed',
+      description: `You have successfully removed ${book.title} from ${props.list.name}.`,
+      variant: 'success',
+      duration: 2000,
+    });
+  } catch (error) {
+    const book = props.books?.find((b) => b.isbn === isbn);
+    toast({
+      title: 'Error Removing Book',
+      description: `There was an error removing ${
+        book?.title || 'the book'
+      } from ${props.list.name}: "${error}".`,
+      variant: 'destructive',
+      duration: 4000,
+    });
+  } finally {
+    removingBookIsbn.value = null;
+  }
+};
+
+const getBookCount = (): string => {
+  const count = props.books?.length || 0;
   return `${count} ${count === 1 ? 'book' : 'books'}`;
 };
 </script>
 
 <template>
-  <div class="overflow-hidden">
+  <div>
     <div class="p-6 flex items-center justify-between cursor-pointer">
       <div class="w-full" @click="emit('toggleExpansion', list.id)">
         <h3 class="text-lg font-semibold">{{ list.name }}</h3>
@@ -66,7 +119,7 @@ const getBookCount = (): string => {
             'bg-gray-900 text-white border border-white':
               darkModeStore.darkMode,
           }"
-          @click.stop="emit('deleteList', list.id)"
+          @click.stop="handleDeleteList(list.id)"
         >
           <font-awesome-icon icon="fa-regular fa-trash-can" />
         </Button>
@@ -74,15 +127,12 @@ const getBookCount = (): string => {
     </div>
     <Separator />
     <div
-      :class="[
-        'overflow-hidden transition-all duration-300 ease-out transform',
-        expanded
-          ? 'max-h-[2000px] opacity-100 translate-y-0'
-          : 'max-h-0 opacity-0 -translate-y-2',
-      ]"
+      :class="{
+        hidden: !expanded,
+      }"
     >
-      <div class="border-t relative">
-        <!-- Loading State with Skeletons -->
+      <div class="border-t">
+        <!-- Initial Loading State -->
         <div v-if="loadingBooks" class="divide-y">
           <div v-for="n in 3" :key="n" class="p-4">
             <div class="flex items-center gap-4">
@@ -97,7 +147,7 @@ const getBookCount = (): string => {
         </div>
 
         <!-- Empty State -->
-        <div v-else-if="books?.length === 0" class="p-4 text-center">
+        <div v-else-if="!books?.length" class="p-4 text-center">
           <p class="text-muted-foreground">No books in this list</p>
         </div>
 
@@ -107,6 +157,7 @@ const getBookCount = (): string => {
             v-for="book in books"
             :key="book.isbn"
             class="p-4 flex items-center"
+            :class="{ 'opacity-50': removingBookIsbn === book.isbn }"
           >
             <router-link :to="`/book/${book.isbn}`" class="flex-grow min-w-0">
               <div class="flex items-center gap-4">
@@ -125,13 +176,15 @@ const getBookCount = (): string => {
               </div>
             </router-link>
             <Button
-              @click="emit('removeBook', list.id, book.isbn)"
-              class="hover:bg-goingRed hover:text-white"
+              @click="handleRemoveBook(list.id, book.isbn)"
+              class="hover:bg-goingRed hover:text-white shrink-0"
               :class="{
+                'pointer-events-none': removingBookIsbn === book.isbn,
                 'bg-white text-black': !darkModeStore.darkMode,
                 'bg-gray-900 text-white border border-white':
                   darkModeStore.darkMode,
               }"
+              :disabled="removingBookIsbn === book.isbn"
             >
               <font-awesome-icon icon="fa-solid fa-minus" /> Remove
             </Button>

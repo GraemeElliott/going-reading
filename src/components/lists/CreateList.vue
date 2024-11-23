@@ -13,6 +13,7 @@ import { useListsStore } from '@/store/lists-store';
 import { useDarkModeStore } from '@/store/store';
 import { useForm, useField } from 'vee-validate';
 import { listDetailsFormSchema } from '@/store/form-validation-schemas';
+import { toast } from '@/components/ui/toast';
 
 const emit = defineEmits<{
   (e: 'list-created', listId: string): void;
@@ -45,10 +46,21 @@ const onSubmit = handleSubmit(async (values) => {
     nameValue.value = '';
     detailsValue.value = '';
     isPublic.value = false;
+    toast({
+      title: 'New list created',
+      description: 'You have created a new custom list.',
+      variant: 'success',
+      duration: 3000,
+    });
     isPopoverOpen.value = false;
     emit('list-created', newList.id);
   } catch (error) {
-    console.error('Failed to create list:', error);
+    toast({
+      title: `Error`,
+      description: `You have failed to create a new list: ${error}.`,
+      variant: 'destructive',
+      duration: 4000,
+    });
   }
 });
 

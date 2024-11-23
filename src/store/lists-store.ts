@@ -19,6 +19,7 @@ export const useListsStore = defineStore('lists', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
   const authStore = useAuthStore();
+  const booksInLists = ref<Record<string, UserBook[]>>({});
 
   const userLists = computed(() => lists.value);
 
@@ -74,7 +75,6 @@ export const useListsStore = defineStore('lists', () => {
         .single();
 
       if (createError) {
-        // Check if error is a unique constraint violation
         if (createError.code === '23505') {
           throw new Error('A list with this name already exists');
         }
@@ -83,6 +83,7 @@ export const useListsStore = defineStore('lists', () => {
 
       const newList = data as List;
       lists.value = [newList, ...lists.value];
+      booksInLists.value[newList.id] = [];
 
       return newList;
     } catch (err: any) {
@@ -125,7 +126,6 @@ export const useListsStore = defineStore('lists', () => {
 
       if (updateError) throw updateError;
 
-      // Update local state
       lists.value = lists.value.map((list) =>
         list.id === listId ? { ...list, ...updateData } : list
       );
@@ -166,13 +166,11 @@ export const useListsStore = defineStore('lists', () => {
       loading.value = true;
       error.value = null;
 
-      // Check if book is already in the list
       const alreadyInList = await isBookInList(listId, isbn);
       if (alreadyInList) {
-        return; // Silently succeed if book is already in list
+        return;
       }
 
-      // Add to books_in_lists without modifying user_books
       const { error: addError } = await supabase.from('books_in_lists').insert({
         list_id: listId,
         isbn,
@@ -180,6 +178,10 @@ export const useListsStore = defineStore('lists', () => {
       });
 
       if (addError) throw addError;
+
+      // Update local state
+      const books = await getBooksInList(listId);
+      booksInLists.value[listId] = books;
     } catch (err: any) {
       error.value = err.message;
       throw err;
@@ -208,6 +210,13 @@ export const useListsStore = defineStore('lists', () => {
         .eq('user_id', authStore.user.id);
 
       if (removeError) throw removeError;
+
+      // Update local state
+      if (booksInLists.value[listId]) {
+        booksInLists.value[listId] = booksInLists.value[listId].filter(
+          (book) => book.isbn !== isbn
+        );
+      }
     } catch (err: any) {
       error.value = err.message;
       throw err;
@@ -234,6 +243,7 @@ export const useListsStore = defineStore('lists', () => {
       if (deleteError) throw deleteError;
 
       lists.value = lists.value.filter((list) => list.id !== listId);
+      delete booksInLists.value[listId];
     } catch (err: any) {
       error.value = err.message;
       throw err;
@@ -244,10 +254,6 @@ export const useListsStore = defineStore('lists', () => {
 
   const getBooksInList = async (listId: string): Promise<UserBook[]> => {
     try {
-      loading.value = true;
-      error.value = null;
-
-      // First get all book ISBNs in the list
       const { data: bookListData, error: bookListError } = await supabase
         .from('books_in_lists')
         .select('isbn')
@@ -256,10 +262,10 @@ export const useListsStore = defineStore('lists', () => {
       if (bookListError) throw bookListError;
 
       if (!bookListData || bookListData.length === 0) {
+        booksInLists.value[listId] = [];
         return [];
       }
 
-      // Get the book details from user_books
       const isbns = bookListData.map((item) => item.isbn);
       const { data: bookData, error: bookError } = await supabase
         .from('user_books')
@@ -269,23 +275,31 @@ export const useListsStore = defineStore('lists', () => {
 
       if (bookError) throw bookError;
 
-      return bookData as UserBook[];
+      const books = bookData as UserBook[];
+      booksInLists.value[listId] = books;
+      return books;
     } catch (err: any) {
       error.value = err.message;
       throw err;
-    } finally {
-      loading.value = false;
     }
   };
 
   const initialize = async (): Promise<void> => {
-    await fetchUserLists();
+    try {
+      loading.value = true;
+      await fetchUserLists();
+      // Load books for all lists
+      await Promise.all(lists.value.map((list) => getBooksInList(list.id)));
+    } finally {
+      loading.value = false;
+    }
   };
 
   return {
     lists: userLists,
     loading,
     error,
+    booksInLists,
     fetchUserLists,
     createList,
     editListDetails,

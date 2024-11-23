@@ -14,6 +14,7 @@ import { useDarkModeStore } from '@/store/store';
 import { useForm, useField } from 'vee-validate';
 import { listDetailsFormSchema } from '@/store/form-validation-schemas';
 import type { List } from '@/types/list';
+import { toast } from '@/components/ui/toast';
 
 const props = defineProps<{
   list: List;
@@ -48,9 +49,20 @@ const onSubmit = handleSubmit(async (values) => {
       values.details || '',
       isPublic.value
     );
+    toast({
+      title: `${props.list.name} updated`,
+      description: `You have successfully updated ${props.list.name}.`,
+      variant: 'success',
+      duration: 3000,
+    });
     isPopoverOpen.value = false;
   } catch (error) {
-    console.error('Failed to update list details:', error);
+    toast({
+      title: `Error`,
+      description: `You have failed to update the details for ${props.list.name}: ${error}.`,
+      variant: 'destructive',
+      duration: 4000,
+    });
   }
 });
 </script>

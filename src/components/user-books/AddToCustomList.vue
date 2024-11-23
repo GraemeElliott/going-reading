@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { toast } from '@/components/ui/toast';
 import { useListsStore } from '@/store/lists-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { storeToRefs } from 'pinia';
@@ -29,11 +30,13 @@ const newListName = ref('');
 const isPublic = ref(false);
 const listsStore = useListsStore();
 const userBooksStore = useUserBooksStore();
-const { lists, loading } = storeToRefs(listsStore);
+const { lists } = storeToRefs(listsStore);
 const feedback = ref<{ message: string; type: 'success' | 'error' } | null>(
   null
 );
 const listsContainingBook = ref<Set<string>>(new Set());
+const isAddingToList = ref(false);
+const isCreatingList = ref(false);
 
 onMounted(async () => {
   await listsStore.fetchUserLists();
@@ -86,23 +89,44 @@ const handleAddToList = async (listId: string) => {
       return;
     }
 
+    isAddingToList.value = true;
+    // Close popover immediately
+    isPopoverOpen.value = false;
+
+    // Find the list name
+    const list = lists.value.find((l) => l.id === listId);
+    const listName = list ? list.name : 'list';
+
     // Ensure book is in user_books first
     await ensureBookInUserBooks();
 
     // Add to list
     await listsStore.addBookToList(listId, props.isbn);
     listsContainingBook.value.add(listId);
-    showFeedback('Book added to list', 'success');
     emit('addToList', listId);
-    isPopoverOpen.value = false;
+    toast({
+      title: `Book added to ${listName}`,
+      description: `You have added ${
+        props.book?.title || 'book'
+      } to ${listName}.`,
+      variant: 'success',
+      duration: 3000,
+    });
   } catch (error) {
     showFeedback('Failed to add book to list', 'error');
+    isPopoverOpen.value = true;
+  } finally {
+    isAddingToList.value = false;
   }
 };
 
 const handleCreateList = async () => {
   if (newListName.value.trim()) {
     try {
+      isCreatingList.value = true;
+      // Close popover immediately
+      isPopoverOpen.value = false;
+
       const newList = await listsStore.createList(
         newListName.value.trim(),
         isPublic.value
@@ -114,13 +138,22 @@ const handleCreateList = async () => {
       // Add to new list
       await listsStore.addBookToList(newList.id, props.isbn);
       listsContainingBook.value.add(newList.id);
-      showFeedback('List created and book added', 'success');
       emit('createList', newListName.value.trim());
       newListName.value = '';
       isPublic.value = false;
-      isPopoverOpen.value = false;
+      toast({
+        title: 'New list created',
+        description: `You have created a new custom list and added ${
+          props.book?.title || 'book'
+        } to the list.`,
+        variant: 'success',
+        duration: 3000,
+      });
     } catch (error: any) {
       showFeedback(error.message || 'Failed to create list', 'error');
+      isPopoverOpen.value = true;
+    } finally {
+      isCreatingList.value = false;
     }
   }
 };
@@ -164,7 +197,7 @@ const handleCreateList = async () => {
                 placeholder="New list name"
                 class="w-full"
               />
-              <div class="flex items-center space-x-2">
+              <div class="flex items-center space-x-2 py-2">
                 <Switch
                   :checked="isPublic"
                   @update:checked="handlePublicToggle"
@@ -173,15 +206,17 @@ const handleCreateList = async () => {
                   isPublic ? 'Public' : 'Private'
                 }}</span>
               </div>
-              <Button @click="handleCreateList" :disabled="!newListName.trim()">
-                Create & Add Book
+              <Button
+                @click="handleCreateList"
+                :disabled="!newListName.trim() || isCreatingList"
+              >
+                {{ isCreatingList ? 'Creating...' : 'Create & Add Book' }}
               </Button>
             </div>
           </div>
           <Separator class="my-2" />
-          <div v-if="loading" class="text-center py-2">Loading lists...</div>
           <div
-            v-else-if="lists.length === 0"
+            v-if="!lists.length"
             class="text-center py-2 text-sm text-muted-foreground"
           >
             No lists created yet
@@ -192,6 +227,7 @@ const handleCreateList = async () => {
               :key="list.id"
               class="w-full text-left px-2 py-1 text-sm rounded hover:bg-accent flex items-center justify-between"
               @click="handleAddToList(list.id)"
+              :disabled="isAddingToList"
             >
               <span>{{ list.name }}</span>
               <div class="flex items-center gap-2">
