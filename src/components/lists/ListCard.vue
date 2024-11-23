@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { UserBook } from '@/types/book';
 import type { List } from '@/types/list';
 import { useDarkModeStore } from '@/store/store';
@@ -59,7 +60,7 @@ const getBookCount = (): string => {
         <EditListDetails :list="list" />
         <Button
           size="sm"
-          class="hover:bg-goingRed hover:text-white"
+          class="hover:bg-goingRed hover:text-white hover:border hover:border-goingRed"
           :class="{
             'bg-white text-black': !darkModeStore.darkMode,
             'bg-gray-900 text-white border border-white':
@@ -81,22 +82,27 @@ const getBookCount = (): string => {
       ]"
     >
       <div class="border-t relative">
-        <div
-          v-show="loadingBooks"
-          class="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-[2px]"
-        >
-          <div class="animate-spin h-6 w-6"></div>
+        <!-- Loading State with Skeletons -->
+        <div v-if="loadingBooks" class="divide-y">
+          <div v-for="n in 3" :key="n" class="p-4">
+            <div class="flex items-center gap-4">
+              <Skeleton class="w-16 h-24 rounded" />
+              <div class="flex-grow space-y-2">
+                <Skeleton class="h-5 w-3/4" />
+                <Skeleton class="h-4 w-1/2" />
+              </div>
+              <Skeleton class="h-9 w-24" />
+            </div>
+          </div>
         </div>
-        <div
-          v-show="!loadingBooks && books?.length === 0"
-          class="p-4 text-center"
-        >
+
+        <!-- Empty State -->
+        <div v-else-if="books?.length === 0" class="p-4 text-center">
           <p class="text-muted-foreground">No books in this list</p>
         </div>
-        <div
-          v-show="!loadingBooks && books && books.length > 0"
-          class="divide-y"
-        >
+
+        <!-- Books List -->
+        <div v-else class="divide-y">
           <div
             v-for="book in books"
             :key="book.isbn"

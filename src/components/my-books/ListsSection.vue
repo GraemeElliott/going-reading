@@ -2,10 +2,9 @@
 import { ref, onMounted } from 'vue';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { useListsStore } from '@/store/lists-store';
 import ListCard from '@/components/lists/ListCard.vue';
+import CreateList from '../lists/CreateList.vue';
 import type { UserBook } from '@/types/book';
 
 const listsStore = useListsStore();
@@ -46,6 +45,19 @@ const loadAllBooks = async () => {
     } finally {
       loadingBooks.value.delete(list.id);
     }
+  }
+};
+
+// Add this function to handle new list creation
+const handleNewList = async (listId: string) => {
+  loadingBooks.value.add(listId);
+  try {
+    const books = await listsStore.getBooksInList(listId);
+    listBooks.value[listId] = books;
+  } catch (error) {
+    console.error('Error loading books for new list:', error);
+  } finally {
+    loadingBooks.value.delete(listId);
   }
 };
 
@@ -96,36 +108,7 @@ const handleRemoveBook = async (listId: string, isbn: string) => {
         <h3 class="text-lg font-medium">Lists</h3>
       </div>
       <Separator class="my-6" />
-      <div class="lg:mx-10">
-        <div class="mb-8 border rounded-lg p-10">
-          <div>
-            <div class="grid gap-4">
-              <div class="flex items-center gap-4">
-                <Input
-                  v-model="newListName"
-                  placeholder="Enter list name"
-                  class="flex-1"
-                />
-                <div class="flex items-center gap-2">
-                  <Switch
-                    :checked="isPublic"
-                    @update:checked="handlePublicToggle"
-                  />
-                  <span class="text-sm">{{
-                    isPublic ? 'Public' : 'Private'
-                  }}</span>
-                </div>
-                <Button
-                  @click="handleCreateList"
-                  :disabled="!newListName.trim()"
-                >
-                  Create List
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <CreateList @list-created="handleNewList" />
 
       <div v-if="listsStore.loading" class="text-center py-4">
         <div class="animate-spin h-6 w-6 mx-auto"></div>

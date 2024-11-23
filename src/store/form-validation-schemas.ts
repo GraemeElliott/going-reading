@@ -92,3 +92,17 @@ export const passwordFormSchema = toTypedSchema(
       path: ['confirmPassword'],
     })
 );
+
+// List Details Form Schema
+export const listDetailsFormSchema = toTypedSchema(
+  z.object({
+    name: z
+      .string()
+      .min(3, 'List name must be at least 3 characters.')
+      .max(30, 'List name can have a maximum of 30 characters.'),
+    details: z
+      .string()
+      .max(150, 'Details can have a maximum of 150 characters.')
+      .optional(),
+  })
+);

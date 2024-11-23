@@ -53,3 +53,9 @@ export const updateBookErrorMessages = {
   fullBookInfoRequired: 'Full book info required for new books.',
   unknownError: 'An unknown error occurred. Please try again.',
 };
+
+export const updateListErrorMessages = {
+  userNotLoggedInList: 'User must be logged in to update list details.',
+  listNotFound: 'List not found.',
+  unknownError: 'An unknown error occurred. Please try again.',
+};

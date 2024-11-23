@@ -73,6 +73,10 @@ const ensureBookInUserBooks = async () => {
   await userBooksStore.updateBookStatus(bookInfo, currentStatus);
 };
 
+const handlePublicToggle = (checked: boolean) => {
+  isPublic.value = checked;
+};
+
 const handleAddToList = async (listId: string) => {
   try {
     // Check if book is already in the list
@@ -160,11 +164,14 @@ const handleCreateList = async () => {
                 placeholder="New list name"
                 class="w-full"
               />
-              <div class="flex items-center justify-between space-x-2">
-                <label class="text-sm text-muted-foreground"
-                  >Make list public</label
-                >
-                <Switch v-model="isPublic" />
+              <div class="flex items-center space-x-2">
+                <Switch
+                  :checked="isPublic"
+                  @update:checked="handlePublicToggle"
+                />
+                <span class="text-sm">{{
+                  isPublic ? 'Public' : 'Private'
+                }}</span>
               </div>
               <Button @click="handleCreateList" :disabled="!newListName.trim()">
                 Create & Add Book

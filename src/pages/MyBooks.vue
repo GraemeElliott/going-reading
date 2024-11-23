@@ -2,9 +2,9 @@
 import { onMounted, computed } from 'vue';
 import { useAuthStore } from '@/store/auth-store';
 import { useUserBooksStore } from '@/store/user-books-store';
+import { Skeleton } from '@/components/ui/skeleton';
 import CurrentlyReadingCarousel from '@/components/my-books/CurrentlyReadingCarousel.vue';
 import BookStatusNavigation from '@/components/my-books/BookStatusNavigation.vue';
-import ReadingActivityNavigation from '@/components/my-books/ReadingActivityNavigation.vue';
 import ListsSection from '@/components/my-books/ListsSection.vue';
 
 const authStore = useAuthStore();
@@ -23,8 +23,40 @@ onMounted(async () => {
 <template>
   <div class="mx-auto py-1">
     <!-- Loading State -->
-    <div v-if="isLoading" class="text-center">
-      <div class="animate-spin h-12 w-12 mx-auto"></div>
+    <div v-if="isLoading">
+      <h2 class="text-2xl font-bold tracking-tight mb-6">My Books</h2>
+
+      <!-- Currently Reading Carousel Skeleton -->
+      <div class="mb-8">
+        <div class="space-y-4">
+          <div class="flex gap-4 overflow-hidden">
+            <div v-for="n in 3" :key="n" class="shrink-0">
+              <Skeleton class="w-[200px] h-[300px] rounded-lg" />
+              <div class="mt-2 space-y-2">
+                <Skeleton class="h-4 w-3/4" />
+                <Skeleton class="h-3 w-1/2" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Book Status Navigation Skeleton -->
+      <div class="mb-8">
+        <div class="flex gap-4">
+          <Skeleton v-for="n in 4" :key="n" class="h-10 w-24" />
+        </div>
+      </div>
+
+      <!-- Lists Section Skeleton -->
+      <div class="space-y-4">
+        <div v-for="n in 3" :key="n" class="border rounded-lg">
+          <div class="p-6">
+            <Skeleton class="h-6 w-1/4 mb-2" />
+            <Skeleton class="h-4 w-1/3" />
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -46,12 +78,7 @@ onMounted(async () => {
         <BookStatusNavigation />
 
         <ListsSection />
-
-        <!-- Reading Activity Navigation -->
-        <ReadingActivityNavigation />
       </div>
     </div>
   </div>
 </template>
-
-<style scoped></style>

@@ -51,7 +51,8 @@ export const useListsStore = defineStore('lists', () => {
 
   const createList = async (
     name: string,
-    isPublic: boolean = false
+    isPublic: boolean = false,
+    details: string = ''
   ): Promise<List> => {
     if (!authStore.user) {
       throw new Error('User must be logged in to create a list');
@@ -66,6 +67,7 @@ export const useListsStore = defineStore('lists', () => {
         .insert({
           user_id: authStore.user.id,
           name,
+          details,
           is_public: isPublic,
         })
         .select()
@@ -94,7 +96,8 @@ export const useListsStore = defineStore('lists', () => {
   const editListDetails = async (
     listId: string,
     name: string,
-    details: string
+    details: string,
+    isPublic?: boolean
   ): Promise<void> => {
     if (!authStore.user) {
       throw new Error('User must be logged in to edit a list');
@@ -104,9 +107,19 @@ export const useListsStore = defineStore('lists', () => {
       loading.value = true;
       error.value = null;
 
+      const updateData: { name: string; details: string; is_public?: boolean } =
+        {
+          name,
+          details,
+        };
+
+      if (typeof isPublic !== 'undefined') {
+        updateData.is_public = isPublic;
+      }
+
       const { error: updateError } = await supabase
         .from('lists')
-        .update({ name, details })
+        .update(updateData)
         .eq('id', listId)
         .eq('user_id', authStore.user.id);
 
@@ -114,7 +127,7 @@ export const useListsStore = defineStore('lists', () => {
 
       // Update local state
       lists.value = lists.value.map((list) =>
-        list.id === listId ? { ...list, name, details } : list
+        list.id === listId ? { ...list, ...updateData } : list
       );
     } catch (err: any) {
       error.value = err.message;
