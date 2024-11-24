@@ -19,27 +19,60 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const storeInitialized = ref(false);
 
+// Safe book data for template
+const bookData = computed(() => {
+  if (!book.value) return null;
+  return {
+    ...book.value,
+    basicInfo: {
+      isbn: book.value.isbn,
+      title: book.value.title,
+      authors: book.value.authors,
+      image: book.value.image,
+      date_published: book.value.date_published,
+      publisher: book.value.publisher,
+      pages: book.value.pages,
+    } as BookBasicInfo,
+  };
+});
+
 // Get the book's status from the store
 const bookStatus = computed({
   get: () => {
-    if (!book.value || !storeInitialized.value) return '';
-    return userBooksStore.getUserBookStatus(book.value.isbn);
+    if (!bookData.value || !storeInitialized.value) return '';
+    return userBooksStore.getUserBookStatus(bookData.value.isbn);
   },
   set: async (newStatus: BookStatus) => {
-    if (!book.value || !authStore.user?.id) return;
+    if (!bookData.value || !authStore.user?.id) return;
     try {
-      const bookInfo: BookBasicInfo = {
-        isbn: book.value.isbn,
-        title: book.value.title,
-        authors: book.value.authors,
-        image: book.value.image,
-        date_published: book.value.date_published,
-        publisher: book.value.publisher,
-        pages: book.value.pages,
-      };
-      await userBooksStore.updateBookStatus(bookInfo, newStatus);
+      await userBooksStore.updateBookStatus(
+        bookData.value.basicInfo,
+        newStatus
+      );
     } catch (err) {
       console.error('Failed to update book status:', err);
+    }
+  },
+});
+
+// Compute if rating should be shown
+const showRating = computed(
+  () => bookStatus.value === 'read' || bookStatus.value === 'did-not-finish'
+);
+
+// Get and set the book's rating
+const bookRating = computed({
+  get: () => {
+    if (!bookData.value || !storeInitialized.value) return null;
+    const rating = userBooksStore.getUserBookRating(bookData.value.isbn);
+    return rating ?? null;
+  },
+  set: async (newRating: number | null) => {
+    if (!bookData.value || !authStore.user?.id) return;
+    try {
+      await userBooksStore.updateBookRating(bookData.value.isbn, newRating);
+    } catch (err) {
+      console.error('Failed to update book rating:', err);
     }
   },
 });
@@ -147,15 +180,15 @@ onMounted(async () => {
     </div>
 
     <!-- Content -->
-    <div v-else-if="book" class="max-w-4xl mx-auto">
+    <div v-else-if="bookData" class="max-w-4xl mx-auto">
       <div class="overflow-hidden">
         <div class="flex flex-col md:flex-row">
           <div class="w-full md:w-1/3 p-6">
             <img
-              :src="book.image"
-              :alt="book.title"
+              :src="bookData.image"
+              :alt="bookData.title"
               class="w-full rounded-lg object-cover mx-auto"
-              @error="book.image = '/default-book-cover.jpg'"
+              @error="bookData.image = '/default-book-cover.jpg'"
             />
             <!-- User Interaction Section --Desktop -->
             <div
@@ -164,19 +197,11 @@ onMounted(async () => {
             >
               <UserBookStatusSelect
                 v-model="bookStatus"
-                :book="{
-                  isbn: book.isbn,
-                  title: book.title,
-                  authors: book.authors,
-                  image: book.image,
-                  date_published: book.date_published,
-                  publisher: book.publisher,
-                  pages: book.pages,
-                }"
+                :book="bookData.basicInfo"
               />
-              <AddToList :isbn="book.isbn" :book="book" />
-              <div class="flex flex-col items-center">
-                <UserRating />
+              <AddToList :isbn="bookData.isbn" :book="bookData" />
+              <div v-if="showRating" class="flex flex-col items-center">
+                <UserRating v-model="bookRating" />
                 <span class="pt-1">Your Rating</span>
               </div>
             </div>
@@ -184,44 +209,50 @@ onMounted(async () => {
 
           <div class="w-full md:w-2/3 p-6">
             <h1 class="text-3xl font-bold mb-4">
-              {{ book.title }}
+              {{ bookData.title }}
             </h1>
             <div class="text-lg text-gray-600 mb-4">
               by
               <router-link
-                :to="`/author/${encodeURIComponent(book.authors.join(', '))}`"
+                :to="`/author/${encodeURIComponent(
+                  bookData.authors.join(', ')
+                )}`"
                 class="flex-shrink-0"
               >
-                <span class="font-medium">{{ book.authors.join(', ') }}</span>
+                <span class="font-medium">{{
+                  bookData.authors.join(', ')
+                }}</span>
               </router-link>
               <div class="py-4">
                 <div class="flex flex-col text-sm text-gray-500">
                   <div>
                     <span class="font-medium mr-2">ISBN:</span>
-                    <span>{{ book.isbn }}</span>
+                    <span>{{ bookData.isbn }}</span>
                   </div>
                   <div>
                     <span class="font-medium mr-2">Publisher:</span>
-                    <span>{{ book.publisher }}</span>
+                    <span>{{ bookData.publisher }}</span>
                   </div>
                   <div>
                     <span class="font-medium mr-2">Year Published:</span>
                     <span>{{
-                      book.date_published ? formatYear(book.date_published) : ''
+                      bookData.date_published
+                        ? formatYear(bookData.date_published)
+                        : ''
                     }}</span>
                   </div>
                   <div>
                     <span class="font-medium mr-2">Pages:</span>
-                    <span>{{ book.pages }}</span>
+                    <span>{{ bookData.pages }}</span>
                   </div>
                   <div class="mt-5">
-                    <p>{{ book.subjects.join(', ') }}</p>
+                    <p>{{ bookData.subjects.join(', ') }}</p>
                   </div>
                 </div>
               </div>
               <Separator />
               <div class="py-4 flex flex-col">
-                <p class="text-md" v-html="book.synopsis"></p>
+                <p class="text-md" v-html="bookData.synopsis"></p>
               </div>
               <!-- User Interaction Section --Mobile -->
               <div
@@ -230,19 +261,11 @@ onMounted(async () => {
               >
                 <UserBookStatusSelect
                   v-model="bookStatus"
-                  :book="{
-                    isbn: book.isbn,
-                    title: book.title,
-                    authors: book.authors,
-                    image: book.image,
-                    date_published: book.date_published,
-                    publisher: book.publisher,
-                    pages: book.pages,
-                  }"
+                  :book="bookData.basicInfo"
                 />
-                <AddToList :isbn="book.isbn" :book="book" />
-                <div class="flex flex-col items-center">
-                  <UserRating />
+                <AddToList :isbn="bookData.isbn" :book="bookData" />
+                <div v-if="showRating" class="flex flex-col items-center">
+                  <UserRating v-model="bookRating" />
                   <span class="pt-1">Your Rating</span>
                 </div>
               </div>

@@ -5,7 +5,8 @@ import UserBookStatusSelect from '@/components/user-books/UserBookStatusSelect.v
 import AddToList from '@/components/user-books/AddToList.vue';
 import UserRating from '@/components/user-books/UserRating.vue';
 import { useAuthStore } from '@/store/auth-store';
-import { ref } from 'vue';
+import { useUserBooksStore } from '@/store/user-books-store';
+import { ref, computed, onMounted } from 'vue';
 
 const props = defineProps<{
   book: Book;
@@ -16,11 +17,45 @@ const emit = defineEmits<{
 }>();
 
 const authStore = useAuthStore();
+const userBooksStore = useUserBooksStore();
 const currentStatus = ref<BookStatus>(props.book.status || '');
+const error = ref<string | null>(null);
+
+// Initialize user rating from the database
+onMounted(() => {
+  if (authStore.user && authStore.userMetadata.username) {
+    const dbRating = userBooksStore.getUserBookRating(props.book.isbn);
+    if (dbRating !== undefined) {
+      props.book.user_rating = dbRating;
+    }
+  }
+});
+
+// Compute if rating should be shown
+const showRating = computed(
+  () =>
+    currentStatus.value === 'read' || currentStatus.value === 'did-not-finish'
+);
+
+// Compute the rating value, ensuring it's either a number or null
+const userRating = computed(() => props.book.user_rating ?? null);
 
 const handleStatusUpdate = (newStatus: BookStatus) => {
   currentStatus.value = newStatus;
   emit('update:status', newStatus);
+};
+
+const handleRatingChange = async (newRating: number | null) => {
+  error.value = null;
+  try {
+    await userBooksStore.updateBookRating(props.book.isbn, newRating);
+    props.book.user_rating = newRating; // Update local state
+  } catch (err: any) {
+    error.value = 'Failed to update rating. Please try again.';
+    console.error('Failed to update book rating:', err);
+    // Revert to previous rating
+    props.book.user_rating = userBooksStore.getUserBookRating(props.book.isbn);
+  }
 };
 
 const formatYear = (dateString: string) => {
@@ -69,12 +104,20 @@ const formatYear = (dateString: string) => {
 
           <div
             v-if="authStore.user && authStore.userMetadata.username"
-            class="flex flex-row"
+            class="flex flex-col gap-2"
           >
-            <span class="text-sm font-semibold text-gray-600 mr-2"
-              >Your Rating:</span
-            >
-            <UserRating v-model="book.userRating" />
+            <div v-if="error" class="text-sm text-red-500">
+              {{ error }}
+            </div>
+            <div v-if="showRating" class="flex flex-row">
+              <span class="text-sm font-semibold text-gray-600 mr-2"
+                >Your Rating:</span
+              >
+              <UserRating
+                v-model="userRating"
+                @update:model-value="handleRatingChange"
+              />
+            </div>
           </div>
         </div>
       </div>

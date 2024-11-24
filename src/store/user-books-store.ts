@@ -9,7 +9,7 @@ export const useUserBooksStore = defineStore('userBooks', () => {
   const booksMap = ref(new Map<string, UserBook>());
   const loading = ref(false);
   const error = ref<string | null>(null);
-  const statusUpdateInProgress = ref(new Set<string>()); // Track books with status updates in progress
+  const statusUpdateInProgress = ref(new Set<string>());
   const authStore = useAuthStore();
 
   const userBooks = computed(() => Array.from(booksMap.value.values()));
@@ -29,11 +29,8 @@ export const useUserBooksStore = defineStore('userBooks', () => {
       }
     });
 
-    // Sort each group based on status
     Object.keys(groups).forEach((status) => {
       if (status === 'read') {
-        // Sort read books by date_finished (most recent first)
-        // If date_finished is null, use date_added as fallback
         groups[status as BookStatus].sort((a, b) => {
           const dateA = a.date_finished
             ? new Date(a.date_finished).getTime()
@@ -44,7 +41,6 @@ export const useUserBooksStore = defineStore('userBooks', () => {
           return dateB - dateA;
         });
       } else {
-        // Sort other statuses by date_added (most recent first)
         groups[status as BookStatus].sort(
           (a, b) =>
             new Date(b.date_added).getTime() - new Date(a.date_added).getTime()
@@ -118,6 +114,50 @@ export const useUserBooksStore = defineStore('userBooks', () => {
 
       existingBook.current_page = currentPage;
       existingBook.date_updated = now;
+      booksMap.value.set(isbn, existingBook);
+      booksMap.value = new Map(booksMap.value);
+    } catch (err: any) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const getUserBookRating = (isbn: string): number | null => {
+    return booksMap.value.get(isbn)?.user_rating ?? null;
+  };
+
+  const updateBookRating = async (
+    isbn: string,
+    rating: number | null
+  ): Promise<void> => {
+    if (!authStore.user)
+      throw new Error('User must be logged in to update book rating');
+
+    try {
+      loading.value = true;
+      error.value = null;
+
+      const now = new Date().toISOString();
+      const existingBook = booksMap.value.get(isbn);
+
+      if (!existingBook) {
+        throw new Error(updateBookErrorMessages.bookNotFound);
+      }
+
+      const { error: updateError } = await supabase
+        .from('user_books')
+        .update({
+          user_rating: rating,
+          date_updated: now,
+        })
+        .eq('user_id', authStore.user.id)
+        .eq('isbn', isbn);
+
+      if (updateError) throw updateError;
+
+      existingBook.user_rating = rating;
       existingBook.date_updated = now;
       booksMap.value.set(isbn, existingBook);
       booksMap.value = new Map(booksMap.value);
@@ -141,7 +181,6 @@ export const useUserBooksStore = defineStore('userBooks', () => {
 
     const isbn = typeof bookOrIsbn === 'string' ? bookOrIsbn : bookOrIsbn.isbn;
 
-    // If a status update is already in progress for this book, skip
     if (statusUpdateInProgress.value.has(isbn)) {
       return;
     }
@@ -155,7 +194,6 @@ export const useUserBooksStore = defineStore('userBooks', () => {
       const existingBook = booksMap.value.get(isbn);
 
       if (existingBook) {
-        // Skip if status hasn't changed
         if (existingBook.status === status) {
           return;
         }
@@ -164,19 +202,15 @@ export const useUserBooksStore = defineStore('userBooks', () => {
           status,
           date_updated: now,
         };
-        // Set date_finished when status is 'read'
         if (status === 'read') {
           updateData.date_finished = now;
         } else {
-          updateData.date_finished = null; // Clear date_finished for other statuses
+          updateData.date_finished = null;
         }
 
         const { error: updateError } = await supabase
           .from('user_books')
-          .update({
-            status,
-            date_updated: now,
-          })
+          .update(updateData)
           .eq('user_id', userId)
           .eq('isbn', isbn);
 
@@ -184,8 +218,8 @@ export const useUserBooksStore = defineStore('userBooks', () => {
 
         existingBook.status = status;
         existingBook.date_updated = now;
-        booksMap.value.set(isbn, existingBook);
         existingBook.date_finished = status === 'read' ? now : null;
+        booksMap.value.set(isbn, existingBook);
       } else {
         if (typeof bookOrIsbn === 'string') {
           throw new Error('Full book info required for new books');
@@ -205,6 +239,7 @@ export const useUserBooksStore = defineStore('userBooks', () => {
             date_published: bookOrIsbn.date_published,
             publisher: bookOrIsbn.publisher,
             pages: bookOrIsbn.pages,
+            user_rating: null,
           })
           .select()
           .single();
@@ -224,6 +259,7 @@ export const useUserBooksStore = defineStore('userBooks', () => {
       statusUpdateInProgress.value.delete(isbn);
     }
   };
+
   const deleteBook = async (isbn: string): Promise<void> => {
     if (!authStore.user)
       throw new Error('User must be logged in to delete a book');
@@ -256,6 +292,8 @@ export const useUserBooksStore = defineStore('userBooks', () => {
     loading,
     error,
     getUserBookStatus,
+    getUserBookRating,
+    updateBookRating,
     updateBookStatus,
     updateBookProgress,
     fetchUserBooks,

@@ -23,9 +23,10 @@ export const useListsStore = defineStore('lists', () => {
 
   const userLists = computed(() => lists.value);
 
-  const fetchUserLists = async (): Promise<void> => {
+  const fetchUserListsAndBooks = async (): Promise<void> => {
     if (!authStore.user) {
       lists.value = [];
+      booksInLists.value = {};
       return;
     }
 
@@ -33,21 +34,86 @@ export const useListsStore = defineStore('lists', () => {
       loading.value = true;
       error.value = null;
 
-      const { data, error: fetchError } = await supabase
+      // Step 1: Fetch lists with their books_in_lists entries
+      const { data: listsWithBooks, error: fetchError } = await supabase
         .from('lists')
-        .select('*')
+        .select(
+          `
+          *,
+          books_in_lists (
+            isbn
+          )
+        `
+        )
         .eq('user_id', authStore.user.id)
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      lists.value = data as List[];
+      // Process lists and collect all unique ISBNs
+      const processedLists: List[] = [];
+      const isbnSet = new Set<string>();
+
+      listsWithBooks?.forEach((listData: any) => {
+        const { books_in_lists, ...listInfo } = listData;
+        processedLists.push(listInfo);
+
+        // Collect ISBNs
+        books_in_lists.forEach((item: { isbn: string }) => {
+          isbnSet.add(item.isbn);
+        });
+      });
+
+      lists.value = processedLists;
+
+      // If there are no books, we're done
+      if (isbnSet.size === 0) {
+        processedLists.forEach((list) => {
+          booksInLists.value[list.id] = [];
+        });
+        return;
+      }
+
+      // Step 2: Fetch all user books in a single query
+      const { data: userBooksData, error: booksError } = await supabase
+        .from('user_books')
+        .select('*')
+        .eq('user_id', authStore.user.id)
+        .in('isbn', Array.from(isbnSet));
+
+      if (booksError) throw booksError;
+
+      // Create a map of ISBN to book data for quick lookup
+      const booksByIsbn = new Map(
+        (userBooksData || []).map((book: UserBook) => [book.isbn, book])
+      );
+
+      // Organize books by list
+      const processedBooks: Record<string, UserBook[]> = {};
+
+      listsWithBooks?.forEach((listData: any) => {
+        const books: UserBook[] = [];
+        listData.books_in_lists.forEach((item: { isbn: string }) => {
+          const book = booksByIsbn.get(item.isbn);
+          if (book) {
+            books.push(book);
+          }
+        });
+        processedBooks[listData.id] = books;
+      });
+
+      booksInLists.value = processedBooks;
     } catch (err: any) {
       error.value = err.message;
       throw err;
     } finally {
       loading.value = false;
     }
+  };
+
+  // Add this function back for backward compatibility
+  const fetchUserLists = async (): Promise<void> => {
+    await fetchUserListsAndBooks();
   };
 
   const createList = async (
@@ -179,9 +245,20 @@ export const useListsStore = defineStore('lists', () => {
 
       if (addError) throw addError;
 
-      // Update local state
-      const books = await getBooksInList(listId);
-      booksInLists.value[listId] = books;
+      // Fetch the book details and update local state
+      const { data: bookData, error: bookError } = await supabase
+        .from('user_books')
+        .select('*')
+        .eq('isbn', isbn)
+        .eq('user_id', authStore.user.id)
+        .single();
+
+      if (bookError) throw bookError;
+
+      if (!booksInLists.value[listId]) {
+        booksInLists.value[listId] = [];
+      }
+      booksInLists.value[listId].push(bookData as UserBook);
     } catch (err: any) {
       error.value = err.message;
       throw err;
@@ -252,47 +329,8 @@ export const useListsStore = defineStore('lists', () => {
     }
   };
 
-  const getBooksInList = async (listId: string): Promise<UserBook[]> => {
-    try {
-      const { data: bookListData, error: bookListError } = await supabase
-        .from('books_in_lists')
-        .select('isbn')
-        .eq('list_id', listId);
-
-      if (bookListError) throw bookListError;
-
-      if (!bookListData || bookListData.length === 0) {
-        booksInLists.value[listId] = [];
-        return [];
-      }
-
-      const isbns = bookListData.map((item) => item.isbn);
-      const { data: bookData, error: bookError } = await supabase
-        .from('user_books')
-        .select('*')
-        .in('isbn', isbns)
-        .eq('user_id', authStore.user?.id);
-
-      if (bookError) throw bookError;
-
-      const books = bookData as UserBook[];
-      booksInLists.value[listId] = books;
-      return books;
-    } catch (err: any) {
-      error.value = err.message;
-      throw err;
-    }
-  };
-
   const initialize = async (): Promise<void> => {
-    try {
-      loading.value = true;
-      await fetchUserLists();
-      // Load books for all lists
-      await Promise.all(lists.value.map((list) => getBooksInList(list.id)));
-    } finally {
-      loading.value = false;
-    }
+    await fetchUserListsAndBooks();
   };
 
   return {
@@ -300,14 +338,13 @@ export const useListsStore = defineStore('lists', () => {
     loading,
     error,
     booksInLists,
-    fetchUserLists,
     createList,
     editListDetails,
     addBookToList,
     removeBookFromList,
     deleteList,
-    getBooksInList,
     initialize,
     isBookInList,
+    fetchUserLists, // Add this back to the returned object
   };
 });

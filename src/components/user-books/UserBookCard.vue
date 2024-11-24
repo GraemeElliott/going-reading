@@ -24,6 +24,11 @@ const userBooksStore = useUserBooksStore();
 const error = ref<string | null>(null);
 const currentStatus = ref<BookStatus>(props.book.status);
 
+// Compute if rating should be shown
+const showRating = computed(
+  () => props.book.status === 'read' || props.book.status === 'did-not-finish'
+);
+
 // Compute the basic book info for UserBookStatus
 const bookBasicInfo = computed(() => ({
   isbn: props.book.isbn,
@@ -74,6 +79,19 @@ const handleStatusChange = async (newStatus: BookStatus) => {
     isUpdating.value = false;
   }
 };
+
+const handleRatingChange = async (newRating: number | null) => {
+  error.value = null;
+  try {
+    await userBooksStore.updateBookRating(props.book.isbn, newRating);
+    props.book.user_rating = newRating; // Update local state
+  } catch (err: any) {
+    error.value = 'Failed to update rating. Please try again.';
+    console.error('Failed to update book rating:', err);
+    // Revert to previous rating
+    props.book.user_rating = userBooksStore.getUserBookRating(props.book.isbn);
+  }
+};
 </script>
 
 <template>
@@ -115,11 +133,14 @@ const handleStatusChange = async (newStatus: BookStatus) => {
                   {{ new Date(book.date_finished).toLocaleDateString() }}
                 </p>
 
-                <div class="flex flex-row">
+                <div v-if="showRating" class="flex flex-row">
                   <span class="text-sm font-semibold text-gray-600 mr-2"
                     >Your Rating:</span
                   >
-                  <UserRating v-model="book.userRating" />
+                  <UserRating
+                    v-model="book.user_rating"
+                    @update:model-value="handleRatingChange"
+                  />
                 </div>
               </div>
             </div>
@@ -135,11 +156,14 @@ const handleStatusChange = async (newStatus: BookStatus) => {
           Finished: {{ new Date(book.date_finished).toLocaleDateString() }}
         </p>
 
-        <div class="flex flex-row">
+        <div v-if="showRating" class="flex flex-row">
           <span class="text-sm font-semibold text-gray-600 mr-2"
             >Your Rating:</span
           >
-          <UserRating v-model="book.userRating" />
+          <UserRating
+            v-model="book.user_rating"
+            @update:model-value="handleRatingChange"
+          />
         </div>
       </div>
       <div class="flex flex-wrap gap-2 mt-5 md:w-[180px]">

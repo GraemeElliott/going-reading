@@ -51,7 +51,7 @@ export interface Book {
     binding: string;
   }[];
   // User-specific properties
-  userRating?: number;
+  user_rating?: number | null;
   status?: BookStatus;
   average_rating?: number;
 }
@@ -68,7 +68,7 @@ export interface UserBook {
   date_added: string;
   date_updated: string;
   date_finished?: string | null;
-  userRating?: number;
+  user_rating: number | null;
   date_published?: string;
   publisher?: string;
   pages?: number;
