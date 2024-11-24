@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Separator } from '@/components/ui/separator';
-import { useListsStore } from '@/store/lists-store';
-import ListCard from '@/components/lists/ListCard.vue';
+import { Separator } from '../../components/ui/separator';
+import { useListsStore } from '../../store/lists-store';
+import ListCard from '../../components/lists/ListCard.vue';
 import CreateList from '../lists/CreateList.vue';
-import type { UserBook } from '@/types/book';
+import type { UserBook } from '../../types/book';
 
 const listsStore = useListsStore();
 const expandedLists = ref<Set<string>>(new Set());
@@ -13,7 +13,7 @@ const loadingBooks = ref<Set<string>>(new Set());
 const handleNewList = async (listId: string) => {
   loadingBooks.value.add(listId);
   try {
-    await listsStore.getBooksInList(listId);
+    await listsStore.fetchUserListsAndBooks();
   } catch (error) {
     console.error('Error loading books for new list:', error);
   } finally {
@@ -36,7 +36,7 @@ const handleListDeleted = (listId: string) => {
 const handleBookListUpdated = async (listId: string) => {
   loadingBooks.value.add(listId);
   try {
-    await listsStore.getBooksInList(listId);
+    await listsStore.fetchUserListsAndBooks();
   } finally {
     loadingBooks.value.delete(listId);
   }

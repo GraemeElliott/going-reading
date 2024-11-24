@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { supabase } from '@/supabase/supabase';
+import { supabase } from '../supabase/supabase';
 import { useAuthStore } from './auth-store';
-import type { UserBook } from '@/types/book';
+import type { UserBook } from '../types/book';
 
 interface List {
   id: string;
@@ -345,6 +345,7 @@ export const useListsStore = defineStore('lists', () => {
     deleteList,
     initialize,
     isBookInList,
-    fetchUserLists, // Add this back to the returned object
+    fetchUserLists,
+    fetchUserListsAndBooks, // Added this to the returned object
   };
 });
