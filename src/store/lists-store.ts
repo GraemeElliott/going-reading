@@ -3,6 +3,10 @@ import { ref, computed } from 'vue';
 import { supabase } from '../supabase/supabase';
 import { useAuthStore } from './auth-store';
 import type { UserBook } from '../types/book';
+import {
+  ReadingActivityService,
+  ActivityType,
+} from '../services/activityService';
 
 interface List {
   id: string;
@@ -34,7 +38,6 @@ export const useListsStore = defineStore('lists', () => {
       loading.value = true;
       error.value = null;
 
-      // Step 1: Fetch lists with their books_in_lists entries
       const { data: listsWithBooks, error: fetchError } = await supabase
         .from('lists')
         .select(
@@ -50,7 +53,6 @@ export const useListsStore = defineStore('lists', () => {
 
       if (fetchError) throw fetchError;
 
-      // Process lists and collect all unique ISBNs
       const processedLists: List[] = [];
       const isbnSet = new Set<string>();
 
@@ -58,7 +60,6 @@ export const useListsStore = defineStore('lists', () => {
         const { books_in_lists, ...listInfo } = listData;
         processedLists.push(listInfo);
 
-        // Collect ISBNs
         books_in_lists.forEach((item: { isbn: string }) => {
           isbnSet.add(item.isbn);
         });
@@ -66,7 +67,6 @@ export const useListsStore = defineStore('lists', () => {
 
       lists.value = processedLists;
 
-      // If there are no books, we're done
       if (isbnSet.size === 0) {
         processedLists.forEach((list) => {
           booksInLists.value[list.id] = [];
@@ -74,7 +74,6 @@ export const useListsStore = defineStore('lists', () => {
         return;
       }
 
-      // Step 2: Fetch all user books in a single query
       const { data: userBooksData, error: booksError } = await supabase
         .from('user_books')
         .select('*')
@@ -83,12 +82,10 @@ export const useListsStore = defineStore('lists', () => {
 
       if (booksError) throw booksError;
 
-      // Create a map of ISBN to book data for quick lookup
       const booksByIsbn = new Map(
         (userBooksData || []).map((book: UserBook) => [book.isbn, book])
       );
 
-      // Organize books by list
       const processedBooks: Record<string, UserBook[]> = {};
 
       listsWithBooks?.forEach((listData: any) => {
@@ -111,7 +108,6 @@ export const useListsStore = defineStore('lists', () => {
     }
   };
 
-  // Add this function back for backward compatibility
   const fetchUserLists = async (): Promise<void> => {
     await fetchUserListsAndBooks();
   };
@@ -245,7 +241,6 @@ export const useListsStore = defineStore('lists', () => {
 
       if (addError) throw addError;
 
-      // Fetch the book details and update local state
       const { data: bookData, error: bookError } = await supabase
         .from('user_books')
         .select('*')
@@ -259,6 +254,21 @@ export const useListsStore = defineStore('lists', () => {
         booksInLists.value[listId] = [];
       }
       booksInLists.value[listId].push(bookData as UserBook);
+
+      // Get list name for activity log
+      const list = lists.value.find((l) => l.id === listId);
+
+      // Log book added to list
+      await ReadingActivityService.logActivity(
+        authStore.user.id,
+        ActivityType.BOOK_ADDED_TO_LIST,
+        isbn,
+        {
+          listId,
+          listName: list?.name,
+          bookTitle: (bookData as UserBook).title,
+        }
+      );
     } catch (err: any) {
       error.value = err.message;
       throw err;
@@ -279,6 +289,10 @@ export const useListsStore = defineStore('lists', () => {
       loading.value = true;
       error.value = null;
 
+      // Get book and list info before removal for activity log
+      const book = booksInLists.value[listId]?.find((b) => b.isbn === isbn);
+      const list = lists.value.find((l) => l.id === listId);
+
       const { error: removeError } = await supabase
         .from('books_in_lists')
         .delete()
@@ -294,6 +308,18 @@ export const useListsStore = defineStore('lists', () => {
           (book) => book.isbn !== isbn
         );
       }
+
+      // Log book removed from list
+      await ReadingActivityService.logActivity(
+        authStore.user.id,
+        ActivityType.BOOK_REMOVED_FROM_LIST,
+        isbn,
+        {
+          listId,
+          listName: list?.name,
+          bookTitle: book?.title,
+        }
+      );
     } catch (err: any) {
       error.value = err.message;
       throw err;
@@ -311,6 +337,9 @@ export const useListsStore = defineStore('lists', () => {
       loading.value = true;
       error.value = null;
 
+      // Get list info before deletion for activity log
+      const list = lists.value.find((l) => l.id === listId);
+
       const { error: deleteError } = await supabase
         .from('lists')
         .delete()
@@ -318,6 +347,17 @@ export const useListsStore = defineStore('lists', () => {
         .eq('user_id', authStore.user.id);
 
       if (deleteError) throw deleteError;
+
+      // Log list deletion before removing from local state
+      await ReadingActivityService.logActivity(
+        authStore.user.id,
+        ActivityType.LIST_DELETED,
+        undefined,
+        {
+          listId,
+          listName: list?.name,
+        }
+      );
 
       lists.value = lists.value.filter((list) => list.id !== listId);
       delete booksInLists.value[listId];
@@ -346,6 +386,6 @@ export const useListsStore = defineStore('lists', () => {
     initialize,
     isBookInList,
     fetchUserLists,
-    fetchUserListsAndBooks, // Added this to the returned object
+    fetchUserListsAndBooks,
   };
 });

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from 'vue';
-import { useAuthStore } from '@/store/auth-store';
-import { useUserBooksStore } from '@/store/user-books-store';
-import { useListsStore } from '@/store/lists-store';
-import { Skeleton } from '@/components/ui/skeleton';
-import CurrentlyReadingCarousel from '@/components/my-books/CurrentlyReadingCarousel.vue';
-import BookStatusNavigation from '@/components/my-books/BookStatusNavigation.vue';
-import ListsSection from '@/components/my-books/ListsSection.vue';
+import { useAuthStore } from '../store/auth-store';
+import { useUserBooksStore } from '../store/user-books-store';
+import { useListsStore } from '../store/lists-store';
+import { Skeleton } from '../components/ui/skeleton';
+import CurrentlyReadingCarousel from '../components/my-books/CurrentlyReadingCarousel.vue';
+import BookStatusNavigation from '../components/my-books/BookStatusNavigation.vue';
+import ListsSection from '../components/my-books/ListsSection.vue';
+import ReadingActivityFeed from '../components/my-books/ReadingActivityFeed.vue';
 
 const authStore = useAuthStore();
 const userBooksStore = useUserBooksStore();
@@ -63,11 +64,22 @@ onMounted(async () => {
       </div>
 
       <!-- Lists Section Skeleton -->
-      <div class="space-y-4">
+      <div class="space-y-4 mb-8">
         <div v-for="n in 3" :key="n" class="border rounded-lg">
           <div class="p-6">
             <Skeleton class="h-6 w-1/4 mb-2" />
             <Skeleton class="h-4 w-1/3" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Reading Activity Feed Skeleton -->
+      <div class="space-y-4">
+        <Skeleton class="h-6 w-1/4 mb-4" />
+        <div v-for="n in 5" :key="n" class="border rounded-lg">
+          <div class="p-4">
+            <Skeleton class="h-4 w-3/4 mb-2" />
+            <Skeleton class="h-3 w-1/4" />
           </div>
         </div>
       </div>
@@ -83,15 +95,20 @@ onMounted(async () => {
     <!-- Content -->
     <div v-else>
       <!-- User Header -->
-      <div class="mb-8">
-        <h2 class="text-2xl font-bold tracking-tight mb-6">My Books</h2>
+      <div class="space-y-8">
+        <h2 class="text-2xl font-bold tracking-tight">My Books</h2>
+
         <!-- Currently Reading Carousel -->
         <CurrentlyReadingCarousel />
 
         <!-- Book Status Navigation -->
         <BookStatusNavigation />
 
+        <!-- Lists Section -->
         <ListsSection />
+
+        <!-- Reading Activity Feed -->
+        <ReadingActivityFeed />
       </div>
     </div>
   </div>

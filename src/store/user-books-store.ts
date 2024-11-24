@@ -1,9 +1,14 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { supabase } from '@/supabase/supabase';
+import { supabase } from '../supabase/supabase';
 import type { BookStatus, UserBook, BookBasicInfo } from '../types/book';
 import { useAuthStore } from './auth-store';
 import { updateBookErrorMessages } from './error-handler';
+import {
+  ReadingActivityService,
+  ActivityType,
+} from '../services/activityService';
+import { ReadingProgressService } from '../services/readingProgressService';
 
 export const useUserBooksStore = defineStore('userBooks', () => {
   const booksMap = ref(new Map<string, UserBook>());
@@ -116,6 +121,26 @@ export const useUserBooksStore = defineStore('userBooks', () => {
       existingBook.date_updated = now;
       booksMap.value.set(isbn, existingBook);
       booksMap.value = new Map(booksMap.value);
+
+      // Log to both activity feed and progress tracking
+      await Promise.all([
+        ReadingActivityService.logActivity(
+          authStore.user.id,
+          ActivityType.BOOK_PROGRESS_UPDATED,
+          isbn,
+          {
+            currentPage,
+            totalPages: existingBook.pages,
+            bookTitle: existingBook.title,
+          }
+        ),
+        ReadingProgressService.logProgress(
+          authStore.user.id,
+          isbn,
+          currentPage,
+          existingBook.pages || 0
+        ),
+      ]);
     } catch (err: any) {
       error.value = err.message;
       throw err;
@@ -161,6 +186,19 @@ export const useUserBooksStore = defineStore('userBooks', () => {
       existingBook.date_updated = now;
       booksMap.value.set(isbn, existingBook);
       booksMap.value = new Map(booksMap.value);
+
+      // Log the rating update
+      if (rating !== null) {
+        await ReadingActivityService.logActivity(
+          authStore.user.id,
+          ActivityType.BOOK_RATED,
+          isbn,
+          {
+            rating,
+            bookTitle: existingBook.title,
+          }
+        );
+      }
     } catch (err: any) {
       error.value = err.message;
       throw err;
@@ -216,10 +254,23 @@ export const useUserBooksStore = defineStore('userBooks', () => {
 
         if (updateError) throw updateError;
 
+        const oldStatus = existingBook.status;
         existingBook.status = status;
         existingBook.date_updated = now;
         existingBook.date_finished = status === 'read' ? now : null;
         booksMap.value.set(isbn, existingBook);
+
+        // Log status change
+        await ReadingActivityService.logActivity(
+          userId,
+          ActivityType.BOOK_STATUS_CHANGED,
+          isbn,
+          {
+            oldStatus,
+            newStatus: status,
+            bookTitle: existingBook.title,
+          }
+        );
       } else {
         if (typeof bookOrIsbn === 'string') {
           throw new Error('Full book info required for new books');
@@ -247,6 +298,27 @@ export const useUserBooksStore = defineStore('userBooks', () => {
         if (insertError) throw insertError;
         if (newBook) {
           booksMap.value.set(bookOrIsbn.isbn, newBook as UserBook);
+
+          // Log new book added
+          await ReadingActivityService.logActivity(
+            userId,
+            ActivityType.BOOK_ADDED,
+            bookOrIsbn.isbn,
+            {
+              newStatus: status,
+              bookTitle: bookOrIsbn.title,
+            }
+          );
+
+          // Initialize progress tracking if pages are available
+          if (bookOrIsbn.pages) {
+            await ReadingProgressService.logProgress(
+              userId,
+              bookOrIsbn.isbn,
+              0, // Start at page 0
+              bookOrIsbn.pages
+            );
+          }
         }
       }
 
@@ -268,6 +340,11 @@ export const useUserBooksStore = defineStore('userBooks', () => {
       loading.value = true;
       error.value = null;
 
+      const existingBook = booksMap.value.get(isbn);
+      if (!existingBook) {
+        throw new Error(updateBookErrorMessages.bookNotFound);
+      }
+
       const { error: deleteError } = await supabase
         .from('user_books')
         .delete()
@@ -275,6 +352,16 @@ export const useUserBooksStore = defineStore('userBooks', () => {
         .eq('isbn', isbn);
 
       if (deleteError) throw deleteError;
+
+      // Log book deletion before removing from local state
+      await ReadingActivityService.logActivity(
+        authStore.user.id,
+        ActivityType.BOOK_DELETED,
+        isbn,
+        {
+          bookTitle: existingBook.title,
+        }
+      );
 
       booksMap.value.delete(isbn);
       booksMap.value = new Map(booksMap.value);
