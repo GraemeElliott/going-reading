@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import UserBookStatusSelect from '@/components/user-books/UserBookStatusSelect.vue';
 import AddToList from '@/components/user-books/AddToList.vue';
 import UserRating from '@/components/user-books/UserRating.vue';
+import UserBookActivity from '@/components/user-books/UserBookActivity.vue';
 import { useAuthStore } from '@/store/auth-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -271,6 +272,12 @@ onMounted(async () => {
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Book Activity Feed -->
+        <div v-if="authStore.user?.id" class="px-6">
+          <Separator class="my-6" />
+          <UserBookActivity :isbn="bookData.isbn" />
         </div>
       </div>
     </div>
