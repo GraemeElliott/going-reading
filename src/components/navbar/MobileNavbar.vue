@@ -54,8 +54,14 @@ const handleNavClick = () => {
 <template>
   <div class="lg:hidden">
     <!-- Mobile Header -->
-    <div class="top-0 left-0 right-0 z-50 bg-inherit sticky">
-      <div class="flex items-center justify-between">
+    <div class="fixed top-0 left-0 right-0 z-50 bg-inherit">
+      <div
+        class="flex items-center justify-between px-5 py-5"
+        :class="{
+          'bg-white text-black': !darkModeStore.darkMode,
+          'bg-gray-900 text-white': darkModeStore.darkMode,
+        }"
+      >
         <router-link
           to="/"
           @click="
@@ -89,10 +95,17 @@ const handleNavClick = () => {
       </div>
     </div>
 
+    <!-- Add spacing to account for fixed header -->
+    <div class="h-20"></div>
+
     <!-- Mobile Navbar Overlay -->
     <div
       v-if="isMenuOpen"
-      class="fixed inset-0 z-40 transition-all duration-300 mx-5"
+      class="fixed inset-0 z-40 transition-all duration-300 px-5 w-full overflow-hidden"
+      :class="{
+        'bg-white text-black': !darkModeStore.darkMode,
+        'bg-gray-900 text-white': darkModeStore.darkMode,
+      }"
     >
       <div class="mt-20 h-full flex flex-col">
         <!-- User Profile Section -->
@@ -244,14 +257,6 @@ const handleNavClick = () => {
           <button class="flex-shrink-0" @click="emit('toggleSearch')">
             <font-awesome-icon icon="fa-solid fa-xmark" class="fa-lg pl-2" />
           </button>
-        </div>
-      </div>
-
-      <!-- Your existing header content -->
-      <div class="top-0 left-0 right-0 z-40 bg-inherit sticky">
-        <!-- Changed z-index to be lower than search -->
-        <div class="flex items-center justify-between">
-          <!-- ... rest of your header content ... -->
         </div>
       </div>
     </div>

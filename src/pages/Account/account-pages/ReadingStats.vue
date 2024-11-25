@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import ReadingStats from '@/components/account/ReadingStats.vue';
+import UserReadingStats from '@/components/account/user-reading-stats/UserReadingStats.vue';
 </script>
 
 <template>
-  <ReadingStats />
+  <UserReadingStats />
 </template>

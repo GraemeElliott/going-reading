@@ -7,7 +7,6 @@ import { Skeleton } from '../components/ui/skeleton';
 import CurrentlyReadingCarousel from '../components/my-books/CurrentlyReadingCarousel.vue';
 import BookStatusNavigation from '../components/my-books/BookStatusNavigation.vue';
 import ListsSection from '../components/my-books/ListsSection.vue';
-import ReadingActivityFeed from '@/components/my-books/ReadingActivityFeed.vue';
 
 const authStore = useAuthStore();
 const userBooksStore = useUserBooksStore();
