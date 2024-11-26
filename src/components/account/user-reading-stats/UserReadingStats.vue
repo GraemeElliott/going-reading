@@ -16,8 +16,10 @@ const userBooksStore = useUserBooksStore();
 
 onMounted(async () => {
   await userBooksStore.initialize();
+  await userAnalyticsStore.updateMonthlyData();
 });
 </script>
+
 <template>
   <div class="space-y-4">
     <div class="grid gap-4 md:grid-cols-2">
@@ -25,13 +27,13 @@ onMounted(async () => {
         <CardHeader
           class="flex flex-row items-center justify-between space-y-0 pb-2"
         >
-          <CardTitle class="text-sm font-medium"> Total Books Read </CardTitle>
+          <CardTitle class="text-sm font-medium">Total Books Read</CardTitle>
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">
             {{ userAnalyticsStore.formattedTotalBooksRead }}
           </div>
-          <p class="text-xs text-muted-foreground">+20.1% from last month</p>
+          <p class="text-xs text-muted-foreground">Total books completed</p>
         </CardContent>
       </Card>
 
@@ -39,7 +41,7 @@ onMounted(async () => {
         <CardHeader
           class="flex flex-row items-center justify-between space-y-0 pb-2"
         >
-          <CardTitle class="text-sm font-medium"> Total Pages Read </CardTitle>
+          <CardTitle class="text-sm font-medium">Total Pages Read</CardTitle>
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">
@@ -52,8 +54,8 @@ onMounted(async () => {
 
     <Card>
       <CardHeader>
-        <CardTitle>Total Books Read By Month</CardTitle>
-        <CardDescription>Your reading progress over time</CardDescription>
+        <CardTitle>Reading Progress</CardTitle>
+        <CardDescription>Track your reading activity over time</CardDescription>
       </CardHeader>
       <CardContent>
         <ReadingChart />

@@ -18,7 +18,6 @@ export class ReadingProgressService {
       if (error) throw error;
     } catch (err) {
       console.error('Error logging reading progress:', err);
-      // We don't want to throw here as logging failures shouldn't break the app
     }
   }
 
@@ -84,25 +83,59 @@ export class ReadingProgressService {
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
 
-      // Calculate total pages read by summing the differences
-      let totalPages = 0;
       const progressByBook: { [key: string]: number } = {};
-
-      data?.forEach((progress) => {
+      return (data || []).reduce((total, progress) => {
         const lastProgress = progressByBook[progress.book_isbn] || 0;
         const pagesRead = progress.pages_read - lastProgress;
-        if (pagesRead > 0) {
-          totalPages += pagesRead;
-        }
         progressByBook[progress.book_isbn] = progress.pages_read;
-      });
-
-      return totalPages;
+        return total + (pagesRead > 0 ? pagesRead : 0);
+      }, 0);
     } catch (err) {
       console.error('Error calculating total pages read:', err);
+      return 0;
+    }
+  }
+
+  static async getMonthlyPagesRead(
+    userId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<number> {
+    try {
+      const { data: progressData, error } = await supabase
+        .from('reading_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('recorded_at', startDate.toISOString())
+        .lte('recorded_at', endDate.toISOString())
+        .order('recorded_at', { ascending: true });
+
+      if (error) throw error;
+      if (!progressData?.length) return 0;
+
+      const progressByBook: { [key: string]: any[] } = {};
+      progressData.forEach((entry) => {
+        if (!progressByBook[entry.book_isbn]) {
+          progressByBook[entry.book_isbn] = [];
+        }
+        progressByBook[entry.book_isbn].push(entry);
+      });
+
+      return Object.values(progressByBook).reduce((total, bookEntries) => {
+        let previousPages = 0;
+        bookEntries.forEach((entry) => {
+          const pagesRead = entry.pages_read - previousPages;
+          if (pagesRead > 0) {
+            total += pagesRead;
+          }
+          previousPages = entry.pages_read;
+        });
+        return total;
+      }, 0);
+    } catch (err) {
+      console.error('Error calculating monthly pages read:', err);
       return 0;
     }
   }
