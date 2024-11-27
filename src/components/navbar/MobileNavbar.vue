@@ -173,36 +173,6 @@ const handleNavClick = () => {
               <p class="text-md font-medium">My Books</p>
             </div>
           </router-link>
-          <router-link
-            v-if="authStore.user && authStore.userMetadata.username"
-            :to="`/user/${authStore.userMetadata.username}/lists`"
-            class="w-full"
-            @click="handleNavClick"
-          >
-            <div class="flex flex-row space-x-3 items-center">
-              <font-awesome-icon icon="fa-solid fa-bookmark" class="fa-xl" />
-              <p class="text-md font-medium">My Lists</p>
-            </div>
-          </router-link>
-          <router-link
-            v-if="authStore.user && authStore.userMetadata.username"
-            :to="`/user/${authStore.userMetadata.username}/my-stats`"
-            class="w-full"
-            @click="handleNavClick"
-          >
-            <div class="flex flex-row space-x-3 items-center">
-              <font-awesome-icon icon="fa-solid fa-chart-line" class="fa-xl" />
-              <p class="text-md font-medium">My Stats</p>
-            </div>
-          </router-link>
-          <div
-            v-if="authStore.user && authStore.userMetadata.username"
-            class="flex flex-row space-x-3 items-center w-full"
-            @click="handleNavClick"
-          >
-            <font-awesome-icon icon="fa-solid fa-bell" class="fa-xl" />
-            <p class="text-md font-medium">Notifications</p>
-          </div>
 
           <!-- Admin Links -->
           <router-link

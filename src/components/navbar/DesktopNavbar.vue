@@ -4,7 +4,6 @@ import Logo from '@/components/partials/Logo.vue';
 import SignOutButton from '@/components/authentication/SignOutButton.vue';
 import { useAuthStore } from '@/store/auth-store';
 import SearchBar from '@/components/search/SearchBar.vue';
-import { ref, watch } from 'vue';
 
 const authStore = useAuthStore();
 
@@ -33,13 +32,6 @@ const emit = defineEmits<{
           <font-awesome-icon icon="fa-solid fa-book" class="fa-xl" />
         </router-link>
 
-        <font-awesome-icon
-          v-if="authStore.userMetadata && authStore.userMetadata.username"
-          icon="fa-solid fa-chart-line"
-          class="fa-xl"
-          @click="emit('closeMenuIfOpen')"
-        />
-
         <router-link
           v-if="authStore.userMetadata && authStore.userMetadata.username"
           :to="`/user/${authStore.userMetadata.username}/account`"
@@ -47,13 +39,6 @@ const emit = defineEmits<{
         >
           <font-awesome-icon icon="fa-solid fa-user" class="fa-xl" />
         </router-link>
-
-        <font-awesome-icon
-          v-if="authStore.userMetadata && authStore.userMetadata.username"
-          icon="fa-solid fa-bell"
-          class="fa-xl"
-          @click="emit('closeMenuIfOpen')"
-        />
 
         <router-link
           v-if="authStore.userMetadata.isAdmin"
