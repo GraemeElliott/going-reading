@@ -9,47 +9,32 @@ import {
 import { useUserAnalyticsStore } from '@/store/user-analytics-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { onMounted } from 'vue';
-import ReadingChart from './charts/ReadingChart.vue';
+import TotalBooksReadCard from './cards/TotalBooksReadCard.vue';
+import TotalPagesReadCard from './cards/TotalPagesReadCard.vue';
+import CurrentYearBooksReadCard from './cards/CurrentYearBooksReadCard.vue';
+import CurrentYearPagesReadCard from './cards/CurrentYearPagesReadCard.vue';
+import UserReadingProgressChart from './charts/UserReadingProgressChart.vue';
+import UserReadingPagesPerDay from './charts/UserReadingPagesPerDay.vue';
 
 const userAnalyticsStore = useUserAnalyticsStore();
 const userBooksStore = useUserBooksStore();
 
 onMounted(async () => {
   await userBooksStore.initialize();
-  await userAnalyticsStore.updateMonthlyData();
+  // Load yearly data first for the cards
+  await userAnalyticsStore.updateYearlyData();
+  // Then load monthly data for the chart
+  await userAnalyticsStore.updateMonthlyData('by-year');
 });
 </script>
 
 <template>
   <div class="space-y-4">
-    <div class="grid gap-4 md:grid-cols-2">
-      <Card>
-        <CardHeader
-          class="flex flex-row items-center justify-between space-y-0 pb-2"
-        >
-          <CardTitle class="text-sm font-medium">Total Books Read</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div class="text-2xl font-bold">
-            {{ userAnalyticsStore.formattedTotalBooksRead }}
-          </div>
-          <p class="text-xs text-muted-foreground">Total books completed</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader
-          class="flex flex-row items-center justify-between space-y-0 pb-2"
-        >
-          <CardTitle class="text-sm font-medium">Total Pages Read</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div class="text-2xl font-bold">
-            {{ userAnalyticsStore.formattedTotalPagesRead }}
-          </div>
-          <p class="text-xs text-muted-foreground">Pages across all books</p>
-        </CardContent>
-      </Card>
+    <div class="grid gap-4 grid-cols-2">
+      <TotalBooksReadCard />
+      <TotalPagesReadCard />
+      <CurrentYearBooksReadCard />
+      <CurrentYearPagesReadCard />
     </div>
 
     <Card>
@@ -58,7 +43,19 @@ onMounted(async () => {
         <CardDescription>Track your reading activity over time</CardDescription>
       </CardHeader>
       <CardContent>
-        <ReadingChart />
+        <UserReadingProgressChart initial-period="by-year" />
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle>Pages Read By Day</CardTitle>
+        <CardDescription
+          >Pages read per day over the last 14 days</CardDescription
+        >
+      </CardHeader>
+      <CardContent>
+        <UserReadingPagesPerDay />
       </CardContent>
     </Card>
   </div>

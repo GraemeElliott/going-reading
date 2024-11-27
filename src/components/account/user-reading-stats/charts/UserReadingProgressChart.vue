@@ -13,12 +13,15 @@ import {
   ChartOptions,
   Scale,
   CoreScaleOptions,
-  Tick,
 } from 'chart.js';
 import { Chart } from 'vue-chartjs';
 import { useUserAnalyticsStore } from '@/store/user-analytics-store';
 import { ref, onMounted, watch, computed } from 'vue';
-import type { TimePeriod } from '@/store/user-analytics-store';
+import type { TimePeriod, ReadingData } from '@/store/user-analytics-store';
+
+const props = defineProps<{
+  initialPeriod: TimePeriod;
+}>();
 
 ChartJS.register(
   CategoryScale,
@@ -32,12 +35,10 @@ ChartJS.register(
 );
 
 const analyticsStore = useUserAnalyticsStore();
-const selectedPeriod = ref<TimePeriod>('by-year');
+const selectedPeriod = ref<TimePeriod>(props.initialPeriod);
 
 const timePeriods = [
   { value: 'by-year', label: 'By Year' },
-  { value: 'month', label: 'Past Month' },
-  { value: '3months', label: 'Past 3 Months' },
   { value: '6months', label: 'Past 6 Months' },
 ] as const;
 
@@ -53,6 +54,7 @@ type Dataset = {
   barPercentage?: number;
   categoryPercentage?: number;
   fill?: boolean;
+  pointStyle?: string;
   pointRadius?: number;
   pointHoverRadius?: number;
   tension?: number;
@@ -85,10 +87,9 @@ const chartData = ref<{
       fill: false,
       borderColor: 'rgb(0, 0, 0)',
       backgroundColor: 'rgb(0, 0, 0)',
-      borderWidth: 2,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      tension: 0.2,
+      borderWidth: 3,
+      pointStyle: 'circle',
+      pointHoverRadius: 2,
       order: 1,
       yAxisID: 'y1',
     },
@@ -123,6 +124,19 @@ const chartOptions = computed(
           padding: 10,
           titleSpacing: 10,
           bodySpacing: 5,
+          backgroundColor: 'rgba(255,255,255, 1)',
+          titleColor: 'rgb(0, 0, 0)',
+          bodyColor: 'rgb(0, 0, 0)',
+          titleFont: {
+            size: 26,
+          },
+          bodyFont: {
+            size: 12.5,
+          },
+          boxPadding: 10,
+          borderWidth: 1,
+          borderColor: 'rgba(220,220,220, 1)',
+          usePointStyle: true,
           callbacks: {
             label: function (context: any) {
               const label = context.dataset.label || '';
@@ -184,12 +198,14 @@ const chartOptions = computed(
 );
 
 const updateChartData = () => {
-  const labels = analyticsStore.monthlyData.map((data) => data.name);
+  const labels = analyticsStore.monthlyData.map(
+    (data: ReadingData) => data.name
+  );
   const booksData = analyticsStore.monthlyData.map(
-    (data) => data['Total Books Read']
+    (data: ReadingData) => data['Total Books Read']
   );
   const pagesData = analyticsStore.monthlyData.map(
-    (data) => data['Pages Read']
+    (data: ReadingData) => data['Pages Read']
   );
 
   chartData.value = {
@@ -204,8 +220,8 @@ const updateChartData = () => {
       {
         ...chartData.value.datasets[1],
         data: pagesData,
-        pointRadius: isYearlyView.value ? 6 : 4,
-        pointHoverRadius: isYearlyView.value ? 8 : 6,
+        pointRadius: isYearlyView.value ? 2 : 1.5,
+        pointHoverRadius: isYearlyView.value ? 3 : 2.5,
       } as Dataset,
     ],
   };
@@ -216,14 +232,10 @@ onMounted(async () => {
   updateChartData();
 });
 
-watch(() => analyticsStore.monthlyData, updateChartData, { deep: true });
 watch(selectedPeriod, () =>
   analyticsStore.updateMonthlyData(selectedPeriod.value)
 );
-watch(
-  [() => analyticsStore.totalBooksRead, () => analyticsStore.totalPagesRead],
-  () => analyticsStore.updateMonthlyData(selectedPeriod.value)
-);
+watch(() => analyticsStore.monthlyData, updateChartData, { deep: true });
 </script>
 
 <template>

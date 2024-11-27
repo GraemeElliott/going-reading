@@ -8,11 +8,24 @@ export class ReadingProgressService {
     totalPages: number
   ): Promise<void> {
     try {
+      // Get the last progress entry for this book
+      const { data: lastProgress } = await supabase
+        .from('reading_progress')
+        .select('pages_read')
+        .eq('user_id', userId)
+        .eq('book_isbn', bookIsbn)
+        .order('recorded_at', { ascending: false })
+        .limit(1);
+
+      const lastPagesRead = lastProgress?.[0]?.pages_read || 0;
+      const pagesReadInSession = pagesRead - lastPagesRead;
+
       const { error } = await supabase.from('reading_progress').insert({
         user_id: userId,
         book_isbn: bookIsbn,
         pages_read: pagesRead,
         total_pages: totalPages,
+        pages_read_in_session: pagesReadInSession > 0 ? pagesReadInSession : 0,
       });
 
       if (error) throw error;
@@ -71,9 +84,8 @@ export class ReadingProgressService {
     try {
       let query = supabase
         .from('reading_progress')
-        .select('*')
-        .eq('user_id', userId)
-        .order('recorded_at', { ascending: true });
+        .select('pages_read_in_session')
+        .eq('user_id', userId);
 
       if (startDate) {
         query = query.gte('recorded_at', startDate.toISOString());
@@ -85,17 +97,23 @@ export class ReadingProgressService {
       const { data, error } = await query;
       if (error) throw error;
 
-      const progressByBook: { [key: string]: number } = {};
-      return (data || []).reduce((total, progress) => {
-        const lastProgress = progressByBook[progress.book_isbn] || 0;
-        const pagesRead = progress.pages_read - lastProgress;
-        progressByBook[progress.book_isbn] = progress.pages_read;
-        return total + (pagesRead > 0 ? pagesRead : 0);
-      }, 0);
+      return (data || []).reduce(
+        (total, entry) => total + (entry.pages_read_in_session || 0),
+        0
+      );
     } catch (err) {
       console.error('Error calculating total pages read:', err);
       return 0;
     }
+  }
+
+  static async getYearlyPagesRead(
+    userId: string,
+    year: number
+  ): Promise<number> {
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31, 23, 59, 59);
+    return this.getTotalPagesRead(userId, startDate, endDate);
   }
 
   static async getMonthlyPagesRead(
@@ -103,40 +121,6 @@ export class ReadingProgressService {
     startDate: Date,
     endDate: Date
   ): Promise<number> {
-    try {
-      const { data: progressData, error } = await supabase
-        .from('reading_progress')
-        .select('*')
-        .eq('user_id', userId)
-        .gte('recorded_at', startDate.toISOString())
-        .lte('recorded_at', endDate.toISOString())
-        .order('recorded_at', { ascending: true });
-
-      if (error) throw error;
-      if (!progressData?.length) return 0;
-
-      const progressByBook: { [key: string]: any[] } = {};
-      progressData.forEach((entry) => {
-        if (!progressByBook[entry.book_isbn]) {
-          progressByBook[entry.book_isbn] = [];
-        }
-        progressByBook[entry.book_isbn].push(entry);
-      });
-
-      return Object.values(progressByBook).reduce((total, bookEntries) => {
-        let previousPages = 0;
-        bookEntries.forEach((entry) => {
-          const pagesRead = entry.pages_read - previousPages;
-          if (pagesRead > 0) {
-            total += pagesRead;
-          }
-          previousPages = entry.pages_read;
-        });
-        return total;
-      }, 0);
-    } catch (err) {
-      console.error('Error calculating monthly pages read:', err);
-      return 0;
-    }
+    return this.getTotalPagesRead(userId, startDate, endDate);
   }
 }

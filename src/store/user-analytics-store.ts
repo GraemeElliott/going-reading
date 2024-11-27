@@ -3,13 +3,21 @@ import { computed, ref } from 'vue';
 import { useUserBooksStore } from './user-books-store';
 import { ReadingProgressService } from '../services/readingProgressService';
 import { useAuthStore } from './auth-store';
+import { supabase } from '../supabase/supabase';
 
 const formatter = new Intl.NumberFormat('en-US');
 
-interface ReadingData {
+export interface ReadingData {
   name: string;
   'Total Books Read': number;
   'Pages Read': number;
+}
+
+interface ProgressEntry {
+  book_isbn: string;
+  pages_read: number;
+  pages_read_in_session: number;
+  recorded_at: string;
 }
 
 export type TimePeriod = 'month' | '3months' | '6months' | 'by-year';
@@ -18,6 +26,7 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
   const userBooksStore = useUserBooksStore();
   const authStore = useAuthStore();
   const monthlyData = ref<ReadingData[]>([]);
+  const yearlyData = ref<ReadingData[]>([]);
 
   const totalBooksRead = computed(
     () => userBooksStore.groupedBooks.read.length
@@ -51,23 +60,6 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
     return max + 5;
   });
 
-  async function calculateYearlyPagesRead(
-    year: number,
-    userId: string
-  ): Promise<number> {
-    let yearlyPages = 0;
-    for (let month = 0; month < 12; month++) {
-      const startDate = new Date(year, month, 1);
-      const endDate = new Date(year, month + 1, 0, 23, 59, 59);
-      yearlyPages += await ReadingProgressService.getMonthlyPagesRead(
-        userId,
-        startDate,
-        endDate
-      );
-    }
-    return yearlyPages;
-  }
-
   async function getYearlyData(): Promise<ReadingData[]> {
     try {
       const currentYear = new Date().getFullYear();
@@ -75,6 +67,9 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
 
       return await Promise.all(
         years.map(async (year) => {
+          const startDate = new Date(year, 0, 1);
+          const endDate = new Date(year, 11, 31, 23, 59, 59);
+
           const booksReadThisYear = userBooksStore.groupedBooks.read.filter(
             (book) => {
               if (!book.date_finished) return false;
@@ -82,9 +77,19 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
             }
           );
 
-          const yearlyPages = await calculateYearlyPagesRead(
-            year,
-            authStore.user?.id || ''
+          // Get total pages read in the year using pages_read_in_session
+          const { data: progressData, error } = await supabase
+            .from('reading_progress')
+            .select('pages_read_in_session')
+            .eq('user_id', authStore.user?.id || '')
+            .gte('recorded_at', startDate.toISOString())
+            .lte('recorded_at', endDate.toISOString());
+
+          if (error) throw error;
+
+          const yearlyPages = (progressData || []).reduce(
+            (total, entry) => total + (entry.pages_read_in_session || 0),
+            0
           );
 
           return {
@@ -109,6 +114,7 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth();
 
+    // Generate months array
     const months = Array.from({ length: monthCount }, (_, i) => {
       let month = currentMonth - (monthCount - 1) + i;
       let year = currentYear;
@@ -119,6 +125,7 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
       return { month, year };
     });
 
+    // Calculate pages read for each month
     return await Promise.all(
       months.map(async ({ month, year }) => {
         const startDate = new Date(year, month, 1);
@@ -135,19 +142,27 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
           }
         );
 
-        const pagesReadThisMonth =
-          await ReadingProgressService.getMonthlyPagesRead(
-            authStore.user?.id || '',
-            startDate,
-            endDate
-          );
+        // Get total pages read in the month using pages_read_in_session
+        const { data: progressData, error } = await supabase
+          .from('reading_progress')
+          .select('pages_read_in_session')
+          .eq('user_id', authStore.user?.id || '')
+          .gte('recorded_at', startDate.toISOString())
+          .lte('recorded_at', endDate.toISOString());
+
+        if (error) throw error;
+
+        const monthlyPagesRead = (progressData || []).reduce(
+          (total, entry) => total + (entry.pages_read_in_session || 0),
+          0
+        );
 
         return {
           name: `${startDate.toLocaleString('default', {
             month: 'short',
           })} ${year}`,
           'Total Books Read': booksReadThisMonth.length,
-          'Pages Read': pagesReadThisMonth,
+          'Pages Read': monthlyPagesRead,
         };
       })
     );
@@ -173,13 +188,24 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
     }
   }
 
+  async function updateYearlyData() {
+    try {
+      yearlyData.value = await getYearlyData();
+    } catch (error) {
+      console.error('Error updating yearly data:', error);
+      yearlyData.value = [];
+    }
+  }
+
   return {
     totalBooksRead,
     totalPagesRead,
     formattedTotalBooksRead,
     formattedTotalPagesRead,
     monthlyData,
+    yearlyData,
     maxMonthlyBooks,
     updateMonthlyData,
+    updateYearlyData,
   };
 });
