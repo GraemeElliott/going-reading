@@ -13,6 +13,8 @@ import {
   ChartOptions,
   Scale,
   CoreScaleOptions,
+  BarController,
+  LineController,
 } from 'chart.js';
 import { Chart } from 'vue-chartjs';
 import { useUserAnalyticsStore } from '@/store/user-analytics-store';
@@ -31,7 +33,9 @@ ChartJS.register(
   PointElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  BarController,
+  LineController
 );
 
 const analyticsStore = useUserAnalyticsStore();
