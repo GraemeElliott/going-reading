@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { useDarkModeStore } from '@/store/store';
+import { useRoute } from 'vue-router';
 import Navbar from './components/navbar/Navbar.vue';
-import Container from '@/components/partials/Container.vue';
 import Footer from '@/components/partials/Footer.vue';
 import Toaster from '@/components/ui/toast/Toaster.vue';
 import { useAuthStore } from '@/store/auth-store';
 import { onMounted } from 'vue';
 
 const authStore = useAuthStore();
-
 const darkModeStore = useDarkModeStore();
+const route = useRoute();
 
 onMounted(() => {
   authStore.initializeAuth();
@@ -24,13 +24,19 @@ onMounted(() => {
     }"
     class="flex flex-col min-h-screen wrapper overflow-x-hidden"
   >
-    <Container>
-      <Navbar />
-      <main class="relative">
+    <Navbar />
+    <main class="relative flex-grow">
+      <div
+        v-if="!route.meta.fullWidth"
+        class="max-w-7xl mx-auto px-6 lg:px-26 xl:px-36"
+      >
         <router-view></router-view>
-        <Toaster />
-      </main>
-    </Container>
+      </div>
+      <div v-else>
+        <router-view></router-view>
+      </div>
+      <Toaster />
+    </main>
     <Footer />
   </div>
 </template>

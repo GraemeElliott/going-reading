@@ -15,6 +15,7 @@ const props = defineProps<{
   totalResults: number;
   isSearching: boolean;
   searchQuery: string;
+  isHome: boolean;
 }>();
 
 const emit = defineEmits(['search-complete']);
@@ -93,10 +94,10 @@ const handleSeeMore = () => {
         <div>
           <p class="font-semibold text-lg">{{ result.name }}</p>
           <p
-            class="text-sm dark:text-gray-400"
+            class="text-sm"
             :class="{
-              'bg-white text-black': !darkModeStore.darkMode,
-              'bg-gray-900 text-white': darkModeStore.darkMode,
+              'text-black': isHome || (!darkModeStore.darkMode && !isHome),
+              'text-gray-400': darkModeStore.darkMode && !isHome,
             }"
           >
             Author
@@ -115,8 +116,8 @@ const handleSeeMore = () => {
           <p
             class="text-sm"
             :class="{
-              'bg-white text-black': !darkModeStore.darkMode,
-              'bg-gray-900 text-white': darkModeStore.darkMode,
+              'text-black': isHome || (!darkModeStore.darkMode && !isHome),
+              'text-gray-400': darkModeStore.darkMode && !isHome,
             }"
           >
             by {{ result.authors.join(', ') }}
@@ -130,6 +131,10 @@ const handleSeeMore = () => {
     <button
       @click="handleSeeMore"
       class="w-full py-3 font-medium text-sm transition-colors"
+      :class="{
+        'text-black': isHome || (!darkModeStore.darkMode && !isHome),
+        'text-white': darkModeStore.darkMode && !isHome,
+      }"
     >
       See more results
     </button>

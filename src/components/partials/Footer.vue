@@ -1,13 +1,15 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div
-    class="flex flex-row relative bottom-0 h-20 items-center mt-auto container px-4 md:px-8 lg:px-16 xl:px-36"
-  >
-    <div>
-      <p>Footer</p>
+  <footer class="bg-[#0F3538] text-white">
+    <div
+      class="flex flex-row relative bottom-0 h-20 items-center mt-auto max-w-7xl mx-auto px-6 lg:px-26 xl:px-36"
+    >
+      <div>
+        <p>Footer</p>
+      </div>
     </div>
-  </div>
+  </footer>
 </template>
 
 <style scoped></style>

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
 import MobileNavMenu from './MobileNavbar.vue';
 import DesktopNavMenu from './DesktopNavbar.vue';
 
+const route = useRoute();
 const isMenuOpen = ref(false);
 const isSearchVisible = ref(false);
 const shouldClearSearch = ref(false);
@@ -34,16 +36,20 @@ const handleSearchComplete = () => {
 </script>
 
 <template>
-  <nav class="lg-px-0 mb-4 lg:mb-8">
+  <nav>
     <MobileNavMenu
       :is-menu-open="isMenuOpen"
       :is-search-visible="isSearchVisible"
       :should-clear-search="shouldClearSearch"
+      :is-home="route.name === 'home'"
       @toggle-menu="toggleMenu"
       @close-menu-if-open="closeMenuIfOpen"
       @toggle-search="toggleSearch"
       @handle-search-complete="handleSearchComplete"
     />
-    <DesktopNavMenu @close-menu-if-open="closeMenuIfOpen" />
+    <DesktopNavMenu
+      :is-home="route.name === 'home'"
+      @close-menu-if-open="closeMenuIfOpen"
+    />
   </nav>
 </template>

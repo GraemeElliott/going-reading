@@ -20,6 +20,10 @@ type SearchType = 'title' | 'author' | 'isbn';
 
 const searchTypes: SearchType[] = ['title', 'author', 'isbn'];
 
+defineProps<{
+  isHome: boolean;
+}>();
+
 const darkModeStore = useDarkModeStore();
 const searchQuery = ref<string>('');
 const searchResults = ref<(Book | Author)[]>([]);
@@ -92,18 +96,18 @@ watch(searchType, () => {
   <div class="relative w-full" ref="searchContainer">
     <div class="flex gap-2">
       <Select :model-value="searchType" @update:model-value="setSearchType">
-        <SelectTrigger class="w-[100px]">
+        <SelectTrigger :class="['w-[100px]']" :isHome="isHome">
           <SelectValue
             :placeholder="
               searchType.charAt(0).toUpperCase() + searchType.slice(1)
             "
           />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent :isHome="isHome">
           <SelectGroup>
-            <SelectItem value="title"> Title </SelectItem>
-            <SelectItem value="author"> Author </SelectItem>
-            <SelectItem value="isbn"> ISBN </SelectItem>
+            <SelectItem value="title" :isHome="isHome"> Title </SelectItem>
+            <SelectItem value="author" :isHome="isHome"> Author </SelectItem>
+            <SelectItem value="isbn" :isHome="isHome"> ISBN </SelectItem>
           </SelectGroup>
         </SelectContent>
       </Select>
@@ -116,7 +120,8 @@ watch(searchType, () => {
           v-model="searchQuery"
           type="search"
           placeholder="Search"
-          class="pl-8 w-full"
+          :class="['pl-8 w-full']"
+          :isHome="isHome"
           @focus="handleFocus"
           @blur="handleBlur"
         />
@@ -129,8 +134,9 @@ watch(searchType, () => {
           "
           class="absolute w-full left-0 right-0 mt-2 border border-gray-200 shadow-lg z-50 rounded-md overflow-hidden"
           :class="{
-            'bg-white text-black': !darkModeStore.darkMode,
-            'bg-gray-900 text-white hover:bg-gray-900': darkModeStore.darkMode,
+            'bg-white text-black': !darkModeStore.darkMode || isHome,
+            'bg-gray-900 text-white hover:bg-gray-900':
+              darkModeStore.darkMode && !isHome,
           }"
         >
           <SearchBarResults
@@ -139,6 +145,7 @@ watch(searchType, () => {
             :totalResults="totalResults"
             :isSearching="isSearching"
             :searchType="searchType"
+            :isHome="isHome"
             @search-complete="clearSearch"
           />
         </div>

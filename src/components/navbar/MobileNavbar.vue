@@ -18,6 +18,7 @@ const props = defineProps<{
   isMenuOpen: boolean;
   isSearchVisible: boolean;
   shouldClearSearch: boolean;
+  isHome: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -221,6 +222,7 @@ const handleNavClick = () => {
           <div class="flex-grow">
             <SearchBar
               ref="searchBarRef"
+              :isHome="isHome"
               @search-complete="emit('handleSearchComplete')"
             />
           </div>
