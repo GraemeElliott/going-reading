@@ -22,11 +22,10 @@ import { registerFormSchema } from '@/store/form-validation-schemas';
 import router from '@/router/router';
 import { ref } from 'vue';
 import { useAuthStore } from '@/store/auth-store';
-
 import { registrationErrorMessages } from '@/store/error-handler';
-
+import { useDarkModeStore } from '@/store/store';
+const darkModeStore = useDarkModeStore();
 const authStore = useAuthStore();
-
 const { handleSubmit, resetForm } = useForm({
   validationSchema: registerFormSchema,
 });
@@ -56,7 +55,6 @@ const onSubmit = handleSubmit(async (formData) => {
   }
 });
 </script>
-
 <template>
   <TabsContent value="register">
     <Card class="h-full border-none">
@@ -143,3 +141,11 @@ const onSubmit = handleSubmit(async (formData) => {
     </Card>
   </TabsContent>
 </template>
+<style scoped>
+:deep(input) {
+  @apply bg-white text-black !important;
+}
+:deep(button) {
+  @apply bg-black text-white !important;
+}
+</style>

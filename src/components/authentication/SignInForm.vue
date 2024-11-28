@@ -22,37 +22,28 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/store/auth-store';
 import { signInFormSchema } from '@/store/form-validation-schemas';
 import { signinErrorMessages } from '@/store/error-handler';
-
 const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
-
 const { handleSubmit, resetForm } = useForm({
   validationSchema: signInFormSchema,
 });
-
 const onSubmit = handleSubmit(async (formData) => {
   try {
     await authStore.handleSignIn(formData);
-
     toast({
       title: 'Logged in',
       description: 'Account successfully logged in.',
       variant: 'success',
       duration: 2000,
     });
-
     let redirectPath = route.query.redirect;
-
     if (Array.isArray(redirectPath)) {
       redirectPath = redirectPath[0];
     }
-
     redirectPath =
       redirectPath || `/user/${authStore.userMetadata.username}/my-books`;
-
     await router.push(redirectPath);
-
     resetForm();
   } catch (error) {
     toast({
@@ -64,7 +55,6 @@ const onSubmit = handleSubmit(async (formData) => {
   }
 });
 </script>
-
 <template>
   <TabsContent value="sign-in">
     <Card class="h-full flex flex-col justify-center border-none">
@@ -74,7 +64,6 @@ const onSubmit = handleSubmit(async (formData) => {
           Sign in to your account to track books and see stats
         </CardDescription>
       </CardHeader>
-
       <form @submit="onSubmit" class="px-2 md:px-4">
         <!-- Email -->
         <FormField v-slot="{ componentField, handleChange }" name="email">
@@ -91,7 +80,6 @@ const onSubmit = handleSubmit(async (formData) => {
             <FormMessage />
           </FormItem>
         </FormField>
-
         <!-- Password -->
         <FormField v-slot="{ componentField, handleChange }" name="password">
           <FormItem>
@@ -106,7 +94,6 @@ const onSubmit = handleSubmit(async (formData) => {
             <FormMessage />
           </FormItem>
         </FormField>
-
         <!-- Submit button -->
         <CardFooter class="flex flex-col mt-7">
           <Button type="submit" class="w-full"> Submit </Button>
@@ -115,3 +102,11 @@ const onSubmit = handleSubmit(async (formData) => {
     </Card>
   </TabsContent>
 </template>
+<style scoped>
+:deep(input) {
+  @apply bg-white text-black !important;
+}
+:deep(button) {
+  @apply bg-black text-white !important;
+}
+</style>
