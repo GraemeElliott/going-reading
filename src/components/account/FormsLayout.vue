@@ -13,9 +13,9 @@ defineProps<{
 <template>
   <div class="space-y-6 pb-16 md:block">
     <div class="space-y-0.5">
-      <h2 class="text-2xl font-bold tracking-tight">My Account</h2>
+      <h2 class="text-2xl font-bold tracking-tight">Account</h2>
       <p class="text-muted-foreground">
-        Manage your account settings and set e-mail preferences.
+        Manage your account settings and view your reading stats.
       </p>
     </div>
     <Separator class="my-6" />

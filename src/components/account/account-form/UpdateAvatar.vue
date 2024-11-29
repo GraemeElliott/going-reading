@@ -1,13 +1,45 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useAuthStore } from '@/store/auth-store';
 import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { updateUserDetailsErrorMessages } from '@/store/error-handler';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const authStore = useAuthStore();
 const selectedAvatar = ref<File | null>(null);
-const previewAvatarUrl = ref(authStore.userMetadata.avatarURL);
+const previewAvatarUrl = ref<string | null>(null);
+const isImageLoaded = ref(false);
+const hasAttemptedLoad = ref(false);
+
+// Cache avatar URL with computed property
+const avatarUrl = computed(
+  () => previewAvatarUrl.value || authStore.userMetadata.avatarURL
+);
+
+// Preload avatar image only if not already loaded
+const preloadAvatar = () => {
+  if (avatarUrl.value && !hasAttemptedLoad.value) {
+    hasAttemptedLoad.value = true;
+    const img = new Image();
+    img.src = avatarUrl.value;
+    img.onload = () => {
+      isImageLoaded.value = true;
+    };
+  }
+};
+
+// Preload avatar when component mounts
+onMounted(preloadAvatar);
+
+// Watch for avatar URL changes
+watch(avatarUrl, (newValue, oldValue) => {
+  if (newValue && newValue !== oldValue) {
+    isImageLoaded.value = false;
+    hasAttemptedLoad.value = false;
+    preloadAvatar();
+  }
+});
 
 const onAvatarSelected = (event: Event) => {
   const files = (event.target as HTMLInputElement).files;
@@ -21,6 +53,7 @@ const onSubmit = async () => {
   if (selectedAvatar.value) {
     try {
       await authStore.updateAvatar(selectedAvatar.value);
+      previewAvatarUrl.value = null;
       toast({
         title: 'Avatar updated',
         description: 'Avatar successfully updated.',
@@ -43,11 +76,20 @@ const onSubmit = async () => {
 <template>
   <form @submit.prevent="onSubmit">
     <div class="flex flex-col items-center gap-4 mb-10">
-      <img
-        :src="previewAvatarUrl"
-        class="w-32 h-32 rounded-full object-cover"
-        alt="User Avatar"
-      />
+      <div class="relative w-32 h-32">
+        <Skeleton
+          v-show="!isImageLoaded"
+          class="w-32 h-32 rounded-full absolute top-0 left-0"
+        />
+        <img
+          :src="avatarUrl"
+          class="w-32 h-32 rounded-full object-cover"
+          :class="{ 'opacity-0': !isImageLoaded }"
+          alt="User Avatar"
+          loading="eager"
+          @load="isImageLoaded = true"
+        />
+      </div>
       <input
         type="file"
         accept="image/*"

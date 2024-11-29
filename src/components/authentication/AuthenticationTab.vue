@@ -2,11 +2,8 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import RegisterForm from '@/components/authentication/RegisterForm.vue';
 import SignInForm from '@/components/authentication/SignInForm.vue';
-import { useAuthStore } from '@/store/auth-store';
-import { Loader2 } from 'lucide-vue-next';
 import { ref } from 'vue';
 
-const authStore = useAuthStore();
 const isLoading = ref(false);
 
 const handleTabChange = async () => {
@@ -25,14 +22,6 @@ const handleTabChange = async () => {
       </TabsList>
 
       <div class="relative h-[650px]">
-        <!-- Loading Overlay -->
-        <div
-          v-if="isLoading"
-          class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 z-50"
-        >
-          <Loader2 class="animate-spin h-8 w-8 text-gray-500" />
-        </div>
-
         <!-- Tab Contents -->
         <div class="h-full overflow-hidden">
           <TabsContent

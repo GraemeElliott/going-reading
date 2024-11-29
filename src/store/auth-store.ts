@@ -7,7 +7,7 @@ import {
   validateRegistrationForm,
   checkIfUsernameExists,
   checkIfEmailExists,
-} from '@/store/auth-utils.js';
+} from '@/store/auth-utils';
 import {
   handleError,
   handleSupabaseError,
@@ -33,6 +33,30 @@ export const useAuthStore = defineStore('auth', () => {
     email: '',
     bio: '',
     isAdmin: false,
+  });
+
+  // Add refs for avatar preloading
+  const preloadedAvatar = ref<HTMLImageElement | null>(null);
+  const isAvatarPreloaded = ref(false);
+
+  // Preload avatar image
+  const preloadAvatar = (url: string) => {
+    if (url && !isAvatarPreloaded.value) {
+      const img = new Image();
+      img.src = url;
+      img.onload = () => {
+        preloadedAvatar.value = img;
+        isAvatarPreloaded.value = true;
+      };
+    }
+  };
+
+  // Computed property to get preloaded avatar URL
+  const preloadedAvatarUrl = computed(() => {
+    if (isAvatarPreloaded.value && preloadedAvatar.value) {
+      return preloadedAvatar.value.src;
+    }
+    return userMetadata.value.avatarURL;
   });
 
   // Handle registration
@@ -90,6 +114,9 @@ export const useAuthStore = defineStore('auth', () => {
           avatarURL: defaultAvatarURL ?? '',
           isAdmin: false,
         };
+
+        // Preload default avatar
+        preloadAvatar(defaultAvatarURL);
       }
 
       errorMessage.value = '';
@@ -128,6 +155,9 @@ export const useAuthStore = defineStore('auth', () => {
             bio: userProfile.bio,
             isAdmin: userProfile.is_admin,
           };
+
+          // Preload avatar on initialization
+          preloadAvatar(userProfile.avatar_url);
         }
 
         if (error) {
@@ -179,6 +209,9 @@ export const useAuthStore = defineStore('auth', () => {
         isAdmin: userProfile.is_admin,
       };
 
+      // Preload avatar when fetching profile
+      preloadAvatar(userProfile.avatar_url);
+
       user.value = { id: userId, email: userProfile.email };
     } catch (err: any) {
       throw new Error(
@@ -226,6 +259,9 @@ export const useAuthStore = defineStore('auth', () => {
         bio: '',
         isAdmin: false,
       };
+      // Reset avatar preload state
+      preloadedAvatar.value = null;
+      isAvatarPreloaded.value = false;
       errorMessage.value = '';
     } catch (err: any) {
       errorMessage.value = handleError(err, logoutErrorMessages.logoutFailed);
@@ -298,6 +334,11 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       userMetadata.value = { ...userMetadata.value, ...newMetadata };
+
+      // If avatar URL is updated, preload the new avatar
+      if (newMetadata.avatarURL) {
+        preloadAvatar(newMetadata.avatarURL);
+      }
     } catch (err: any) {
       errorMessage.value = handleError(
         err,
@@ -330,6 +371,9 @@ export const useAuthStore = defineStore('auth', () => {
         .from('avatars')
         .getPublicUrl(fileName);
       if (publicURLData?.publicUrl) {
+        // Reset preload state before updating
+        preloadedAvatar.value = null;
+        isAvatarPreloaded.value = false;
         await updateAccount({ avatarURL: publicURLData.publicUrl });
       }
     } catch (err: any) {
@@ -369,6 +413,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     userMetadata,
     errorMessage,
+    preloadedAvatarUrl,
     handleRegister,
     initializeAuth,
     handleSignIn,

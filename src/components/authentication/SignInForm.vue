@@ -22,12 +22,15 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/store/auth-store';
 import { signInFormSchema } from '@/store/form-validation-schemas';
 import { signinErrorMessages } from '@/store/error-handler';
+
 const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
+
 const { handleSubmit, resetForm } = useForm({
   validationSchema: signInFormSchema,
 });
+
 const onSubmit = handleSubmit(async (formData) => {
   try {
     await authStore.handleSignIn(formData);
@@ -57,7 +60,7 @@ const onSubmit = handleSubmit(async (formData) => {
 </script>
 <template>
   <TabsContent value="sign-in">
-    <Card class="h-full flex flex-col justify-center border-none">
+    <Card class="h-full flex flex-col border-none">
       <CardHeader class="space-y-1 pl-0 md:p-6">
         <CardTitle class="text-2xl"> Sign in to your account </CardTitle>
         <CardDescription>

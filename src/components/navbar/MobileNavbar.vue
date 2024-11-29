@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import { useDarkModeStore } from '@/store/store';
 import ThemeSwitch from '@/components/navbar/ThemeSwitch.vue';
 import Logo from '@/components/partials/Logo.vue';
@@ -48,8 +48,38 @@ const preloadAvatar = () => {
   }
 };
 
+// Function to toggle body scroll
+const toggleBodyScroll = (disable: boolean) => {
+  if (disable) {
+    document.documentElement.classList.add('overflow-hidden');
+    document.body.classList.add('overflow-hidden');
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+  } else {
+    document.documentElement.classList.remove('overflow-hidden');
+    document.body.classList.remove('overflow-hidden');
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.height = '';
+  }
+};
+
+// Watch for menu state changes
+watch(
+  () => props.isMenuOpen,
+  (newValue) => {
+    toggleBodyScroll(newValue);
+  }
+);
+
 // Preload avatar when component mounts
 onMounted(preloadAvatar);
+
+// Clean up body styles when component unmounts
+onUnmounted(() => {
+  toggleBodyScroll(false);
+});
 
 // Only reset and reload if avatar URL changes
 watch(
@@ -121,19 +151,17 @@ const handleNavClick = () => {
       </div>
     </div>
 
-    <!-- Add spacing to account for fixed header -->
     <div class="h-20"></div>
-
     <!-- Mobile Navbar Overlay -->
     <div
       v-show="isMenuOpen"
-      class="fixed inset-0 z-40 transition-all duration-300 px-5 w-full overflow-hidden"
+      class="fixed inset-0 z-40 transition-all duration-300 px-5 w-full h-full overflow-hidden touch-none"
       :class="{
         'bg-white text-black': !darkModeStore.darkMode,
         'bg-gray-900 text-white': darkModeStore.darkMode,
       }"
     >
-      <div class="mt-20 h-full flex flex-col">
+      <div class="mt-20 h-[calc(100%-5rem)] flex flex-col overflow-y-auto">
         <!-- User Profile Section -->
         <div v-if="userData.username" class="flex flex-row my-5">
           <div class="flex">

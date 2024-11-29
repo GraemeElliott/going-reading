@@ -23,13 +23,15 @@ import router from '@/router/router';
 import { ref } from 'vue';
 import { useAuthStore } from '@/store/auth-store';
 import { registrationErrorMessages } from '@/store/error-handler';
-import { useDarkModeStore } from '@/store/store';
-const darkModeStore = useDarkModeStore();
+
 const authStore = useAuthStore();
+
 const { handleSubmit, resetForm } = useForm({
   validationSchema: registerFormSchema,
 });
+
 const isLoading = ref(false);
+
 const onSubmit = handleSubmit(async (formData) => {
   isLoading.value = true;
   try {

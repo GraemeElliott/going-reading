@@ -59,7 +59,7 @@ const onSubmit = handleSubmit(async (values) => {
       title: `Error`,
       description: `You have failed to create a new list: ${error}.`,
       variant: 'destructive',
-      duration: 4000,
+      duration: 3000,
     });
   }
 });
@@ -132,3 +132,11 @@ const handlePublicToggle = (checked: boolean) => {
     </PopoverContent>
   </Popover>
 </template>
+<style scoped>
+:deep(input) {
+  @apply bg-white text-black !important;
+}
+:deep(textarea) {
+  @apply bg-white text-black !important;
+}
+</style>

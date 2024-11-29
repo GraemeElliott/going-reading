@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -132,7 +132,6 @@ const getBookCount = (): string => {
       }"
     >
       <div class="border-t">
-        <!-- Initial Loading State -->
         <div v-if="loadingBooks" class="divide-y">
           <div v-for="n in 3" :key="n" class="p-4">
             <div class="flex items-center gap-4">
@@ -146,12 +145,10 @@ const getBookCount = (): string => {
           </div>
         </div>
 
-        <!-- Empty State -->
         <div v-else-if="!books?.length" class="p-4 text-center">
           <p class="text-muted-foreground">No books in this list</p>
         </div>
 
-        <!-- Books List -->
         <div v-else class="divide-y">
           <div
             v-for="book in books"

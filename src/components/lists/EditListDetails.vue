@@ -135,3 +135,11 @@ const onSubmit = handleSubmit(async (values) => {
     </PopoverContent>
   </Popover>
 </template>
+<style scoped>
+:deep(input) {
+  @apply bg-white text-black !important;
+}
+:deep(textarea) {
+  @apply bg-white text-black !important;
+}
+</style>

@@ -5,11 +5,13 @@ import Navbar from './components/navbar/Navbar.vue';
 import Footer from '@/components/partials/Footer.vue';
 import Toaster from '@/components/ui/toast/Toaster.vue';
 import { useAuthStore } from '@/store/auth-store';
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 
 const authStore = useAuthStore();
 const darkModeStore = useDarkModeStore();
 const route = useRoute();
+
+const isHome = computed(() => route.name === 'home');
 
 onMounted(() => {
   authStore.initializeAuth();
@@ -37,7 +39,7 @@ onMounted(() => {
       </div>
       <Toaster />
     </main>
-    <Footer />
+    <Footer :is-home="isHome" />
   </div>
 </template>
 
