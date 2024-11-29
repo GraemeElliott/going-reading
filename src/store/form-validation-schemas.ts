@@ -106,3 +106,22 @@ export const listDetailsFormSchema = toTypedSchema(
       .optional(),
   })
 );
+
+// Update Progress Form Schema
+export const updateProgressSchema = toTypedSchema(
+  z.object({
+    currentPage: z
+      .number({
+        required_error: 'Please enter the current page number',
+        invalid_type_error: 'Current page must be a number',
+      })
+      .min(0, 'Current page must be 0 or greater'),
+    timeReadingInMins: z
+      .number({
+        required_error: 'Please enter the time spent reading',
+        invalid_type_error: 'Time must be a number',
+      })
+      .min(0, 'Time must be 0 or greater')
+      .max(1440, 'Time cannot exceed 1,440 minutes'),
+  })
+);

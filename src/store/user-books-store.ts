@@ -90,7 +90,8 @@ export const useUserBooksStore = defineStore('userBooks', () => {
 
   const updateBookProgress = async (
     isbn: string,
-    currentPage: number
+    currentPage: number,
+    timeReadingInMins: number = 0
   ): Promise<void> => {
     if (!authStore.user)
       throw new Error('User must be logged in to update book progress');
@@ -138,7 +139,8 @@ export const useUserBooksStore = defineStore('userBooks', () => {
           authStore.user.id,
           isbn,
           currentPage,
-          existingBook.pages || 0
+          existingBook.pages || 0,
+          timeReadingInMins
         ),
       ]);
     } catch (err: any) {
@@ -316,7 +318,8 @@ export const useUserBooksStore = defineStore('userBooks', () => {
               userId,
               bookOrIsbn.isbn,
               0, // Start at page 0
-              bookOrIsbn.pages
+              bookOrIsbn.pages,
+              0 // Initialize with 0 minutes read
             );
           }
         }

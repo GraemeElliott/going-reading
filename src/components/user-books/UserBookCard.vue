@@ -108,9 +108,12 @@ const handleRatingChange = async (newRating: number | null) => {
           />
         </div>
         <div class="flex-grow min-w-0 space-y-1">
-          <div class="cursor-pointer" @click="navigateToBook">
+          <div class="cursor-pointer">
             <div>
-              <h2 class="font-semibold text-lg break-words w-full">
+              <h2
+                class="font-semibold text-lg break-words w-full"
+                @click="navigateToBook"
+              >
                 {{ book.title }}
               </h2>
               <p class="text-sm font-semibold text-gray-600 mt-1">

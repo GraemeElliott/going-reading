@@ -52,6 +52,12 @@ export const updateBookErrorMessages = {
   bookNotFound: 'Book not found in user library.',
   fullBookInfoRequired: 'Full book info required for new books.',
   unknownError: 'An unknown error occurred. Please try again.',
+  currentPageRequired: 'Please enter the current page number.',
+  timeReadingRequired: 'Please enter the time spent reading.',
+  invalidCurrentPage: 'Current page must be a valid number.',
+  invalidTimeReading: 'Time spent reading must be a valid number.',
+  currentPageExceedsTotal:
+    'Current page cannot be higher than the total number of pages.',
 };
 
 export const updateListErrorMessages = {

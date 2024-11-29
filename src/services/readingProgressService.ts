@@ -5,7 +5,8 @@ export class ReadingProgressService {
     userId: string,
     bookIsbn: string,
     pagesRead: number,
-    totalPages: number
+    totalPages: number,
+    timeReadingInMins?: number
   ): Promise<void> {
     try {
       // Get the last progress entry for this book
@@ -26,6 +27,7 @@ export class ReadingProgressService {
         pages_read: pagesRead,
         total_pages: totalPages,
         pages_read_in_session: pagesReadInSession > 0 ? pagesReadInSession : 0,
+        time_reading_in_session_mins: timeReadingInMins || 0,
       });
 
       if (error) throw error;

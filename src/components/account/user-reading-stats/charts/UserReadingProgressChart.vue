@@ -121,23 +121,26 @@ const chartOptions = computed(
           position: 'top' as const,
           labels: {
             usePointStyle: true,
-            padding: 15,
+            padding: window.innerWidth < 640 ? 8 : 15,
+            font: {
+              size: window.innerWidth < 640 ? 8 : 12,
+            },
           },
         },
         tooltip: {
-          padding: 10,
-          titleSpacing: 10,
-          bodySpacing: 5,
+          padding: window.innerWidth < 640 ? 6 : 10,
+          titleSpacing: window.innerWidth < 640 ? 6 : 10,
+          bodySpacing: window.innerWidth < 640 ? 3 : 5,
           backgroundColor: 'rgba(255,255,255, 1)',
           titleColor: 'rgb(0, 0, 0)',
           bodyColor: 'rgb(0, 0, 0)',
           titleFont: {
-            size: 26,
+            size: window.innerWidth < 640 ? 16 : 26,
           },
           bodyFont: {
-            size: 12.5,
+            size: window.innerWidth < 640 ? 11 : 12.5,
           },
-          boxPadding: 10,
+          boxPadding: window.innerWidth < 640 ? 6 : 10,
           borderWidth: 1,
           borderColor: 'rgba(220,220,220, 1)',
           usePointStyle: true,
@@ -157,10 +160,17 @@ const chartOptions = computed(
             display: false,
           },
           ticks: {
-            maxRotation: 0,
-            minRotation: 0,
+            maxRotation: window.innerWidth < 640 ? 45 : 0,
+            minRotation: window.innerWidth < 640 ? 45 : 0,
             font: {
-              size: isYearlyView.value ? 14 : 12,
+              size:
+                window.innerWidth < 640
+                  ? isYearlyView.value
+                    ? 12
+                    : 10
+                  : isYearlyView.value
+                  ? 14
+                  : 12,
               weight: isYearlyView.value
                 ? ('bold' as const)
                 : ('normal' as const),
@@ -175,10 +185,16 @@ const chartOptions = computed(
             display: true,
             text: isYearlyView.value ? 'Books Read per Year' : 'Books Read',
             padding: { top: 10, bottom: 10 },
+            font: {
+              size: window.innerWidth < 640 ? 11 : 14,
+            },
           },
           ticks: {
             stepSize: 1,
             callback: formatTickValue,
+            font: {
+              size: window.innerWidth < 640 ? 10 : 12,
+            },
           },
         },
         y1: {
@@ -189,12 +205,18 @@ const chartOptions = computed(
             display: true,
             text: isYearlyView.value ? 'Pages Read per Year' : 'Pages Read',
             padding: { top: 10, bottom: 10 },
+            font: {
+              size: window.innerWidth < 640 ? 11 : 14,
+            },
           },
           grid: {
             drawOnChartArea: false,
           },
           ticks: {
             callback: formatTickValue,
+            font: {
+              size: window.innerWidth < 640 ? 10 : 12,
+            },
           },
         },
       },
@@ -258,7 +280,7 @@ watch(() => analyticsStore.monthlyData, updateChartData, { deep: true });
         </option>
       </select>
     </div>
-    <div class="w-full h-[400px]">
+    <div class="w-full h-[250px] sm:h-[400px]">
       <Chart type="bar" :data="chartData" :options="chartOptions" />
     </div>
   </div>

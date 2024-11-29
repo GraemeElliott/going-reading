@@ -13,7 +13,7 @@ import {
   Tick,
 } from 'chart.js';
 import { Line } from 'vue-chartjs';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { ReadingProgressService } from '@/services/readingProgressService';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -33,10 +33,15 @@ const props = defineProps<{
   days?: number;
 }>();
 
-const authStore = useAuthStore();
-const dailyData = ref<{ date: string; pagesRead: number }[]>([]);
+interface ChartDataPoint {
+  date: string;
+  pagesRead: number;
+}
 
-// Chart options optimized for mobile and desktop
+const authStore = useAuthStore();
+const chartData = ref<ChartDataPoint[]>([]);
+const viewMode = ref<'daily' | 'weekly'>('daily');
+
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -69,7 +74,7 @@ const chartOptions = {
         display: false,
       },
       ticks: {
-        maxTicksLimit: 7,
+        maxTicksLimit: viewMode.value === 'weekly' ? 4 : 7,
         maxRotation: 0,
         autoSkip: true,
       },
@@ -77,13 +82,21 @@ const chartOptions = {
     y: {
       type: 'linear' as const,
       beginAtZero: true,
+      title: {
+        display: true,
+        text: 'Pages Read',
+        padding: { top: 10, bottom: 10 },
+        font: {
+          size: window.innerWidth < 640 ? 11 : 14,
+        },
+      },
       grid: {
         color: 'rgba(0, 0, 0, 0.1)',
       },
       ticks: {
         maxTicksLimit: 6,
-        callback: function (this: Scale<any>, tickValue: number | string) {
-          return tickValue;
+        callback: function (tickValue: number | string) {
+          return Math.round(Number(tickValue)).toLocaleString('en-US');
         },
       },
     },
@@ -101,49 +114,98 @@ const chartOptions = {
   },
 };
 
-// Process the reading progress data into daily totals
 const processReadingData = (data: any[]) => {
-  const dailyTotals = new Map<string, number>();
+  if (viewMode.value === 'weekly') {
+    const weeklyTotals = new Map<string, number>();
 
-  data.forEach((entry) => {
-    const date = new Date(entry.recorded_at).toLocaleDateString('en-GB', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-    const currentTotal = dailyTotals.get(date) || 0;
-    dailyTotals.set(date, currentTotal + (entry.pages_read_in_session || 0));
-  });
+    data.forEach((entry) => {
+      const date = new Date(entry.recorded_at);
+      date.setDate(date.getDate() - date.getDay());
+      const weekKey = date.toLocaleDateString('en-GB', {
+        month: 'short',
+        day: 'numeric',
+      });
 
-  // Fill in missing dates with 0
-  const result = [];
-  const endDate = new Date();
-  const startDate = new Date(
-    Date.now() - (props.days || 14) * 24 * 60 * 60 * 1000
-  );
+      const currentTotal = weeklyTotals.get(weekKey) || 0;
+      weeklyTotals.set(
+        weekKey,
+        currentTotal + (entry.pages_read_in_session || 0)
+      );
+    });
 
-  for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
-    const dateStr = d.toLocaleDateString('en-GB', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric', // Added year here to match the format above
+    const result = [];
+    const endDate = new Date();
+    const startDate = new Date();
+    // Set to 28 days (4 weeks) for weekly view
+    startDate.setDate(startDate.getDate() - 28);
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      const weekStartDate = new Date(currentDate);
+      weekStartDate.setDate(weekStartDate.getDate() - weekStartDate.getDay());
+
+      const weekKey = weekStartDate.toLocaleDateString('en-GB', {
+        month: 'short',
+        day: 'numeric',
+      });
+
+      result.push({
+        date: weekKey,
+        pagesRead: weeklyTotals.get(weekKey) || 0,
+      });
+
+      currentDate.setDate(currentDate.getDate() + 7);
+    }
+
+    return result;
+  } else {
+    const dailyTotals = new Map<string, number>();
+
+    data.forEach((entry) => {
+      const date = new Date(entry.recorded_at);
+      const dateKey = date.toLocaleDateString('en-GB', {
+        month: 'short',
+        day: 'numeric',
+      });
+
+      const currentTotal = dailyTotals.get(dateKey) || 0;
+      dailyTotals.set(
+        dateKey,
+        currentTotal + (entry.pages_read_in_session || 0)
+      );
     });
-    result.push({
-      date: dateStr,
-      pagesRead: dailyTotals.get(dateStr) || 0,
-    });
+
+    const result = [];
+    const endDate = new Date();
+    const startDate = new Date(
+      Date.now() - (props.days || 14) * 24 * 60 * 60 * 1000
+    );
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      const dateKey = currentDate.toLocaleDateString('en-GB', {
+        month: 'short',
+        day: 'numeric',
+      });
+
+      result.push({
+        date: dateKey,
+        pagesRead: dailyTotals.get(dateKey) || 0,
+      });
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return result;
   }
-
-  return result;
 };
 
-// Computed chart data
-const chartData = computed(() => ({
-  labels: dailyData.value.map((d) => d.date),
+const computedChartData = computed(() => ({
+  labels: chartData.value.map((d: ChartDataPoint) => d.date),
   datasets: [
     {
       label: 'Pages Read',
-      data: dailyData.value.map((d) => d.pagesRead),
+      data: chartData.value.map((d: ChartDataPoint) => d.pagesRead),
       fill: 'start',
       backgroundColor: 'rgba(0, 124, 137, 0.5)',
       borderColor: 'rgb(0, 124, 137)',
@@ -152,17 +214,23 @@ const chartData = computed(() => ({
   ],
 }));
 
-// Fetch and process the data
 const fetchData = async () => {
   if (!authStore.user?.id) return;
 
+  // Use 28 days for weekly view to ensure we have 4 weeks of data
+  const daysToFetch = viewMode.value === 'weekly' ? 28 : props.days || 14;
+
   const data = await ReadingProgressService.getRecentProgress(
     authStore.user.id,
-    props.days || 14
+    daysToFetch
   );
 
-  dailyData.value = processReadingData(data);
+  chartData.value = processReadingData(data);
 };
+
+watch(viewMode, () => {
+  fetchData();
+});
 
 onMounted(() => {
   fetchData();
@@ -170,29 +238,24 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="chart-container">
-    <Line
-      v-if="dailyData.length > 0"
-      :data="chartData"
-      :options="chartOptions"
-    />
+  <div class="space-y-4">
+    <div class="flex justify-end">
+      <select
+        v-model="viewMode"
+        class="block rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-gray-100 dark:ring-gray-700"
+      >
+        <option value="daily">Daily View</option>
+        <option value="weekly">Weekly View</option>
+      </select>
+    </div>
+    <div
+      class="relative w-full min-h-[250px] sm:min-h-[300px] h-[40vh] sm:h-[50vh] max-h-[500px]"
+    >
+      <Line
+        v-if="chartData.length > 0"
+        :data="computedChartData"
+        :options="chartOptions"
+      />
+    </div>
   </div>
 </template>
-
-<style scoped>
-.chart-container {
-  position: relative;
-  min-height: 300px;
-  height: 50vh;
-  max-height: 500px;
-  width: 100%;
-}
-
-/* Responsive adjustments */
-@media (max-width: 640px) {
-  .chart-container {
-    min-height: 250px;
-    height: 40vh;
-  }
-}
-</style>

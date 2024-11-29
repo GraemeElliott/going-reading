@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import { useDarkModeStore } from '@/store/store';
 import ThemeSwitch from '@/components/navbar/ThemeSwitch.vue';
 import Logo from '@/components/partials/Logo.vue';
@@ -12,7 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 const darkModeStore = useDarkModeStore();
 const authStore = useAuthStore();
 const searchBarRef = ref();
-const hasComponentLoaded = ref(false);
+const isImageLoaded = ref(false);
+const hasAttemptedLoad = ref(false);
 
 const props = defineProps<{
   isMenuOpen: boolean;
@@ -28,11 +29,36 @@ const emit = defineEmits<{
   (e: 'handleSearchComplete'): void;
 }>();
 
+// Cache user data with computed properties
+const userData = computed(() => ({
+  username: authStore.userMetadata.username,
+  avatarURL: authStore.userMetadata.avatarURL,
+  isAdmin: authStore.userMetadata.isAdmin,
+}));
+
+// Preload avatar image only if not already loaded
+const preloadAvatar = () => {
+  if (userData.value.avatarURL && !hasAttemptedLoad.value) {
+    hasAttemptedLoad.value = true;
+    const img = new Image();
+    img.src = userData.value.avatarURL;
+    img.onload = () => {
+      isImageLoaded.value = true;
+    };
+  }
+};
+
+// Preload avatar when component mounts
+onMounted(preloadAvatar);
+
+// Only reset and reload if avatar URL changes
 watch(
-  () => props.isMenuOpen,
-  (newValue) => {
-    if (newValue) {
-      hasComponentLoaded.value = false;
+  () => userData.value.avatarURL,
+  (newValue, oldValue) => {
+    if (newValue && newValue !== oldValue) {
+      isImageLoaded.value = false;
+      hasAttemptedLoad.value = false;
+      preloadAvatar();
     }
   }
 );
@@ -55,12 +81,13 @@ const handleNavClick = () => {
 <template>
   <div class="lg:hidden">
     <!-- Mobile Header -->
-    <div class="fixed top-0 left-0 right-0 z-50 bg-inherit">
+    <div class="fixed top-0 left-0 right-0 z-50">
       <div
         class="flex items-center justify-between px-5 py-5"
         :class="{
-          'bg-white text-black': !darkModeStore.darkMode,
-          'bg-gray-900 text-white': darkModeStore.darkMode,
+          'bg-[#0F3538] text-white': isHome,
+          'bg-white text-black': !isHome && !darkModeStore.darkMode,
+          'bg-gray-900 text-white': !isHome && darkModeStore.darkMode,
         }"
       >
         <router-link
@@ -79,17 +106,15 @@ const handleNavClick = () => {
             v-if="!isMenuOpen"
             icon="fa-solid fa-magnifying-glass"
             class="fa-lg hover:cursor-pointer"
+            :class="{ 'text-white': isHome }"
             @click="emit('toggleSearch')"
           />
           <ThemeSwitch />
-          <button
-            v-if="authStore.userMetadata.username"
-            @click="emit('toggleMenu')"
-            link
-          >
+          <button v-if="userData.username" @click="emit('toggleMenu')" link>
             <font-awesome-icon
               :icon="isMenuOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars'"
               class="fa-xl w-6"
+              :class="{ 'text-white': isHome }"
             />
           </button>
         </div>
@@ -101,7 +126,7 @@ const handleNavClick = () => {
 
     <!-- Mobile Navbar Overlay -->
     <div
-      v-if="isMenuOpen"
+      v-show="isMenuOpen"
       class="fixed inset-0 z-40 transition-all duration-300 px-5 w-full overflow-hidden"
       :class="{
         'bg-white text-black': !darkModeStore.darkMode,
@@ -110,51 +135,49 @@ const handleNavClick = () => {
     >
       <div class="mt-20 h-full flex flex-col">
         <!-- User Profile Section -->
-        <div v-if="authStore.userMetadata.username" class="flex flex-row my-5">
-          <!-- Skeleton -->
-          <div v-show="!hasComponentLoaded" class="flex items-center space-x-4">
-            <Skeleton class="h-12 w-12 rounded-full" />
-            <div class="space-y-2">
-              <Skeleton class="h-4 w-[250px]" />
-              <Skeleton class="h-4 w-[200px]" />
-            </div>
-          </div>
-          <!-- User Content -->
-          <div v-show="hasComponentLoaded" class="flex">
+        <div v-if="userData.username" class="flex flex-row my-5">
+          <div class="flex">
             <router-link
-              v-if="authStore.userMetadata.username"
-              :to="`/user/${authStore.userMetadata.username}/account`"
+              :to="`/user/${userData.username}/account`"
               @click="handleNavClick"
+              class="relative"
             >
+              <!-- Skeleton loader for image -->
+              <Skeleton
+                v-show="!isImageLoaded"
+                class="w-20 h-20 rounded-full absolute top-0 left-0"
+              />
               <img
-                :src="authStore.userMetadata.avatarURL"
+                :src="userData.avatarURL"
                 class="w-20 h-20 rounded-full object-cover mr-5"
-                @load="hasComponentLoaded = true"
+                :class="{ 'opacity-0': !isImageLoaded }"
+                alt="User avatar"
+                loading="eager"
+                @load="isImageLoaded = true"
               />
             </router-link>
             <div class="flex flex-col mt-4">
               <router-link
-                v-if="authStore.userMetadata.username"
-                :to="`/user/${authStore.userMetadata.username}/account`"
+                :to="`/user/${userData.username}/account`"
                 @click="handleNavClick"
               >
                 <p class="text-md font-bold">
-                  {{ authStore.userMetadata.username }}
+                  {{ userData.username }}
                 </p>
               </router-link>
               <p class="text-md font-light">
-                {{ authStore.userMetadata.isAdmin ? 'Admin' : 'Reader' }}
+                {{ userData.isAdmin ? 'Admin' : 'Reader' }}
               </p>
             </div>
           </div>
         </div>
-        <Separator v-if="authStore.userMetadata.username" />
+        <Separator v-if="userData.username" />
 
         <!-- Mobile Navigation Links -->
         <div class="flex flex-col my-8 space-y-8 items-center">
           <router-link
-            v-if="authStore.user && authStore.userMetadata.username"
-            :to="`/user/${authStore.userMetadata.username}/account`"
+            v-if="authStore.user && userData.username"
+            :to="`/user/${userData.username}/account`"
             class="w-full"
             @click="handleNavClick"
           >
@@ -164,8 +187,8 @@ const handleNavClick = () => {
             </div>
           </router-link>
           <router-link
-            v-if="authStore.user && authStore.userMetadata.username"
-            :to="`/user/${authStore.userMetadata.username}/my-books`"
+            v-if="authStore.user && userData.username"
+            :to="`/user/${userData.username}/my-books`"
             class="w-full"
             @click="handleNavClick"
           >
@@ -177,7 +200,7 @@ const handleNavClick = () => {
 
           <!-- Admin Links -->
           <router-link
-            v-if="authStore.userMetadata.isAdmin"
+            v-if="userData.isAdmin"
             :to="`/admin/dashboard`"
             class="w-full"
             @click="handleNavClick"
@@ -189,7 +212,7 @@ const handleNavClick = () => {
           </router-link>
         </div>
         <SignOutButton
-          v-if="authStore.userMetadata.username"
+          v-if="userData.username"
           class="flex justify-center w-full"
           @click="handleNavClick"
         />

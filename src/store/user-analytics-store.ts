@@ -11,6 +11,7 @@ export interface ReadingData {
   name: string;
   'Total Books Read': number;
   'Pages Read': number;
+  'Reading Time': number;
 }
 
 interface ProgressEntry {
@@ -27,6 +28,7 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
   const authStore = useAuthStore();
   const monthlyData = ref<ReadingData[]>([]);
   const yearlyData = ref<ReadingData[]>([]);
+  const totalReadingTime = ref<number>(0);
 
   const totalBooksRead = computed(
     () => userBooksStore.groupedBooks.read.length
@@ -53,12 +55,51 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
     formatter.format(totalPagesRead.value)
   );
 
+  function formatReadingTime(minutes: number): string {
+    const days = Math.floor(minutes / (24 * 60));
+    const hours = Math.floor((minutes % (24 * 60)) / 60);
+    const remainingMinutes = Math.floor(minutes % 60);
+
+    const parts = [];
+    if (days > 0) parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
+    if (hours > 0) parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
+    if (remainingMinutes > 0)
+      parts.push(
+        `${remainingMinutes} ${remainingMinutes === 1 ? 'min' : 'mins'}`
+      );
+
+    return parts.join(' ') || '0 mins';
+  }
+
+  const formattedTotalReadingTime = computed(() =>
+    formatReadingTime(totalReadingTime.value)
+  );
+
   const maxMonthlyBooks = computed(() => {
     const max = Math.max(
       ...monthlyData.value.map((data) => data['Total Books Read'])
     );
     return max + 5;
   });
+
+  async function calculateTotalReadingTime() {
+    try {
+      const { data: progressData, error } = await supabase
+        .from('reading_progress')
+        .select('time_reading_in_session_mins')
+        .eq('user_id', authStore.user?.id || '');
+
+      if (error) throw error;
+
+      totalReadingTime.value = (progressData || []).reduce(
+        (total, entry) => total + (entry.time_reading_in_session_mins || 0),
+        0
+      );
+    } catch (error) {
+      console.error('Error calculating total reading time:', error);
+      totalReadingTime.value = 0;
+    }
+  }
 
   async function getYearlyData(): Promise<ReadingData[]> {
     try {
@@ -77,10 +118,10 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
             }
           );
 
-          // Get total pages read in the year using pages_read_in_session
+          // Get total pages read and reading time in the year
           const { data: progressData, error } = await supabase
             .from('reading_progress')
-            .select('pages_read_in_session')
+            .select('pages_read_in_session, time_reading_in_session_mins')
             .eq('user_id', authStore.user?.id || '')
             .gte('recorded_at', startDate.toISOString())
             .lte('recorded_at', endDate.toISOString());
@@ -92,10 +133,16 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
             0
           );
 
+          const yearlyReadingTime = (progressData || []).reduce(
+            (total, entry) => total + (entry.time_reading_in_session_mins || 0),
+            0
+          );
+
           return {
             name: year.toString(),
             'Total Books Read': booksReadThisYear.length,
             'Pages Read': yearlyPages,
+            'Reading Time': yearlyReadingTime,
           };
         })
       );
@@ -106,6 +153,7 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
         name: (currentYear - 4 + i).toString(),
         'Total Books Read': 0,
         'Pages Read': 0,
+        'Reading Time': 0,
       }));
     }
   }
@@ -142,10 +190,10 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
           }
         );
 
-        // Get total pages read in the month using pages_read_in_session
+        // Get total pages read and reading time in the month
         const { data: progressData, error } = await supabase
           .from('reading_progress')
-          .select('pages_read_in_session')
+          .select('pages_read_in_session, time_reading_in_session_mins')
           .eq('user_id', authStore.user?.id || '')
           .gte('recorded_at', startDate.toISOString())
           .lte('recorded_at', endDate.toISOString());
@@ -157,12 +205,18 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
           0
         );
 
+        const monthlyReadingTime = (progressData || []).reduce(
+          (total, entry) => total + (entry.time_reading_in_session_mins || 0),
+          0
+        );
+
         return {
           name: `${startDate.toLocaleString('default', {
             month: 'short',
           })} ${year}`,
           'Total Books Read': booksReadThisMonth.length,
           'Pages Read': monthlyPagesRead,
+          'Reading Time': monthlyReadingTime,
         };
       })
     );
@@ -202,10 +256,13 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
     totalPagesRead,
     formattedTotalBooksRead,
     formattedTotalPagesRead,
+    formattedTotalReadingTime,
+    formatReadingTime,
     monthlyData,
     yearlyData,
     maxMonthlyBooks,
     updateMonthlyData,
     updateYearlyData,
+    calculateTotalReadingTime,
   };
 });

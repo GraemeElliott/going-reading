@@ -15,7 +15,7 @@ const handleClick = (title: string) => {
 </script>
 
 <template>
-  <nav class="flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1">
+  <nav class="flex flex-row flex-wrap gap-2 lg:flex-col lg:gap-1">
     <Button
       v-for="item in items"
       :key="item.title"
@@ -23,7 +23,7 @@ const handleClick = (title: string) => {
       @click="handleClick(item.title)"
       :class="
         cn(
-          'w-full text-left justify-start',
+          'justify-start text-left',
           item.title === selectedOption ? 'bg-gray-100 text-black' : ''
         )
       "
