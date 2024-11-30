@@ -4,6 +4,7 @@ import type {
   APIBookResponse,
   ScoredBook,
   CacheEntry,
+  AuthorBookResponse,
 } from '@/types/book';
 import type { Author } from '@/types/author';
 
@@ -37,31 +38,35 @@ api.interceptors.response.use(
 
 // Utility functions
 const mapAPIBookToBook = (
-  bookData: { book?: APIBookResponse } | APIBookResponse
+  bookData: APIBookResponse | AuthorBookResponse
 ): Book => {
   // Handle nested book structure from author endpoint
-  const book = 'book' in bookData ? bookData.book : bookData;
+  const book: APIBookResponse = 'book' in bookData ? bookData.book : bookData;
+
+  // Default book object
+  const defaultBook: Book = {
+    isbn: '',
+    title: 'Unknown Title',
+    title_long: 'Unknown Title',
+    authors: ['Unknown Author'],
+    image: '/default-book-cover.jpg',
+    date_published: '',
+    synopsis: '',
+    language: 'en',
+    binding: 'Unknown Format',
+    pages: 0,
+    subjects: [],
+    publisher: 'Unknown Publisher',
+    other_isbns: [],
+    overview: '',
+    excerpt: '',
+    msrp: 0,
+    edition: '',
+    dimensions: '',
+  };
+
   if (!book) {
-    return {
-      isbn: '',
-      title: 'Unknown Title',
-      title_long: 'Unknown Title',
-      authors: ['Unknown Author'],
-      image: '/default-book-cover.jpg',
-      date_published: '',
-      synopsis: '',
-      language: 'en',
-      binding: 'Unknown Format',
-      pages: 0,
-      subjects: [],
-      publisher: 'Unknown Publisher',
-      other_isbns: [],
-      overview: '',
-      excerpt: '',
-      msrp: 0,
-      edition: '',
-      dimensions: '',
-    };
+    return defaultBook;
   }
 
   // Ensure date_published is properly formatted if it exists
@@ -76,28 +81,28 @@ const mapAPIBookToBook = (
   }
 
   return {
-    isbn: book.isbn13 || book.isbn || '',
-    title: book.title || 'Unknown Title',
-    title_long: book.title_long || book.title || 'Unknown Title',
+    isbn: book.isbn13 || book.isbn || defaultBook.isbn,
+    title: book.title || defaultBook.title,
+    title_long: book.title_long || book.title || defaultBook.title_long,
     authors: Array.isArray(book.authors)
       ? book.authors
       : book.authors
       ? [book.authors]
-      : ['Unknown Author'],
-    image: book.image || '/default-book-cover.jpg',
-    date_published: formattedDate?.toString() || '',
-    synopsis: book.synopsis || '',
-    language: book.language || 'en',
-    binding: book.binding || 'Unknown Format',
-    pages: typeof book.pages === 'number' ? book.pages : 0,
-    subjects: book.subjects || [],
-    publisher: book.publisher || 'Unknown Publisher',
-    other_isbns: book.other_isbns || [],
-    overview: book.overview || '',
-    excerpt: book.excerpt || '',
-    msrp: book.msrp || 0,
-    edition: book.edition || '',
-    dimensions: book.dimensions || '',
+      : defaultBook.authors,
+    image: book.image || defaultBook.image,
+    date_published: formattedDate?.toString() || defaultBook.date_published,
+    synopsis: book.synopsis || defaultBook.synopsis,
+    language: book.language || defaultBook.language,
+    binding: book.binding || defaultBook.binding,
+    pages: typeof book.pages === 'number' ? book.pages : defaultBook.pages,
+    subjects: book.subjects || defaultBook.subjects,
+    publisher: book.publisher || defaultBook.publisher,
+    other_isbns: book.other_isbns || defaultBook.other_isbns,
+    overview: book.overview || defaultBook.overview,
+    excerpt: book.excerpt || defaultBook.excerpt,
+    msrp: book.msrp || defaultBook.msrp,
+    edition: book.edition || defaultBook.edition,
+    dimensions: book.dimensions || defaultBook.dimensions,
   };
 };
 
@@ -238,12 +243,18 @@ const getAuthorDetails = async (
 
     // Map the books data to our Book type
     const books = authorResponse.data.books.map(
-      (bookData: { book: APIBookResponse }) => mapAPIBookToBook(bookData)
+      (bookData: AuthorBookResponse) => mapAPIBookToBook(bookData)
     );
 
-    // Calculate total from the response
-    const total = authorResponse.data.total || books.length;
-    console.log('Total books:', total);
+    // Get the total from the response, ensuring it's a number
+    const total =
+      typeof authorResponse.data.total === 'number'
+        ? authorResponse.data.total
+        : authorResponse.data.total_items ||
+          authorResponse.data.total_books ||
+          books.length;
+
+    console.log('Total books from API:', total);
     console.log('Current page:', page);
     console.log('Books in this response:', books.length);
 
@@ -252,6 +263,8 @@ const getAuthorDetails = async (
       name: authorResponse.data.author || authorName,
       books: books,
       total: total,
+      bio: authorResponse.data.bio || undefined,
+      photoUrl: authorResponse.data.photo_url || undefined,
     };
   } catch (error) {
     console.error('Error fetching author details:', error);
@@ -259,8 +272,13 @@ const getAuthorDetails = async (
       console.error('Response data:', error.response?.data);
       console.error('Status:', error.response?.status);
       console.error('Request URL:', error.config?.url);
+
+      // If it's a 404, return null instead of throwing
+      if (error.response?.status === 404) {
+        return null;
+      }
     }
-    return null;
+    throw error; // Re-throw other errors to be handled by the caller
   }
 };
 
