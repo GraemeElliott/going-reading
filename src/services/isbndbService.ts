@@ -36,14 +36,41 @@ api.interceptors.response.use(
 );
 
 // Utility functions
-const mapAPIBookToBook = (book: APIBookResponse): Book => {
+const mapAPIBookToBook = (
+  bookData: { book?: APIBookResponse } | APIBookResponse
+): Book => {
+  // Handle nested book structure from author endpoint
+  const book = 'book' in bookData ? bookData.book : bookData;
+  if (!book) {
+    return {
+      isbn: '',
+      title: 'Unknown Title',
+      title_long: 'Unknown Title',
+      authors: ['Unknown Author'],
+      image: '/default-book-cover.jpg',
+      date_published: '',
+      synopsis: '',
+      language: 'en',
+      binding: 'Unknown Format',
+      pages: 0,
+      subjects: [],
+      publisher: 'Unknown Publisher',
+      other_isbns: [],
+      overview: '',
+      excerpt: '',
+      msrp: 0,
+      edition: '',
+      dimensions: '',
+    };
+  }
+
   // Ensure date_published is properly formatted if it exists
   let formattedDate = book.date_published;
   if (formattedDate) {
     // If it's just a year, keep it as is
-    if (!/^\d{4}$/.test(formattedDate)) {
+    if (!/^\d{4}$/.test(formattedDate.toString())) {
       // Otherwise try to extract the year
-      const matches = formattedDate.match(/\d{4}/);
+      const matches = formattedDate.toString().match(/\d{4}/);
       formattedDate = matches ? matches[0] : formattedDate;
     }
   }
@@ -58,14 +85,19 @@ const mapAPIBookToBook = (book: APIBookResponse): Book => {
       ? [book.authors]
       : ['Unknown Author'],
     image: book.image || '/default-book-cover.jpg',
-    date_published: formattedDate,
+    date_published: formattedDate?.toString() || '',
     synopsis: book.synopsis || '',
     language: book.language || 'en',
     binding: book.binding || 'Unknown Format',
     pages: typeof book.pages === 'number' ? book.pages : 0,
     subjects: book.subjects || [],
     publisher: book.publisher || 'Unknown Publisher',
-    other_isbns: book.other_isbns,
+    other_isbns: book.other_isbns || [],
+    overview: book.overview || '',
+    excerpt: book.excerpt || '',
+    msrp: book.msrp || 0,
+    edition: book.edition || '',
+    dimensions: book.dimensions || '',
   };
 };
 
@@ -183,6 +215,55 @@ const searchByAuthor = async (
     });
 };
 
+const getAuthorDetails = async (
+  authorName: string,
+  page: number = 1
+): Promise<Author | null> => {
+  try {
+    // Use the correct author endpoint
+    const encodedName = authorName
+      .split(' ')
+      .map((part: string) => encodeURIComponent(part))
+      .join('%20');
+    const authorUrl = `/author/${encodedName}?page=${page}&pageSize=20`;
+    console.log('Requesting author URL:', authorUrl);
+
+    const authorResponse = await api.get(authorUrl);
+    console.log('Author API Response:', authorResponse.data);
+
+    if (!authorResponse.data?.books) {
+      console.error('No author books found');
+      return null;
+    }
+
+    // Map the books data to our Book type
+    const books = authorResponse.data.books.map(
+      (bookData: { book: APIBookResponse }) => mapAPIBookToBook(bookData)
+    );
+
+    // Calculate total from the response
+    const total = authorResponse.data.total || books.length;
+    console.log('Total books:', total);
+    console.log('Current page:', page);
+    console.log('Books in this response:', books.length);
+
+    return {
+      type: 'author',
+      name: authorResponse.data.author || authorName,
+      books: books,
+      total: total,
+    };
+  } catch (error) {
+    console.error('Error fetching author details:', error);
+    if (axios.isAxiosError(error)) {
+      console.error('Response data:', error.response?.data);
+      console.error('Status:', error.response?.status);
+      console.error('Request URL:', error.config?.url);
+    }
+    return null;
+  }
+};
+
 const searchByIsbn = async (isbn: string): Promise<Book[]> => {
   const response = await api.get(`/books/${isbn}`);
   const bookData = response.data.books?.[0];
@@ -214,7 +295,7 @@ const setCacheResults = (
 ): void => {
   searchCache.set(cacheKey, {
     timestamp: Date.now(),
-    results, // Store full results in cache
+    results,
   });
 };
 
@@ -268,6 +349,21 @@ const isbndbService = {
       return books[0] || null;
     } catch (error) {
       console.error('ISBN lookup error:', error);
+      return null;
+    }
+  },
+  async getAuthorDetails(
+    authorName: string,
+    page: number = 1
+  ): Promise<Author | null> {
+    if (!authorName) {
+      return null;
+    }
+
+    try {
+      return await getAuthorDetails(authorName, page);
+    } catch (error) {
+      console.error('Author details lookup error:', error);
       return null;
     }
   },

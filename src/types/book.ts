@@ -16,6 +16,16 @@ export interface APIBookResponse {
   subjects?: string[];
   binding?: string;
   other_isbns?: { isbn: string; binding: string }[];
+  overview?: string;
+  excerpt?: string;
+  msrp?: number;
+  edition?: string;
+  dimensions?: string;
+}
+
+// Author API response with nested book
+export interface AuthorBookResponse {
+  book: APIBookResponse;
 }
 
 export interface ScoredBook extends Book {
@@ -50,6 +60,11 @@ export interface Book {
     isbn: string;
     binding: string;
   }[];
+  overview?: string;
+  excerpt?: string;
+  msrp?: number;
+  edition?: string;
+  dimensions?: string;
   // User-specific properties
   user_rating?: number | null;
   status?: BookStatus;

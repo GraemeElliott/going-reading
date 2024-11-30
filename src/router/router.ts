@@ -39,9 +39,10 @@ const router = createRouter({
       props: true,
     },
     {
-      path: '/author/:id',
+      path: '/author/:name',
       name: 'author-details',
       component: AuthorDetails,
+      props: true,
     },
     {
       path: '/user/:username/my-books',
