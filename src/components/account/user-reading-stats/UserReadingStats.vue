@@ -12,12 +12,14 @@ import { onMounted } from 'vue';
 import TotalBooksReadCard from './cards/TotalBooksReadCard.vue';
 import TotalPagesReadCard from './cards/TotalPagesReadCard.vue';
 import CurrentYearBooksReadCard from './cards/CurrentYearBooksReadCard.vue';
+import CurrentYearBooksAddedCard from './cards/CurrentYearBooksAddedCard.vue';
 import CurrentYearPagesReadCard from './cards/CurrentYearPagesReadCard.vue';
 import TotalReadingTimeCard from './cards/TotalReadingTimeCard.vue';
 import CurrentYearReadingTimeCard from './cards/CurrentYearReadingTimeCard.vue';
 import UserReadingProgressChart from './charts/UserReadingProgressChart.vue';
 import UserReadingPagesPerDay from './charts/UserReadingPagesPerDay.vue';
 import UserReadingTimeChart from './charts/UserReadingTimeChart.vue';
+import UserBookStatusChart from './charts/UserBookStatusChart.vue';
 
 const userAnalyticsStore = useUserAnalyticsStore();
 const userBooksStore = useUserBooksStore();
@@ -82,6 +84,21 @@ onMounted(async () => {
       </CardHeader>
       <CardContent class="p-0 md:p-3">
         <UserReadingTimeChart :weeks="4" />
+      </CardContent>
+    </Card>
+
+    <div class="grid grid-cols-1">
+      <CurrentYearBooksAddedCard />
+    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Books by Status</CardTitle>
+        <CardDescription
+          >Distribution of books across reading statuses</CardDescription
+        >
+      </CardHeader>
+      <CardContent class="p-0 md:p-3">
+        <UserBookStatusChart />
       </CardContent>
     </Card>
   </div>

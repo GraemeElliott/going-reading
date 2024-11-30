@@ -225,16 +225,14 @@ const getAuthorDetails = async (
   page: number = 1
 ): Promise<Author | null> => {
   try {
-    // Use the correct author endpoint
+    // Use the author endpoint directly with pagination
     const encodedName = authorName
       .split(' ')
       .map((part: string) => encodeURIComponent(part))
       .join('%20');
     const authorUrl = `/author/${encodedName}?page=${page}&pageSize=20`;
-    console.log('Requesting author URL:', authorUrl);
 
     const authorResponse = await api.get(authorUrl);
-    console.log('Author API Response:', authorResponse.data);
 
     if (!authorResponse.data?.books) {
       console.error('No author books found');
@@ -246,17 +244,11 @@ const getAuthorDetails = async (
       (bookData: AuthorBookResponse) => mapAPIBookToBook(bookData)
     );
 
-    // Get the total from the response, ensuring it's a number
+    // Get the total from the response
     const total =
-      typeof authorResponse.data.total === 'number'
-        ? authorResponse.data.total
-        : authorResponse.data.total_items ||
-          authorResponse.data.total_books ||
-          books.length;
-
-    console.log('Total books from API:', total);
-    console.log('Current page:', page);
-    console.log('Books in this response:', books.length);
+      authorResponse.data.total ||
+      authorResponse.data.total_items ||
+      authorResponse.data.total_books;
 
     return {
       type: 'author',
@@ -278,7 +270,7 @@ const getAuthorDetails = async (
         return null;
       }
     }
-    throw error; // Re-throw other errors to be handled by the caller
+    throw error;
   }
 };
 

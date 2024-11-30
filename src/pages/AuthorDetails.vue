@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Author } from '@/types/author';
 import type { Book } from '@/types/book';
 import isbndbService from '@/services/isbndbService';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const route = useRoute();
 const author = ref<Author | null>(null);
@@ -14,7 +15,37 @@ const error = ref('');
 const currentPage = ref(1);
 const allBooks = ref<Book[]>([]);
 const hasMore = ref(false);
-const totalBooks = ref(0);
+const totalBooks = ref<number | undefined>(undefined);
+const searchQuery = ref('');
+
+const filteredBooks = computed(() => {
+  let books = allBooks.value;
+
+  // Apply search filter if query exists
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    books = books.filter(
+      (book) =>
+        book.title.toLowerCase().includes(query) ||
+        book.publisher?.toLowerCase().includes(query) ||
+        book.binding?.toLowerCase().includes(query)
+    );
+  }
+
+  // Sort by date published
+  return books.sort((a, b) => {
+    // Handle cases where date_published might be undefined
+    if (!a.date_published) return 1; // Push items without dates to the end
+    if (!b.date_published) return -1;
+
+    // Convert dates to timestamps for comparison
+    const dateA = new Date(a.date_published).getTime();
+    const dateB = new Date(b.date_published).getTime();
+
+    // Sort in descending order (newest first)
+    return dateB - dateA;
+  });
+});
 
 const fetchAuthorDetails = async (page: number = 1) => {
   try {
@@ -40,21 +71,26 @@ const fetchAuthorDetails = async (page: number = 1) => {
 
       if (page === 1) {
         allBooks.value = authorDetails.books;
-        // Use the length of filtered books for the first page to estimate total
-        const booksPerPage = authorDetails.books.length;
-        // If we got a full page of results, use the API total
-        totalBooks.value =
-          booksPerPage === 20 ? authorDetails.total || 0 : booksPerPage;
+        // Set total from API response
+        totalBooks.value = authorDetails.total;
       } else {
         allBooks.value = [...allBooks.value, ...authorDetails.books];
-        // Update total based on actual books received
-        if (authorDetails.books.length < 20) {
-          totalBooks.value = allBooks.value.length;
+        // Update total if it wasn't set before and we now have it
+        if (
+          totalBooks.value === undefined &&
+          authorDetails.total !== undefined
+        ) {
+          totalBooks.value = authorDetails.total;
         }
       }
 
-      // Check if we have more books to load based on actual books received
-      hasMore.value = authorDetails.books.length === 20;
+      // If we have a total, check if we've loaded all books
+      if (totalBooks.value !== undefined) {
+        hasMore.value = allBooks.value.length < totalBooks.value;
+      } else {
+        // If no total is available, check if we got a full page
+        hasMore.value = authorDetails.books.length === 20;
+      }
     } else {
       error.value = 'Author not found';
     }
@@ -80,7 +116,7 @@ watch(
   (newName) => {
     if (newName) {
       currentPage.value = 1;
-      totalBooks.value = 0;
+      totalBooks.value = undefined;
       hasMore.value = false;
       fetchAuthorDetails(1);
     }
@@ -110,48 +146,35 @@ onMounted(() => {
     <div v-else-if="author" class="space-y-8">
       <!-- Author Header -->
       <div class="flex flex-col md:flex-row gap-8 items-start">
-        <!-- Author Photo -->
-        <div
-          v-if="author.photoUrl"
-          class="w-48 h-48 rounded-lg overflow-hidden shrink-0"
-        >
-          <img
-            :src="author.photoUrl"
-            :alt="author.name"
-            class="w-full h-full object-cover"
-          />
-        </div>
-        <div
-          v-else
-          class="w-48 h-48 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center shrink-0"
-        >
-          <span class="text-4xl text-gray-400">📷</span>
-        </div>
-
         <!-- Author Info -->
         <div class="flex-grow">
           <h1 class="text-3xl font-bold mb-4">{{ author.name }}</h1>
           <p v-if="author.bio" class="text-gray-600 dark:text-gray-300 mb-4">
             {{ author.bio }}
           </p>
-          <p class="text-gray-500 dark:text-gray-400">
-            {{ totalBooks }} published {{ totalBooks === 1 ? 'book' : 'books' }}
-            <span v-if="allBooks.length < totalBooks">
-              (Showing {{ allBooks.length }})
-            </span>
-          </p>
         </div>
       </div>
 
       <!-- Books Grid -->
       <div>
-        <h2 class="text-2xl font-semibold mb-6">Books by {{ author.name }}</h2>
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold">Books by {{ author.name }}</h2>
+          <div class="w-72">
+            <Input
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search books..."
+              class="w-full"
+            />
+          </div>
+        </div>
+
         <div
           class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
         >
           <!-- Book Card -->
           <div
-            v-for="book in allBooks"
+            v-for="book in filteredBooks"
             :key="book.isbn"
             class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
           >
@@ -187,19 +210,13 @@ onMounted(() => {
                 >
                   Published {{ book.date_published }}
                 </p>
-                <p
-                  v-if="book.binding"
-                  class="text-sm text-gray-500 dark:text-gray-400"
-                >
-                  {{ book.binding }}
-                </p>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Load More Button -->
-        <div v-if="hasMore" class="mt-8 flex justify-center">
+        <div v-if="hasMore && !searchQuery" class="mt-8 flex justify-center">
           <Button @click="loadMore" :disabled="loadingMore" class="px-6 py-2">
             <span v-if="loadingMore" class="flex items-center">
               <span
@@ -208,7 +225,10 @@ onMounted(() => {
               Loading...
             </span>
             <span v-else>
-              Load More Books ({{ allBooks.length }} of {{ totalBooks }})
+              Load More Books
+              <template v-if="totalBooks !== undefined">
+                ({{ allBooks.length }} of {{ totalBooks }})
+              </template>
             </span>
           </Button>
         </div>

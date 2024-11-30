@@ -116,9 +116,16 @@ const handleRatingChange = async (newRating: number | null) => {
               >
                 {{ book.title }}
               </h2>
+
               <p class="text-sm font-semibold text-gray-600 mt-1">
-                by {{ book.authors.join(', ') }}
+                by
+                <router-link
+                  :to="`/author/${encodeURIComponent(book.authors.join(', '))}`"
+                >
+                  <span class="font-medium">{{ book.authors.join(', ') }}</span>
+                </router-link>
               </p>
+
               <div class="text-sm text-gray-600 space-y-0.5 mt-1">
                 <p v-if="book.date_published">
                   {{ formatYear(book.date_published) }}

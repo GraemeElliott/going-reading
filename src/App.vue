@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useDarkModeStore } from '@/store/store';
+import { useDarkModeStore } from './store/store';
 import { useRoute } from 'vue-router';
 import Navbar from './components/navbar/Navbar.vue';
-import Footer from '@/components/partials/Footer.vue';
-import Toaster from '@/components/ui/toast/Toaster.vue';
-import { useAuthStore } from '@/store/auth-store';
+import Footer from './components/partials/Footer.vue';
+import Toaster from './components/ui/toast/Toaster.vue';
+import { useAuthStore } from './store/auth-store';
 import { onMounted, computed } from 'vue';
 
 const authStore = useAuthStore();
