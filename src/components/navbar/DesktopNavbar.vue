@@ -4,6 +4,7 @@ import Logo from '@/components/partials/Logo.vue';
 import SignOutButton from '@/components/authentication/SignOutButton.vue';
 import { useAuthStore } from '@/store/auth-store';
 import SearchBar from '@/components/search/SearchBar.vue';
+import { computed } from 'vue';
 
 const authStore = useAuthStore();
 
@@ -14,6 +15,14 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'closeMenuIfOpen'): void;
 }>();
+
+// Compute the logo destination based on user authentication status
+const logoDestination = computed(() => {
+  if (authStore.userMetadata?.username) {
+    return `/user/${authStore.userMetadata.username}/my-books`;
+  }
+  return '/';
+});
 </script>
 
 <template>
@@ -28,7 +37,7 @@ const emit = defineEmits<{
       >
         <!-- Left side with logo -->
         <router-link
-          to="/"
+          :to="logoDestination"
           @click="emit('closeMenuIfOpen')"
           class="flex-shrink-0"
         >

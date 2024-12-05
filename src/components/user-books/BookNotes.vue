@@ -9,6 +9,7 @@ import NotesList from './notes/NotesList.vue';
 
 const props = defineProps<{
   bookId: string;
+  bookTitle: string; // Added prop for book title
 }>();
 
 const isPopoverOpen = ref(false);
@@ -107,7 +108,9 @@ onUnmounted(() => {
               <font-awesome-icon icon="fa-solid fa-xmark" />
             </button>
             <div class="space-y-2">
-              <h4 class="font-medium leading-none text-lg">Notes</h4>
+              <h4 class="font-medium leading-none text-lg">
+                Notes for "{{ bookTitle }}"
+              </h4>
               <p class="text-sm text-muted-foreground">
                 Add notes, quotes, or a review.
               </p>

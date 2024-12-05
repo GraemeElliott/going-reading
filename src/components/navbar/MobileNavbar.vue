@@ -29,6 +29,14 @@ const emit = defineEmits<{
   (e: 'handleSearchComplete'): void;
 }>();
 
+// Compute the logo destination based on user authentication status
+const logoDestination = computed(() => {
+  if (authStore.userMetadata?.username) {
+    return `/user/${authStore.userMetadata.username}/my-books`;
+  }
+  return '/';
+});
+
 // Cache user data with computed properties
 const userData = computed(() => ({
   username: authStore.userMetadata.username,
@@ -121,7 +129,7 @@ const handleNavClick = () => {
         }"
       >
         <router-link
-          to="/"
+          :to="logoDestination"
           @click="
             () => {
               emit('closeMenuIfOpen');
@@ -260,7 +268,7 @@ const handleNavClick = () => {
       >
         <div class="flex items-center gap-1">
           <router-link
-            to="/"
+            :to="logoDestination"
             @click="
               () => {
                 emit('closeMenuIfOpen');

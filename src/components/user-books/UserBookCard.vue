@@ -198,7 +198,7 @@ const handleRatingChange = async (newRating: number | null) => {
           />
         </div>
         <AddToList :isbn="book.isbn" :book="bookBasicInfo" />
-        <BookNotes :book-id="book.id" />
+        <BookNotes :book-id="book.id" :book-title="book.title" />
         <Button
           @click="isDeleting = true"
           class="bg-goingRed text-white w-[180px]"
