@@ -81,6 +81,11 @@ router.beforeEach(
     const isAuthenticated = authStore.user;
     const currentUsername = authStore.userMetadata?.username;
 
+    // Redirect from home to my-books if authenticated
+    if (to.path === '/' && isAuthenticated && currentUsername) {
+      return next(`/user/${currentUsername}/my-books`);
+    }
+
     if (to.matched.some((record) => record.meta.requiresAuth)) {
       if (!isAuthenticated) {
         return next({ name: 'sign-in', query: { redirect: to.fullPath } });
