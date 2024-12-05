@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import AddToList from '@/components/user-books/AddToList.vue';
 import UserRating from '@/components/user-books/UserRating.vue';
 import UserBookStatusSelect from '@/components/user-books/UserBookStatusSelect.vue';
+import BookNotes from '@/components/user-books/BookNotes.vue';
 import { useRouter } from 'vue-router';
 import { ref, computed } from 'vue';
 import { useUserBooksStore } from '@/store/user-books-store';
@@ -197,6 +198,7 @@ const handleRatingChange = async (newRating: number | null) => {
           />
         </div>
         <AddToList :isbn="book.isbn" :book="bookBasicInfo" />
+        <BookNotes :book-id="book.id" />
         <Button
           @click="isDeleting = true"
           class="bg-goingRed text-white w-[180px]"
@@ -212,14 +214,7 @@ const handleRatingChange = async (newRating: number | null) => {
       Are you sure you want to delete "{{ book.title }}"?
     </p>
     <div class="flex justify-center gap-4">
-      <Button
-        variant="outline"
-        size="sm"
-        type="button"
-        @click="isDeleting = false"
-      >
-        Cancel
-      </Button>
+      <Button variant="outline" @click="isDeleting = false"> Cancel </Button>
       <Button
         variant="destructive"
         size="sm"
