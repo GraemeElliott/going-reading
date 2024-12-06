@@ -19,6 +19,7 @@ interface Props {
   expanded: boolean;
   loadingBooks: boolean;
   books?: UserBook[];
+  isProfilePage?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -93,23 +94,12 @@ const getBookCount = (): string => {
         <h3 class="text-lg font-semibold">{{ list.name }}</h3>
         <div class="flex items-center gap-2 text-sm text-muted-foreground">
           <span>{{ getBookCount() }}</span>
-          <span>•</span>
-          <span
-            :class="{
-              'px-2 py-0.5 rounded-full text-xs font-medium': true,
-              'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100':
-                list.is_public,
-              'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100':
-                !list.is_public,
-            }"
-            >{{ list.is_public ? 'Public' : 'Private' }} List</span
-          >
         </div>
         <p v-if="list.details" class="mt-2 text-sm text-muted-foreground">
           {{ list.details }}
         </p>
       </div>
-      <div class="flex items-center gap-2">
+      <div v-if="!isProfilePage" class="flex items-center gap-2">
         <EditListDetails :list="list" />
         <Button
           size="sm"
@@ -173,6 +163,7 @@ const getBookCount = (): string => {
               </div>
             </router-link>
             <Button
+              v-if="!isProfilePage"
               @click="handleRemoveBook(list.id, book.isbn)"
               class="hover:bg-goingRed hover:text-white shrink-0"
               :class="{

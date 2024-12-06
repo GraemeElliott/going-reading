@@ -6,6 +6,10 @@ import ListCard from '../../components/lists/ListCard.vue';
 import CreateList from '../lists/CreateList.vue';
 import type { UserBook } from '../../types/book';
 
+const props = defineProps<{
+  isProfilePage?: boolean;
+}>();
+
 const listsStore = useListsStore();
 const expandedLists = ref<Set<string>>(new Set());
 const loadingBooks = ref<Set<string>>(new Set());
@@ -50,7 +54,7 @@ const handleBookListUpdated = async (listId: string) => {
         <h3 class="text-lg font-medium">Lists</h3>
       </div>
       <Separator class="my-6" />
-      <CreateList @list-created="handleNewList" />
+      <CreateList v-if="!isProfilePage" @list-created="handleNewList" />
 
       <div v-if="listsStore.loading" class="text-center py-4">
         <div class="animate-spin h-6 w-6 mx-auto"></div>
@@ -75,6 +79,7 @@ const handleBookListUpdated = async (listId: string) => {
           :expanded="expandedLists.has(list.id)"
           :loading-books="loadingBooks.has(list.id)"
           :books="listsStore.booksInLists[list.id]"
+          :is-profile-page="isProfilePage"
           @toggle-expansion="toggleExpansion"
           @list-deleted="handleListDeleted"
           @book-list-updated="handleBookListUpdated"
