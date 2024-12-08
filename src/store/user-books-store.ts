@@ -88,6 +88,65 @@ export const useUserBooksStore = defineStore('userBooks', () => {
     await fetchUserBooks();
   };
 
+  const updateBookTotalPages = async (
+    isbn: string,
+    totalPages: number
+  ): Promise<void> => {
+    if (!authStore.user)
+      throw new Error('User must be logged in to update book pages');
+
+    try {
+      loading.value = true;
+      error.value = null;
+
+      const now = new Date().toISOString();
+      const existingBook = booksMap.value.get(isbn);
+
+      if (!existingBook) {
+        throw new Error(updateBookErrorMessages.bookNotFound);
+      }
+
+      const { error: updateError } = await supabase
+        .from('user_books')
+        .update({
+          pages: totalPages,
+          date_updated: now,
+        })
+        .eq('user_id', authStore.user.id)
+        .eq('isbn', isbn);
+
+      if (updateError) throw updateError;
+
+      existingBook.pages = totalPages;
+      existingBook.date_updated = now;
+      booksMap.value.set(isbn, existingBook);
+      booksMap.value = new Map(booksMap.value);
+
+      // Update total_pages in reading_progress table
+      await ReadingProgressService.updateTotalPages(
+        authStore.user.id,
+        isbn,
+        totalPages
+      );
+
+      // Log the total pages update
+      await ReadingActivityService.logActivity(
+        authStore.user.id,
+        ActivityType.BOOK_TOTAL_PAGES_UPDATED,
+        isbn,
+        {
+          totalPages,
+          bookTitle: existingBook.title,
+        }
+      );
+    } catch (err: any) {
+      error.value = err.message;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
   const updateBookProgress = async (
     isbn: string,
     currentPage: number,
@@ -386,6 +445,7 @@ export const useUserBooksStore = defineStore('userBooks', () => {
     updateBookRating,
     updateBookStatus,
     updateBookProgress,
+    updateBookTotalPages,
     fetchUserBooks,
     initialize,
     deleteBook,

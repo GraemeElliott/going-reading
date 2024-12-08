@@ -59,16 +59,18 @@ const onSubmit = handleSubmit(async (formData) => {
 </script>
 <template>
   <TabsContent value="register">
-    <Card class="h-full border-none">
+    <Card class="h-full border-none bg-transparent">
       <CardHeader class="space-y-1 pl-0 md:p-6">
-        <CardTitle class="text-2xl"> Create an account </CardTitle>
-        <CardDescription> Sign up to create your account </CardDescription>
+        <CardTitle class="text-2xl text-white"> Create an account </CardTitle>
+        <CardDescription class="text-white">
+          Sign up to create your account
+        </CardDescription>
       </CardHeader>
       <form @submit.prevent="onSubmit" class="px-2 md:px-4">
         <!-- First Name -->
         <FormField v-slot="{ componentField }" name="firstName">
           <FormItem>
-            <FormLabel required>First Name</FormLabel>
+            <FormLabel class="text-white" required>First Name</FormLabel>
             <FormControl>
               <Input type="text" placeholder="John" v-bind="componentField" />
             </FormControl>
@@ -78,7 +80,7 @@ const onSubmit = handleSubmit(async (formData) => {
         <!-- Last Name -->
         <FormField v-slot="{ componentField }" name="lastName">
           <FormItem>
-            <FormLabel required>Last Name</FormLabel>
+            <FormLabel class="text-white" required>Last Name</FormLabel>
             <FormControl>
               <Input type="text" placeholder="Smith" v-bind="componentField" />
             </FormControl>
@@ -88,7 +90,7 @@ const onSubmit = handleSubmit(async (formData) => {
         <!-- Username -->
         <FormField v-slot="{ componentField }" name="username">
           <FormItem>
-            <FormLabel required>Username</FormLabel>
+            <FormLabel class="text-white" required>Username</FormLabel>
             <FormControl>
               <Input
                 type="text"
@@ -102,7 +104,7 @@ const onSubmit = handleSubmit(async (formData) => {
         <!-- Email -->
         <FormField v-slot="{ componentField }" name="email">
           <FormItem>
-            <FormLabel required>Email</FormLabel>
+            <FormLabel class="text-white" required>Email</FormLabel>
             <FormControl>
               <Input
                 type="email"
@@ -116,7 +118,7 @@ const onSubmit = handleSubmit(async (formData) => {
         <!-- Password -->
         <FormField v-slot="{ componentField }" name="password">
           <FormItem>
-            <FormLabel required>Password</FormLabel>
+            <FormLabel class="text-white" required>Password</FormLabel>
             <FormControl>
               <Input type="password" v-bind="componentField" />
             </FormControl>
@@ -126,7 +128,7 @@ const onSubmit = handleSubmit(async (formData) => {
         <!-- Confirm Password -->
         <FormField v-slot="{ componentField }" name="confirmPassword">
           <FormItem>
-            <FormLabel required>Confirm Password</FormLabel>
+            <FormLabel class="text-white" required>Confirm Password</FormLabel>
             <FormControl>
               <Input type="password" v-bind="componentField" />
             </FormControl>
@@ -145,9 +147,9 @@ const onSubmit = handleSubmit(async (formData) => {
 </template>
 <style scoped>
 :deep(input) {
-  @apply bg-white text-black !important;
+  @apply bg-transparent text-white !important;
 }
 :deep(button) {
-  @apply bg-black text-white !important;
+  @apply bg-white text-black !important;
 }
 </style>

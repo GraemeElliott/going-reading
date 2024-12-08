@@ -20,7 +20,7 @@ import AuthenticationTab from '@/components/authentication/AuthenticationTab.vue
     </div>
 
     <div
-      class="w-full md:w-[450px] bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg"
+      class="w-full md:w-[450px] bg-transparent border border-white p-6 rounded-lg shadow-lg"
     >
       <AuthenticationTab />
     </div>

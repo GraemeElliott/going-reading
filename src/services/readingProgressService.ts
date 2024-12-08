@@ -36,6 +36,26 @@ export class ReadingProgressService {
     }
   }
 
+  static async updateTotalPages(
+    userId: string,
+    bookIsbn: string,
+    totalPages: number
+  ): Promise<void> {
+    try {
+      // Update all existing progress entries for this book
+      const { error } = await supabase
+        .from('reading_progress')
+        .update({ total_pages: totalPages })
+        .eq('user_id', userId)
+        .eq('book_isbn', bookIsbn);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error('Error updating total pages:', err);
+      throw err;
+    }
+  }
+
   static async getBookProgress(
     userId: string,
     bookIsbn: string,

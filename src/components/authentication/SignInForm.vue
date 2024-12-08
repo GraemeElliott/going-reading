@@ -60,10 +60,12 @@ const onSubmit = handleSubmit(async (formData) => {
 </script>
 <template>
   <TabsContent value="sign-in">
-    <Card class="h-full flex flex-col border-none">
+    <Card class="h-full flex flex-col border-none bg-transparent">
       <CardHeader class="space-y-1 pl-0 md:p-6">
-        <CardTitle class="text-2xl"> Sign in to your account </CardTitle>
-        <CardDescription>
+        <CardTitle class="text-2xl text-white">
+          Sign in to your account
+        </CardTitle>
+        <CardDescription class="text-white">
           Sign in to your account to track books and see stats
         </CardDescription>
       </CardHeader>
@@ -71,7 +73,7 @@ const onSubmit = handleSubmit(async (formData) => {
         <!-- Email -->
         <FormField v-slot="{ componentField, handleChange }" name="email">
           <FormItem>
-            <FormLabel required>Email</FormLabel>
+            <FormLabel class="text-white" required>Email</FormLabel>
             <FormControl>
               <Input
                 type="email"
@@ -86,7 +88,7 @@ const onSubmit = handleSubmit(async (formData) => {
         <!-- Password -->
         <FormField v-slot="{ componentField, handleChange }" name="password">
           <FormItem>
-            <FormLabel required>Password</FormLabel>
+            <FormLabel class="text-white" required>Password</FormLabel>
             <FormControl>
               <Input
                 type="password"
@@ -107,9 +109,9 @@ const onSubmit = handleSubmit(async (formData) => {
 </template>
 <style scoped>
 :deep(input) {
-  @apply bg-white text-black !important;
+  @apply bg-transparent text-white !important;
 }
 :deep(button) {
-  @apply bg-black text-white !important;
+  @apply bg-white text-black !important;
 }
 </style>

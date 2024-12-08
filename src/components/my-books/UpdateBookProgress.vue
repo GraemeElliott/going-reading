@@ -32,9 +32,10 @@ const props = defineProps<{
 const userBooksStore = useUserBooksStore();
 const currentPage = ref(props.book.current_page || 0);
 const timeReadingInMins = ref<number>();
-const totalPages = props.book.pages || 0;
+const totalPages = ref(props.book.pages || 0);
 const isDialogOpen = ref(false);
 const currentPageError = ref('');
+const isEditingTotalPages = ref(false);
 
 const { handleSubmit, setFieldValue, validate } = useForm({
   validationSchema: updateProgressSchema,
@@ -42,8 +43,8 @@ const { handleSubmit, setFieldValue, validate } = useForm({
 
 // Watch for changes in currentPage and validate against total pages
 watch(currentPage, (newValue) => {
-  if (newValue > totalPages) {
-    currentPageError.value = `Current page cannot exceed total pages (${totalPages})`;
+  if (newValue > totalPages.value) {
+    currentPageError.value = `Current page cannot exceed total pages (${totalPages.value})`;
   } else {
     currentPageError.value = '';
   }
@@ -63,8 +64,8 @@ const validateForm = async () => {
   const result = await validate();
   if (!result.valid) return false;
 
-  if (currentPage.value > totalPages) {
-    currentPageError.value = `Current page cannot exceed total pages (${totalPages})`;
+  if (currentPage.value > totalPages.value) {
+    currentPageError.value = `Current page cannot exceed total pages (${totalPages.value})`;
     return false;
   }
 
@@ -88,7 +89,7 @@ const handleUpdate = async (e: Event) => {
     );
 
     // If current page equals total pages, mark as read
-    if (totalPages && currentPage.value === totalPages) {
+    if (totalPages.value && currentPage.value === totalPages.value) {
       await userBooksStore.updateBookStatus(props.book.isbn, 'read');
       emit('statusUpdate', 'read');
       toast({
@@ -130,7 +131,7 @@ const handleFinish = async (e: Event) => {
   try {
     await userBooksStore.updateBookProgress(
       props.book.isbn,
-      totalPages,
+      totalPages.value,
       timeReadingInMins.value!
     );
     await userBooksStore.updateBookStatus(props.book.isbn, 'read');
@@ -145,12 +146,48 @@ const handleFinish = async (e: Event) => {
       duration: 2000,
     });
     isDialogOpen.value = false;
-    currentPage.value = totalPages;
+    currentPage.value = totalPages.value;
     timeReadingInMins.value = undefined;
   } catch (err: unknown) {
     const error = err as Error;
     toast({
       title: 'Error updating progress',
+      description: error.message || updateBookErrorMessages.unknownError,
+      variant: 'destructive',
+      duration: 2000,
+    });
+  }
+};
+
+const handleTotalPagesUpdate = async () => {
+  try {
+    if (totalPages.value < 1) {
+      toast({
+        title: 'Invalid total pages',
+        description: 'Total pages must be greater than 0',
+        variant: 'destructive',
+        duration: 2000,
+      });
+      return;
+    }
+
+    await userBooksStore.updateBookTotalPages(
+      props.book.isbn,
+      totalPages.value
+    );
+
+    toast({
+      title: 'Total Pages Updated',
+      description: 'The total pages has been successfully updated',
+      variant: 'success',
+      duration: 2000,
+    });
+
+    isEditingTotalPages.value = false;
+  } catch (err: unknown) {
+    const error = err as Error;
+    toast({
+      title: 'Error updating total pages',
       description: error.message || updateBookErrorMessages.unknownError,
       variant: 'destructive',
       duration: 2000,
@@ -176,26 +213,79 @@ const handleFinish = async (e: Event) => {
         </DialogDescription>
       </DialogHeader>
       <form @submit.prevent="handleUpdate" class="space-y-4" novalidate>
-        <FormField v-slot="{ field, errorMessage }" name="currentPage">
+        <div class="flex items-center justify-between">
+          <FormField v-slot="{ field, errorMessage }" name="currentPage">
+            <FormItem class="flex-grow">
+              <FormLabel required>Current Page</FormLabel>
+              <FormControl>
+                <input
+                  type="number"
+                  v-model="currentPage"
+                  min="0"
+                  class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </FormControl>
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-muted-foreground" v-if="totalPages">
+                  of {{ totalPages }} pages
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  class="text-xs text-blue-600 hover:text-blue-800 p-0 h-auto"
+                  @click="isEditingTotalPages = !isEditingTotalPages"
+                >
+                  {{ isEditingTotalPages ? '' : 'Edit total pages' }}
+                </Button>
+              </div>
+              <p
+                v-if="currentPageError || errorMessage"
+                class="text-sm font-medium text-destructive"
+              >
+                {{ currentPageError || errorMessage }}
+              </p>
+            </FormItem>
+          </FormField>
+        </div>
+
+        <FormField
+          v-if="isEditingTotalPages"
+          v-slot="{ field }"
+          name="totalPages"
+        >
           <FormItem>
-            <FormLabel required>Current Page</FormLabel>
+            <FormLabel required>Total Pages</FormLabel>
             <FormControl>
               <input
                 type="number"
-                v-model="currentPage"
-                min="0"
+                v-model="totalPages"
+                min="1"
                 class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               />
             </FormControl>
-            <p class="text-xs text-muted-foreground" v-if="totalPages">
-              of {{ totalPages }} pages
-            </p>
-            <p
-              v-if="currentPageError || errorMessage"
-              class="text-sm font-medium text-destructive"
-            >
-              {{ currentPageError || errorMessage }}
-            </p>
+            <div class="flex items-center justify-between mt-2">
+              <p class="text-xs text-muted-foreground">
+                Update if the total page count is incorrect
+              </p>
+              <div class="space-x-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  class="text-xs h-7 px-2"
+                  @click="isEditingTotalPages = false"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="default"
+                  class="text-xs h-7 px-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  @click="handleTotalPagesUpdate"
+                >
+                  Save Pages
+                </Button>
+              </div>
+            </div>
           </FormItem>
         </FormField>
 

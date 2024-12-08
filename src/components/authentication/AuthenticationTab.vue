@@ -16,7 +16,9 @@ const handleTabChange = async () => {
 <template>
   <div>
     <Tabs default-value="register" @update:value="handleTabChange">
-      <TabsList class="grid w-full grid-cols-2">
+      <TabsList
+        class="grid w-full grid-cols-2 bg-transparent border border-white text-white"
+      >
         <TabsTrigger value="register">Register</TabsTrigger>
         <TabsTrigger value="sign-in">Sign In</TabsTrigger>
       </TabsList>

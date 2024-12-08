@@ -58,6 +58,8 @@ const getActivityIcon = (activity: Activity): string => {
       return 'fa-solid fa-arrow-turn-up';
     case ActivityType.BOOK_PROGRESS_UPDATED:
       return 'fa-solid fa-bookmark';
+    case ActivityType.BOOK_TOTAL_PAGES_UPDATED:
+      return 'fa-solid fa-book';
     case ActivityType.BOOK_RATED:
       return 'fa-solid fa-star';
     case ActivityType.BOOK_DELETED:
@@ -94,6 +96,8 @@ const getActivityMessage = (activity: Activity): string | null => {
       )}</strong>`;
     case ActivityType.BOOK_PROGRESS_UPDATED:
       return `Updated progress to page <strong>${metadata.currentPage}</strong> of ${metadata.totalPages}`;
+    case ActivityType.BOOK_TOTAL_PAGES_UPDATED:
+      return `Total pages updated to <strong>${metadata.totalPages}</strong>`;
     case ActivityType.BOOK_RATED:
       return `Rated`; // Just return "Rated" as we'll show the stars separately
     case ActivityType.BOOK_DELETED:
