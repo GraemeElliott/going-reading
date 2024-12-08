@@ -10,14 +10,12 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from '@/components/ui/form';
 import { useForm } from 'vee-validate';
 import { useUserBooksStore } from '@/store/user-books-store';
@@ -208,9 +206,23 @@ const handleTotalPagesUpdate = async () => {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>Update Reading Progress</DialogTitle>
-        <DialogDescription>
-          Update your reading progress for <strong>{{ book.title }}</strong>
-        </DialogDescription>
+        <div class="flex flex-row mt-4">
+          <img
+            :src="book.image"
+            :alt="book.title"
+            class="w-[80px] rounded-lg mr-4"
+            @error="book.image = '/default-book-cover.jpg'"
+          />
+          <DialogDescription class="flex flex-col gap-1 justify-center">
+            <p class="font-bold">{{ book.title }}</p>
+            <p class="text-xs">by: {{ book.authors.join(', ') }}</p>
+            <p class="text-xs">{{ book.publisher }}</p>
+            <p class="text-xs">{{ book.date_published }}</p>
+            <p class="text-xs">
+              Date Added: {{ new Date(book.date_added).toLocaleDateString() }}
+            </p>
+          </DialogDescription>
+        </div>
       </DialogHeader>
       <form @submit.prevent="handleUpdate" class="space-y-4" novalidate>
         <div class="flex items-center justify-between">
@@ -229,14 +241,12 @@ const handleTotalPagesUpdate = async () => {
                 <p class="text-xs text-muted-foreground" v-if="totalPages">
                   of {{ totalPages }} pages
                 </p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  class="text-xs text-blue-600 hover:text-blue-800 p-0 h-auto"
+                <p
+                  class="text-xs p-0 h-auto hover:cursor-pointer"
                   @click="isEditingTotalPages = !isEditingTotalPages"
                 >
                   {{ isEditingTotalPages ? '' : 'Edit total pages' }}
-                </Button>
+                </p>
               </div>
               <p
                 v-if="currentPageError || errorMessage"
@@ -269,20 +279,18 @@ const handleTotalPagesUpdate = async () => {
               </p>
               <div class="space-x-2">
                 <Button
-                  type="button"
-                  variant="ghost"
-                  class="text-xs h-7 px-2"
+                  size="sm"
+                  class="text-xs p-2 text-black bg-white rounded-2xl hover:bg-goingRed hover:text-white hover:border-none"
                   @click="isEditingTotalPages = false"
                 >
-                  Cancel
+                  <font-awesome-icon icon="fa-solid fa-ban" />
                 </Button>
                 <Button
-                  type="button"
-                  variant="default"
-                  class="text-xs h-7 px-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  size="sm"
+                  class="text-xs p-2 text-black bg-white rounded-2xl hover:bg-goingGreen hover:text-white hover:border-none"
                   @click="handleTotalPagesUpdate"
                 >
-                  Save Pages
+                  <font-awesome-icon icon="fa-solid fa-floppy-disk" />
                 </Button>
               </div>
             </div>
