@@ -7,6 +7,7 @@ import {
 } from '../../services/activityService';
 import { formatDistanceToNow } from 'date-fns';
 import StarRating from '../../components/partials/StarRating.vue';
+import { useDarkModeStore } from '@/store/store';
 
 const props = defineProps<{
   isbn: string;
@@ -29,6 +30,7 @@ interface Activity {
 }
 
 const authStore = useAuthStore();
+const darkModeStore = useDarkModeStore();
 const activities = ref<Activity[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -59,7 +61,7 @@ const getActivityIcon = (activity: Activity): string => {
     case ActivityType.BOOK_PROGRESS_UPDATED:
       return 'fa-solid fa-bookmark';
     case ActivityType.BOOK_TOTAL_PAGES_UPDATED:
-      return 'fa-solid fa-book';
+      return 'fa-solid fa-book-open';
     case ActivityType.BOOK_RATED:
       return 'fa-solid fa-star';
     case ActivityType.BOOK_DELETED:
@@ -99,7 +101,7 @@ const getActivityMessage = (activity: Activity): string | null => {
     case ActivityType.BOOK_TOTAL_PAGES_UPDATED:
       return `Total pages updated to <strong>${metadata.totalPages}</strong>`;
     case ActivityType.BOOK_RATED:
-      return `Rated`; // Just return "Rated" as we'll show the stars separately
+      return `Rated`;
     case ActivityType.BOOK_DELETED:
       return `Removed from your books`;
     case ActivityType.BOOK_ADDED_TO_LIST:
@@ -182,7 +184,10 @@ onMounted(() => {
         >
           <!-- Timeline icon -->
           <div
-            class="absolute left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full bg-white border-2 border-gray-200 z-10 flex items-center justify-center"
+            :class="[
+              'absolute left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full border-2 border-gray-200 z-10 flex items-center justify-center',
+              darkModeStore.darkMode ? 'bg-gray-900' : 'bg-white',
+            ]"
           >
             <template v-if="isEmojiIcon(getActivityIcon(activity))">
               {{ getActivityIcon(activity) }}
@@ -201,17 +206,18 @@ onMounted(() => {
           >
             <!-- Activity content -->
             <div
-              class="w-[calc(50%-2rem)]"
+              class="w-[calc(50%-0.25rem)]"
               :class="index % 2 === 0 ? 'text-right pr-8' : 'text-left pl-8'"
             >
-              <div
-                class="p-4 rounded-lg border bg-card text-card-foreground shadow-sm"
-              >
+              <div class="p-4 rounded-lg border shadow-sm">
                 <div
                   class="flex items-center gap-2"
                   :class="index % 2 === 0 ? 'justify-end' : 'justify-start'"
                 >
-                  <p class="text-sm" v-html="getActivityMessage(activity)"></p>
+                  <p
+                    class="text-xs md:text-sm"
+                    v-html="getActivityMessage(activity)"
+                  ></p>
                   <StarRating
                     v-if="activity.activity_type === ActivityType.BOOK_RATED"
                     :model-value="activity.metadata.rating"
@@ -228,7 +234,7 @@ onMounted(() => {
             </div>
 
             <!-- Empty space for the other side -->
-            <div class="w-[calc(50%-2rem)]"></div>
+            <div class="w-[calc(50%-0.25rem)]"></div>
           </div>
         </div>
       </div>

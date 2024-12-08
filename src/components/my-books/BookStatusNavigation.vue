@@ -10,7 +10,6 @@ const router = useRouter();
 const userBooksStore = useUserBooksStore();
 const username = route.params.username;
 
-// Available statuses for navigation (excluding currently-reading)
 const statuses: BookStatus[] = ['want-to-read', 'read', 'did-not-finish'];
 
 const bookCounts = computed(() => {

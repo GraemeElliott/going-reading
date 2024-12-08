@@ -14,7 +14,6 @@ import type { BookStatus, BookBasicInfo } from '@/types/book';
 
 const userBooksStore = useUserBooksStore();
 
-// Get only currently reading books
 const currentlyReadingBooks = computed(() => {
   const books = userBooksStore.groupedBooks['currently-reading'] || [];
   return books;

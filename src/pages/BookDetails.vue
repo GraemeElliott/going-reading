@@ -141,7 +141,7 @@ watch(
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div class="mx-auto py-8">
     <!-- Simplified Loading State -->
     <div v-if="loading" class="max-w-4xl mx-auto">
       <div class="flex flex-col md:flex-row gap-6">
