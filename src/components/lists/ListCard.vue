@@ -88,9 +88,11 @@ const getBookCount = (): string => {
 </script>
 
 <template>
-  <div>
-    <div class="p-6 flex items-center justify-between cursor-pointer">
-      <div class="w-full" @click="emit('toggleExpansion', list.id)">
+  <div class="mt-8">
+    <div
+      class="py-6 px-1 flex items-center justify-between cursor-pointer border-l-4 border-goingTeal rounded shadow-md"
+    >
+      <div class="w-full ml-2" @click="emit('toggleExpansion', list.id)">
         <h3 class="text-lg font-semibold">{{ list.name }}</h3>
         <div class="flex items-center gap-2 text-sm text-muted-foreground">
           <span>{{ getBookCount() }}</span>
@@ -99,7 +101,7 @@ const getBookCount = (): string => {
           {{ list.details }}
         </p>
       </div>
-      <div v-if="!isProfilePage" class="flex items-center gap-2">
+      <div v-if="!isProfilePage" class="flex items-center gap-2 mr-4">
         <EditListDetails :list="list" />
         <Button
           size="sm"
@@ -115,7 +117,6 @@ const getBookCount = (): string => {
         </Button>
       </div>
     </div>
-    <Separator />
     <div
       :class="{
         hidden: !expanded,
@@ -135,15 +136,15 @@ const getBookCount = (): string => {
           </div>
         </div>
 
-        <div v-else-if="!books?.length" class="p-4 text-center">
+        <div v-else-if="!books?.length" class="p-4 mt-4 text-center">
           <p class="text-muted-foreground">No books in this list</p>
         </div>
 
-        <div v-else class="divide-y">
+        <div v-else>
           <div
             v-for="book in books"
             :key="book.isbn"
-            class="p-4 flex items-center"
+            class="p-4 mt-4 flex items-center"
             :class="{ 'opacity-50': removingBookIsbn === book.isbn }"
           >
             <router-link :to="`/book/${book.isbn}`" class="flex-grow min-w-0">
@@ -174,11 +175,10 @@ const getBookCount = (): string => {
               }"
               :disabled="removingBookIsbn === book.isbn"
             >
-              <font-awesome-icon icon="fa-solid fa-minus" /> Remove
+              <font-awesome-icon icon="fa-solid fa-minus" />
             </Button>
           </div>
         </div>
-        <Separator />
       </div>
     </div>
   </div>

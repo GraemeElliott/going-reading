@@ -71,7 +71,7 @@ const handleBookListUpdated = async (listId: string) => {
         You haven't created any lists yet.
       </div>
 
-      <div v-else class="space-y-4">
+      <div v-else class="mt-8 space-y-8 lg:mx-10 mb-10">
         <ListCard
           v-for="list in listsStore.lists"
           :key="list.id"

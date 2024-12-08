@@ -8,9 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Switch } from '@/components/ui/switch';
 import { useListsStore } from '@/store/lists-store';
-import { useDarkModeStore } from '@/store/store';
 import { useForm, useField } from 'vee-validate';
 import { listDetailsFormSchema } from '@/store/form-validation-schemas';
 import { toast } from '@/components/ui/toast';
@@ -20,8 +18,6 @@ const emit = defineEmits<{
 }>();
 
 const listsStore = useListsStore();
-const darkModeStore = useDarkModeStore();
-const isPublic = ref(false);
 const isPopoverOpen = ref(false);
 
 const { handleSubmit } = useForm({
@@ -38,14 +34,9 @@ const { value: detailsValue, errorMessage: detailsError } =
 
 const onSubmit = handleSubmit(async (values) => {
   try {
-    const newList = await listsStore.createList(
-      values.name,
-      isPublic.value,
-      values.details
-    );
+    const newList = await listsStore.createList(values.name, values.details);
     nameValue.value = '';
     detailsValue.value = '';
-    isPublic.value = false;
     toast({
       title: 'New list created',
       description: 'You have created a new list.',
@@ -63,10 +54,6 @@ const onSubmit = handleSubmit(async (values) => {
     });
   }
 });
-
-const handlePublicToggle = (checked: boolean) => {
-  isPublic.value = checked;
-};
 </script>
 
 <template>
@@ -122,10 +109,6 @@ const handlePublicToggle = (checked: boolean) => {
           <span v-if="detailsError" class="text-sm text-red-500">{{
             detailsError
           }}</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <Switch :checked="isPublic" @update:checked="handlePublicToggle" />
-          <span class="text-sm">{{ isPublic ? 'Public' : 'Private' }}</span>
         </div>
         <Button type="submit">Create List</Button>
       </form>

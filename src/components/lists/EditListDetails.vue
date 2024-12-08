@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import {
   Popover,
   PopoverContent,
@@ -23,7 +22,6 @@ const props = defineProps<{
 const listsStore = useListsStore();
 const darkModeStore = useDarkModeStore();
 const isPopoverOpen = ref(false);
-const isPublic = ref(props.list.is_public);
 
 const { handleSubmit } = useForm({
   validationSchema: listDetailsFormSchema,
@@ -37,17 +35,12 @@ const { value: nameValue, errorMessage: nameError } = useField<string>('name');
 const { value: detailsValue, errorMessage: detailsError } =
   useField<string>('details');
 
-const handlePublicToggle = (checked: boolean) => {
-  isPublic.value = checked;
-};
-
 const onSubmit = handleSubmit(async (values) => {
   try {
     await listsStore.editListDetails(
       props.list.id,
       values.name,
-      values.details || '',
-      isPublic.value
+      values.details || ''
     );
     toast({
       title: `${props.list.name} updated`,
@@ -125,10 +118,6 @@ const onSubmit = handleSubmit(async (values) => {
           <span v-if="detailsError" class="text-sm text-red-500">{{
             detailsError
           }}</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <Switch :checked="isPublic" @update:checked="handlePublicToggle" />
-          <span class="text-sm">{{ isPublic ? 'Public' : 'Private' }}</span>
         </div>
         <Button type="submit">Save changes</Button>
       </form>

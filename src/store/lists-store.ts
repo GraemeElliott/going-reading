@@ -13,7 +13,6 @@ interface List {
   user_id: string;
   name: string;
   details: string;
-  is_public: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -114,7 +113,6 @@ export const useListsStore = defineStore('lists', () => {
 
   const createList = async (
     name: string,
-    isPublic: boolean = false,
     details: string = ''
   ): Promise<List> => {
     if (!authStore.user) {
@@ -131,7 +129,6 @@ export const useListsStore = defineStore('lists', () => {
           user_id: authStore.user.id,
           name,
           details,
-          is_public: isPublic,
         })
         .select()
         .single();
@@ -159,8 +156,7 @@ export const useListsStore = defineStore('lists', () => {
   const editListDetails = async (
     listId: string,
     name: string,
-    details: string,
-    isPublic?: boolean
+    details: string
   ): Promise<void> => {
     if (!authStore.user) {
       throw new Error('User must be logged in to edit a list');
@@ -170,15 +166,10 @@ export const useListsStore = defineStore('lists', () => {
       loading.value = true;
       error.value = null;
 
-      const updateData: { name: string; details: string; is_public?: boolean } =
-        {
-          name,
-          details,
-        };
-
-      if (typeof isPublic !== 'undefined') {
-        updateData.is_public = isPublic;
-      }
+      const updateData: { name: string; details: string } = {
+        name,
+        details,
+      };
 
       const { error: updateError } = await supabase
         .from('lists')

@@ -27,7 +27,6 @@ const emit = defineEmits<{
 
 const isPopoverOpen = ref(false);
 const newListName = ref('');
-const isPublic = ref(false);
 const listsStore = useListsStore();
 const userBooksStore = useUserBooksStore();
 const { lists } = storeToRefs(listsStore);
@@ -74,10 +73,6 @@ const ensureBookInUserBooks = async () => {
 
   // Add or update the book in user_books
   await userBooksStore.updateBookStatus(bookInfo, currentStatus);
-};
-
-const handlePublicToggle = (checked: boolean) => {
-  isPublic.value = checked;
 };
 
 const handleAddToList = async (listId: string) => {
@@ -149,10 +144,7 @@ const handleCreateList = async () => {
       // Close popover immediately
       isPopoverOpen.value = false;
 
-      const newList = await listsStore.createList(
-        newListName.value.trim(),
-        isPublic.value
-      );
+      const newList = await listsStore.createList(newListName.value.trim());
 
       // Ensure book is in user_books first
       await ensureBookInUserBooks();
@@ -162,7 +154,6 @@ const handleCreateList = async () => {
       listsContainingBook.value.add(newList.id);
       emit('createList', newListName.value.trim());
       newListName.value = '';
-      isPublic.value = false;
       toast({
         title: 'New list created',
         description: `You have created a new list and added ${
@@ -219,15 +210,7 @@ const handleCreateList = async () => {
                 placeholder="New list name"
                 class="w-full"
               />
-              <div class="flex items-center space-x-2 py-2">
-                <Switch
-                  :checked="isPublic"
-                  @update:checked="handlePublicToggle"
-                />
-                <span class="text-sm">{{
-                  isPublic ? 'Public' : 'Private'
-                }}</span>
-              </div>
+              <div class="flex items-center space-x-2 py-2"></div>
               <Button
                 @click="handleCreateList"
                 :disabled="!newListName.trim() || isCreatingList"
@@ -262,11 +245,6 @@ const handleCreateList = async () => {
               >
                 <span>{{ list.name }}</span>
                 <div class="flex items-center gap-2">
-                  <span
-                    v-if="list.is_public"
-                    class="text-xs text-muted-foreground"
-                    >Public</span
-                  >
                   <span
                     v-if="listsContainingBook.has(list.id)"
                     class="text-green-500"
