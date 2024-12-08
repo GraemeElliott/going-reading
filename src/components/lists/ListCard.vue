@@ -165,8 +165,9 @@ const getBookCount = (): string => {
             </router-link>
             <Button
               v-if="!isProfilePage"
+              size="sm"
               @click="handleRemoveBook(list.id, book.isbn)"
-              class="hover:bg-goingRed hover:text-white shrink-0"
+              class="hover:bg-goingRed hover:border-none hover:text-white rounded-full p-2"
               :class="{
                 'pointer-events-none': removingBookIsbn === book.isbn,
                 'bg-white text-black': !darkModeStore.darkMode,

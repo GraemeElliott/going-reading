@@ -280,14 +280,14 @@ const handleTotalPagesUpdate = async () => {
               <div class="space-x-2">
                 <Button
                   size="sm"
-                  class="text-xs p-2 text-black bg-white rounded-2xl hover:bg-goingRed hover:text-white hover:border-none"
+                  class="text-xs p-2 text-black bg-white rounded-full hover:bg-goingRed hover:text-white hover:border-none"
                   @click="isEditingTotalPages = false"
                 >
                   <font-awesome-icon icon="fa-solid fa-ban" />
                 </Button>
                 <Button
                   size="sm"
-                  class="text-xs p-2 text-black bg-white rounded-2xl hover:bg-goingGreen hover:text-white hover:border-none"
+                  class="text-xs p-2 text-black bg-white rounded-full hover:bg-goingGreen hover:text-white hover:border-none"
                   @click="handleTotalPagesUpdate"
                 >
                   <font-awesome-icon icon="fa-solid fa-floppy-disk" />

@@ -30,8 +30,8 @@ const currentYear = new Date().getFullYear();
           <div class="w-48">
             <Logo />
           </div>
-          <p class="text-sm opacity-80 leading-relaxed">
-            Your personal reading companion. Track, discover, and share your
+          <p class="text-sm opacity-80 leading-relaxed text-center">
+            Your personal reading companion. Track, discover, and analyse your
             reading journey.
           </p>
         </div>
@@ -53,23 +53,9 @@ const currentYear = new Date().getFullYear();
               </li>
               <li>
                 <a
-                  href="/search"
-                  class="text-sm hover:text-goingTeal transition-colors"
-                  >Search Books</a
-                >
-              </li>
-              <li>
-                <a
                   href="/account"
                   class="text-sm hover:text-goingTeal transition-colors"
                   >My Account</a
-                >
-              </li>
-              <li>
-                <a
-                  href="/lists"
-                  class="text-sm hover:text-goingTeal transition-colors"
-                  >Reading Lists</a
                 >
               </li>
             </ul>
@@ -114,13 +100,16 @@ const currentYear = new Date().getFullYear();
         <!-- Social Links -->
         <div class="flex flex-col">
           <h3 class="font-semibold text-lg mb-6">Connect</h3>
-          <div class="flex items-center space-x-6">
+          <div class="flex items-center space-x-4">
             <a
               href="#"
               class="hover:text-goingTeal transition-colors"
-              aria-label="Twitter"
+              aria-label="Tumblr"
             >
-              <font-awesome-icon icon="fa-brands fa-twitter" class="text-xl" />
+              <font-awesome-icon
+                icon="fa-brands fa-tumblr-square"
+                class="text-xl"
+              />
             </a>
             <a
               href="#"
@@ -135,9 +124,12 @@ const currentYear = new Date().getFullYear();
             <a
               href="#"
               class="hover:text-goingTeal transition-colors"
-              aria-label="Facebook"
+              aria-label="Email"
             >
-              <font-awesome-icon icon="fa-brands fa-facebook" class="text-xl" />
+              <font-awesome-icon
+                icon="fa-regular fa-envelope"
+                class="text-xl"
+              />
             </a>
           </div>
         </div>
