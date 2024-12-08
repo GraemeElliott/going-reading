@@ -44,7 +44,7 @@ async function handleBookUpdate(
 <template>
   <div v-if="currentlyReadingBooks.length > 0" class="w-full py-4">
     <div class="flex flex-col gap-1">
-      <h3 class="text-lg font-medium">Reading</h3>
+      <h3 class="text-lg font-medium">Currently Reading</h3>
       <span class="text-sm text-muted-foreground"
         >{{ currentlyReadingBooks.length || 0 }}
         {{ currentlyReadingBooks.length === 1 ? 'book' : 'books' }}</span

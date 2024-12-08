@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useUserBooksStore } from '@/store/user-books-store';
 import BookCovers from '@/components/my-books/BookCovers.vue';
 import { STATUS_DISPLAY_NAMES, BookStatus } from '@/types/book';
+import { Separator } from '@/components/ui/separator';
 
 const route = useRoute();
 const router = useRouter();
@@ -24,6 +25,10 @@ const navigateToStatus = (status: BookStatus) => {
 };
 </script>
 <template>
+  <div class="flex flex-col gap-1">
+    <h3 class="text-lg font-medium">Bookshelves</h3>
+  </div>
+  <Separator class="my-6" />
   <div class="mt-8 space-y-4 lg:mx-10 mb-10">
     <div
       v-for="status in statuses"

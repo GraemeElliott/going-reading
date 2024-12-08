@@ -34,12 +34,12 @@ const readingProgress = computed(() => {
 
 <template>
   <div class="p-1">
-    <div class="flex flex-col items-center space-y-2">
-      <div class="relative group w-32 h-48">
+    <div class="flex flex-col items-center h-[320px]">
+      <div class="relative group w-32">
         <img
           :src="book.image"
           :alt="book.title"
-          class="absolute inset-0 w-32 h-48 rounded-md shadow-md transition-all duration-200 object-cover"
+          class="w-32 h-48 rounded-md shadow-md transition-all duration-200 object-cover"
         />
         <div
           class="absolute inset-0 w-32 h-48 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-200 rounded-md"
@@ -50,17 +50,14 @@ const readingProgress = computed(() => {
           @statusUpdate="handleStatusUpdate"
         />
       </div>
-      <div class="text-center w-full">
-        <div class="flex flex-row items-center justify-center space-x-3">
-          <Progress
-            :model-value="readingProgress"
-            class="my-4 [--progress-foreground:#4CAF50]"
-          />
+      <div class="text-center w-full mt-2">
+        <div class="flex flex-row items-center justify-center space-x-3 mb-2">
+          <Progress :model-value="readingProgress" class="my-2" />
           <span class="text-xs font-semibold"
             >{{ Math.floor(readingProgress) }}%</span
           >
         </div>
-        <router-link :to="`/book/${book.isbn}`">
+        <router-link :to="`/book/${book.isbn}`" class="block mb-1">
           <h3 class="font-medium text-sm line-clamp-2">
             {{ book.title }}
           </h3>
