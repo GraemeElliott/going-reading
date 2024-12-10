@@ -13,6 +13,7 @@ import { useListsStore } from '@/store/lists-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { storeToRefs } from 'pinia';
 import type { Book, BookBasicInfo, UserBook } from '@/types/book';
+import { useDarkModeStore } from '@/store/store';
 
 const props = defineProps<{
   isbn: string;
@@ -28,6 +29,7 @@ const isPopoverOpen = ref(false);
 const newListName = ref('');
 const listsStore = useListsStore();
 const userBooksStore = useUserBooksStore();
+const darkModeStore = useDarkModeStore();
 const { lists } = storeToRefs(listsStore);
 const feedback = ref<{ message: string; type: 'success' | 'error' } | null>(
   null
@@ -174,7 +176,16 @@ const handleCreateList = async () => {
 <template>
   <Popover v-model:open="isPopoverOpen">
     <PopoverTrigger as-child>
-      <Button class="cursor-pointer w-[180px]" @click.stop>
+      <Button
+        class="cursor-pointer w-[180px]"
+        :class="{
+          'bg-white hover:bg-white border-black text-black hover:text-black':
+            darkModeStore.darkMode,
+          'bg-gray-900 hover:bg-gray900 border-white text-white hover:text-white':
+            !darkModeStore.darkMode,
+        }"
+        @click.stop
+      >
         Add To List
       </Button>
     </PopoverTrigger>

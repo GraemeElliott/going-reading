@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNotesStore } from '@/store/notes-store';
+import { useDarkModeStore } from '@/store/store';
 
 const props = defineProps<{
   bookId: string;
@@ -17,11 +18,17 @@ const emit = defineEmits<{
 const newTitle = ref('');
 const newNote = ref('');
 const notesStore = useNotesStore();
+const darkModeStore = useDarkModeStore();
 const isSubmitting = ref(false);
+
+const placeholderStyle = computed(() => {
+  return {
+    '--placeholder-color': darkModeStore.darkMode ? 'white' : 'black',
+  };
+});
 
 // Quill editor options with full toolbar
 const editorOptions = {
-  theme: 'snow',
   modules: {
     toolbar: [
       [{ size: ['small', false, 'large', 'huge'] }],
@@ -38,6 +45,7 @@ const editorOptions = {
     ],
   },
   placeholder: 'Write a new note... (required)',
+  bounds: '.note-editor-container',
 };
 
 // Helper function to check if HTML content is empty
@@ -91,31 +99,39 @@ defineExpose({
     <Input
       v-model="newTitle"
       placeholder="Title (required)"
-      class="w-full text-sm md:text-base"
+      class="text-sm md:text-base"
     />
-    <QuillEditor
-      v-model:content="newNote"
-      :options="editorOptions"
-      contentType="html"
-      class="note-editor"
-    />
-    <Button
-      class="w-full mt-2"
-      @click="handleCreateNote"
-      :disabled="isSubmitting"
-    >
+    <div class="note-editor-container" :style="placeholderStyle">
+      <QuillEditor
+        v-model:content="newNote"
+        :options="editorOptions"
+        contentType="html"
+        class="note-editor"
+      />
+    </div>
+    <Button class="w-full" @click="handleCreateNote" :disabled="isSubmitting">
       {{ isSubmitting ? 'Adding...' : 'Add Note' }}
     </Button>
   </div>
 </template>
 
 <style scoped>
+.note-editor-container {
+  position: relative;
+  isolation: isolate;
+  min-height: 300px;
+}
+
 .note-editor {
-  @apply min-h-[150px] max-h-[300px];
+  @apply min-h-[300px];
 }
 
 :deep(.ql-toolbar) {
   @apply rounded-t-md border-border;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--background);
 }
 
 :deep(.ql-container) {
@@ -123,7 +139,14 @@ defineExpose({
 }
 
 :deep(.ql-editor) {
-  @apply min-h-[150px] max-h-[300px] overflow-y-auto;
+  min-height: 300px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+:deep(.ql-editor.ql-blank::before) {
+  color: var(--placeholder-color) !important;
+  font-style: normal !important;
 }
 
 /* Make toolbar more compact on mobile */

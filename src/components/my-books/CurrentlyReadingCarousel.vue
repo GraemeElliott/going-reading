@@ -42,7 +42,7 @@ async function handleBookUpdate(
 </script>
 
 <template>
-  <div v-if="currentlyReadingBooks.length > 0" class="w-full py-4">
+  <div v-if="currentlyReadingBooks.length > 0" class="w-full">
     <div class="flex flex-col gap-1">
       <h3 class="text-lg font-medium">Currently Reading</h3>
       <span class="text-sm text-muted-foreground"
@@ -64,6 +64,5 @@ async function handleBookUpdate(
       <CarouselPrevious class="hidden md:flex" />
       <CarouselNext class="hidden md:flex" />
     </Carousel>
-    <Separator class="my-6" />
   </div>
 </template>

@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, onUnmounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { useNotesStore } from '@/store/notes-store';
+import { useDarkModeStore } from '@/store/store';
 import CreateNote from './notes/CreateNote.vue';
 import NotesList from './notes/NotesList.vue';
+
 const props = defineProps<{
   bookId: string;
   bookTitle: string;
@@ -20,8 +20,10 @@ const props = defineProps<{
 
 const isSheetOpen = ref(false);
 const notesStore = useNotesStore();
+const darkModeStore = useDarkModeStore();
 const error = ref<string | null>(null);
 const createNoteRef = ref<InstanceType<typeof CreateNote> | null>(null);
+
 watch(isSheetOpen, (isOpen) => {
   const html = document.documentElement;
   if (isOpen) {
@@ -36,6 +38,7 @@ watch(isSheetOpen, (isOpen) => {
     window.scrollTo(0, parseInt(scrollY || '0'));
   }
 });
+
 onMounted(async () => {
   try {
     await notesStore.fetchBookNotes(props.bookId);
@@ -44,32 +47,45 @@ onMounted(async () => {
     error.value = 'Failed to load notes';
   }
 });
+
 const handleError = (errorMessage: string | null) => {
   error.value = errorMessage;
-};
-const closeSheet = () => {
-  isSheetOpen.value = false;
-  error.value = null;
-  if (createNoteRef.value) {
-    createNoteRef.value.clearForm();
-  }
 };
 </script>
 
 <template>
   <div class="relative">
     <Sheet>
-      <SheetTrigger class="mr-0.5">
-        <Button class="cursor-pointer w-[180px]" @click="isSheetOpen = true">
+      <SheetTrigger>
+        <Button
+          class="cursor-pointer w-[180px]"
+          :class="{
+            'bg-white border-black text-black': !darkModeStore.darkMode,
+            'bg-gray-900 border-white text-white': darkModeStore.darkMode,
+          }"
+          @click="isSheetOpen = true"
+        >
           Notes
         </Button>
       </SheetTrigger>
-      <SheetContent class="h-full flex flex-col">
-        <div class="flex-1 overflow-y-auto">
+      <SheetContent
+        class="h-full flex flex-col border-none"
+        :class="{
+          'bg-white text-black': !darkModeStore.darkMode,
+          'bg-gray-900 text-white': darkModeStore.darkMode,
+        }"
+      >
+        <div class="flex-1 overflow-y-auto px-2">
           <div class="flex-1 min-h-0">
             <div class="h-full overflow-y-auto">
               <SheetHeader>
-                <SheetTitle>Notes for {{ bookTitle }}</SheetTitle>
+                <SheetTitle
+                  :class="{
+                    'bg-white text-black': !darkModeStore.darkMode,
+                    'bg-gray-900 text-white': darkModeStore.darkMode,
+                  }"
+                  >Notes for {{ bookTitle }}</SheetTitle
+                >
               </SheetHeader>
               <!-- Notes List -->
               <div class="mt-6">
@@ -78,7 +94,7 @@ const closeSheet = () => {
               <!-- Error Message -->
               <div
                 v-if="error"
-                class="mt-4 bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm"
+                class="mt-4 bg-red-50 border border-red-200 text-goingRed p-3 rounded-md text-sm"
               >
                 {{ error }}
               </div>
@@ -86,9 +102,7 @@ const closeSheet = () => {
           </div>
           <!-- Notes Form Section -->
           <div class="flex-shrink-0 mt-8">
-            <p class="text-sm text-muted-foreground mb-2">
-              Add notes, quotes, or a review.
-            </p>
+            <h2 class="my-3 font-bold">Add notes, quotes, or a review.</h2>
             <CreateNote
               ref="createNoteRef"
               :book-id="bookId"

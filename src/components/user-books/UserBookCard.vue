@@ -2,6 +2,11 @@
 import type { UserBook, BookStatus } from '@/types/book';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import AddToList from '@/components/user-books/AddToList.vue';
 import UserRating from '@/components/user-books/UserRating.vue';
 import UserBookStatusSelect from '@/components/user-books/UserBookStatusSelect.vue';
@@ -19,7 +24,7 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
-const isDeleting = ref(false);
+const isPopoverOpen = ref(false);
 const isUpdating = ref(false);
 const userBooksStore = useUserBooksStore();
 const error = ref<string | null>(null);
@@ -58,7 +63,7 @@ const navigateToBook = () => {
 
 const handleDelete = () => {
   emit('delete', props.book.isbn);
-  isDeleting.value = false;
+  isPopoverOpen.value = false;
 };
 
 const handleStatusChange = async (newStatus: BookStatus) => {
@@ -96,7 +101,7 @@ const handleRatingChange = async (newRating: number | null) => {
 </script>
 
 <template>
-  <div v-if="!isDeleting" class="overflow-x-hidden">
+  <div class="overflow-x-hidden">
     <div
       class="relative flex flex-col md:flex-row items-start justify-between py-4 w-full"
     >
@@ -199,31 +204,36 @@ const handleRatingChange = async (newRating: number | null) => {
         </div>
         <AddToList :isbn="book.isbn" :book="bookBasicInfo" />
         <BookNotes :book-id="book.id" :book-title="book.title" />
-        <Button
-          @click="isDeleting = true"
-          class="bg-goingRed text-white w-[180px]"
-        >
-          Delete
-        </Button>
+        <Popover v-model:open="isPopoverOpen">
+          <PopoverTrigger>
+            <Button
+              class="bg-goingRed hover:bg-goingRed text-white hover:text-white w-[180px]"
+            >
+              Delete
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="p-4">
+            <p class="text-center mb-4">
+              Are you sure you want to delete <strong>{{ book.title }}</strong
+              >?
+            </p>
+            <div class="flex justify-center gap-4">
+              <Button variant="outline" @click="isPopoverOpen = false">
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                class="bg-goingRed"
+                @click="handleDelete"
+              >
+                Delete
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
     <Separator />
-  </div>
-  <div v-else class="overflow-x-hidden p-4 bg-gray-50 dark:bg-gray-800 rounded">
-    <p class="text-center mb-4">
-      Are you sure you want to delete "{{ book.title }}"?
-    </p>
-    <div class="flex justify-center gap-4">
-      <Button variant="outline" @click="isDeleting = false"> Cancel </Button>
-      <Button
-        variant="destructive"
-        size="sm"
-        type="button"
-        @click="handleDelete"
-      >
-        Delete
-      </Button>
-    </div>
-    <Separator class="mt-4" />
   </div>
 </template>

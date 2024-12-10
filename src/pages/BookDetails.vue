@@ -16,6 +16,9 @@ const UserBookStatusSelect = defineAsyncComponent(
 const AddToList = defineAsyncComponent(
   () => import('@/components/user-books/AddToList.vue')
 );
+const Notes = defineAsyncComponent(
+  () => import('@/components/user-books/BookNotes.vue')
+);
 const UserRating = defineAsyncComponent(
   () => import('@/components/user-books/UserRating.vue')
 );
@@ -31,13 +34,19 @@ const book = ref<Book | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-// Simplified book data computation
+// Simplified book data computation with user book ID
 const bookData = computed(() => {
   if (!book.value) return null;
+
+  const isbn = book.value.isbn;
+  // Find the user's book to get the ID
+  const userBook = userBooksStore.userBooks.find((b) => b.isbn === isbn);
+
   return {
     ...book.value,
+    id: userBook?.id, // Include the book ID from user_books table
     basicInfo: {
-      isbn: book.value.isbn,
+      isbn,
       title: book.value.title,
       authors: book.value.authors,
       image: book.value.image,
@@ -191,6 +200,11 @@ watch(
                     :isbn="bookData.isbn"
                     :book="bookData"
                     class="w-48"
+                  />
+                  <Notes
+                    v-if="bookData.id"
+                    :book-id="bookData.id"
+                    :book-title="bookData.title"
                   />
                   <UserRating
                     v-if="showRating"

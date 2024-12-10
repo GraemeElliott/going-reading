@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNotesStore } from '@/store/notes-store';
 import type { Note } from '@/store/notes-store';
+import { useDarkModeStore } from '@/store/store';
+import { Separator } from '@/components/ui/separator';
 
 const props = defineProps<{
   bookId: string;
@@ -17,6 +19,7 @@ const emit = defineEmits<{
 
 const editingNote = ref<Note | null>(null);
 const notesStore = useNotesStore();
+const darkModeStore = useDarkModeStore();
 const isSubmitting = ref(false);
 
 // Quill editor options with full toolbar
@@ -140,49 +143,77 @@ const cancelEditing = () => {
           contentType="html"
           class="note-editor mb-3"
         />
-        <div class="flex justify-end gap-2">
-          <Button variant="outline" size="sm" @click="cancelEditing">
-            Cancel
+        <div class="flex justify-end gap-2 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            class="hover:bg-goingRed hover:border-none hover:text-white"
+            @click="cancelEditing"
+          >
+            <font-awesome-icon icon="fa-solid fa-ban" />
           </Button>
           <Button
             size="sm"
+            class="hover:bg-goingGreen hover:text-white hover:border hover:border-goingGreen"
+            :class="{
+              'bg-white text-black': !darkModeStore.darkMode,
+              'bg-gray-900 text-white border border-white':
+                darkModeStore.darkMode,
+            }"
             @click="handleUpdateNote(note)"
             :disabled="isSubmitting"
           >
-            {{ isSubmitting ? 'Saving...' : 'Save' }}
+            <font-awesome-icon icon="fa-solid fa-floppy-disk" />
           </Button>
         </div>
+        <Separator class="my-4" />
       </div>
       <div v-else>
         <div class="flex flex-col gap-3">
           <div class="space-y-2">
-            <h4 v-if="note.title" class="font-medium text-base">
-              {{ note.title }}
-            </h4>
+            <div class="flex flex-row justify-between">
+              <h4 v-if="note.title" class="font-medium text-base">
+                {{ note.title }}
+              </h4>
+              <div class="flex flex-row space-x-3">
+                <Button
+                  size="sm"
+                  class="hover:bg-goingTeal hover:text-white hover:border hover:border-goingTeal"
+                  :class="{
+                    'bg-white text-black': !darkModeStore.darkMode,
+                    'bg-gray-900 text-white border border-white':
+                      darkModeStore.darkMode,
+                  }"
+                  @click="startEditing(note)"
+                >
+                  <font-awesome-icon icon="fa-solid fa-pen-to-square" />
+                </Button>
+                <Button
+                  size="sm"
+                  class="hover:bg-goingRed hover:text-white hover:border hover:border-goingRed"
+                  :class="{
+                    'bg-white text-black': !darkModeStore.darkMode,
+                    'bg-gray-900 text-white border border-white':
+                      darkModeStore.darkMode,
+                  }"
+                  @click="handleDeleteNote(note.id)"
+                >
+                  <font-awesome-icon icon="fa-solid fa-trash-can" />
+                </Button>
+              </div>
+            </div>
             <p class="text-xs text-muted-foreground">
               {{ formatDate(note.created_at) }}
             </p>
             <div
               v-html="note.note"
-              class="prose prose-sm max-w-none text-sm md:text-base"
+              class="prose prose-sm max-w-none text-sm md:text-base ql-content"
+              :class="{
+                'prose-invert': darkModeStore.darkMode,
+              }"
             ></div>
           </div>
-          <div class="flex flex-row space-x-6 my-4">
-            <Button
-              size="sm"
-              class="flex-1 h-8 px-3"
-              @click="startEditing(note)"
-            >
-              Edit
-            </Button>
-            <Button
-              size="sm"
-              class="flex-1 h-8 px-3 bg-goingRed"
-              @click="handleDeleteNote(note.id)"
-            >
-              Delete
-            </Button>
-          </div>
+          <Separator />
         </div>
       </div>
     </div>
@@ -201,5 +232,78 @@ const cancelEditing = () => {
 
 :deep(.prose p:last-child) {
   @apply mb-0;
+}
+
+/* Quill content styling */
+:deep(.ql-content) {
+  @apply leading-relaxed;
+}
+
+:deep(.ql-content p) {
+  @apply my-2;
+}
+
+:deep(.ql-content blockquote) {
+  @apply pl-4 border-l-4 border-gray-300 dark:border-gray-600 italic my-4;
+}
+
+:deep(.ql-content ul) {
+  @apply list-disc list-inside my-4 space-y-1;
+}
+
+:deep(.ql-content ol) {
+  @apply list-decimal list-inside my-4 space-y-1;
+}
+
+:deep(.ql-content li) {
+  @apply ml-4;
+}
+
+:deep(.ql-content a) {
+  @apply text-blue-600 dark:text-blue-400 hover:underline;
+}
+
+:deep(.ql-content strong) {
+  @apply font-bold;
+}
+
+:deep(.ql-content em) {
+  @apply italic;
+}
+
+:deep(.ql-content s) {
+  @apply line-through;
+}
+
+:deep(.ql-content sub) {
+  @apply align-sub text-xs;
+}
+
+:deep(.ql-content sup) {
+  @apply align-super text-xs;
+}
+
+:deep(.ql-content img) {
+  @apply max-w-full h-auto my-4 rounded-lg;
+}
+
+:deep(.ql-content .ql-align-center) {
+  @apply text-center;
+}
+
+:deep(.ql-content .ql-align-right) {
+  @apply text-right;
+}
+
+:deep(.ql-content .ql-align-justify) {
+  @apply text-justify;
+}
+
+:deep(.ql-content .ql-indent-1) {
+  @apply ml-4;
+}
+
+:deep(.ql-content .ql-indent-2) {
+  @apply ml-8;
 }
 </style>
