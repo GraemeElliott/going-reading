@@ -190,23 +190,30 @@ const handleCreateList = async () => {
       </Button>
     </PopoverTrigger>
     <PopoverContent
-      class="w-80"
+      class="w-80 relative"
+      :class="{
+        'bg-white hover:bg-white border-none text-black hover:text-black':
+          !darkModeStore.darkMode,
+        'bg-gray-900 hover:bg-gray900 border-white text-white hover:text-white':
+          darkModeStore.darkMode,
+      }"
       :open="isPopoverOpen"
       @update:open="isPopoverOpen = $event"
     >
+      <button class="absolute top-2 right-4" @click="isPopoverOpen = false">
+        <font-awesome-icon icon="fa-solid fa-xmark" />
+      </button>
       <div class="grid gap-4">
         <div class="space-y-2">
           <h4 class="font-medium leading-none">Add to List</h4>
-          <p class="text-sm text-muted-foreground">
-            Choose a list or create a new one
-          </p>
+          <p class="text-sm">Choose a list or create a new one</p>
         </div>
         <div
           v-if="feedback"
           :class="{
             'p-2 rounded text-sm': true,
-            'bg-red-100 text-red-600': feedback.type === 'error',
-            'bg-green-100 text-green-600': feedback.type === 'success',
+            'bg-red-100 text-goingRed': feedback.type === 'error',
+            'bg-green-100 text-goingGreen': feedback.type === 'success',
           }"
         >
           {{ feedback.message }}
@@ -245,11 +252,11 @@ const handleCreateList = async () => {
               <font-awesome-icon
                 v-if="listsContainingBook.has(list.id)"
                 icon="fa-regular fa-circle-xmark"
-                class="cursor-pointer text-red-500 hover:text-red-700"
+                class="cursor-pointer text-goingRed"
                 @click="handleRemoveFromList(list.id)"
               />
               <button
-                class="w-full text-left px-2 py-1 text-sm rounded hover:bg-accent flex items-center justify-between"
+                class="w-full text-left px-2 py-1 text-sm rounded flex items-center justify-between"
                 @click="handleAddToList(list.id)"
                 :disabled="isAddingToList"
               >
@@ -257,7 +264,7 @@ const handleCreateList = async () => {
                 <div class="flex items-center gap-2">
                   <span
                     v-if="listsContainingBook.has(list.id)"
-                    class="text-green-500"
+                    class="text-goingGreen"
                     >✓</span
                   >
                 </div>

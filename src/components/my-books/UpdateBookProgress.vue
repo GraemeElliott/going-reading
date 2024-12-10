@@ -22,6 +22,7 @@ import { useUserBooksStore } from '@/store/user-books-store';
 import { toast } from '@/components/ui/toast';
 import { updateBookErrorMessages } from '@/store/error-handler';
 import { updateProgressSchema } from '@/store/form-validation-schemas';
+import { useDarkModeStore } from '@/store/store';
 
 const props = defineProps<{
   book: UserBook;
@@ -34,6 +35,7 @@ const totalPages = ref(props.book.pages || 0);
 const isDialogOpen = ref(false);
 const currentPageError = ref('');
 const isEditingTotalPages = ref(false);
+const darkModeStore = useDarkModeStore();
 
 const { handleSubmit, setFieldValue, validate } = useForm({
   validationSchema: updateProgressSchema,
@@ -239,7 +241,12 @@ const handleTotalPagesUpdate = async () => {
         Update
       </Button>
     </DialogTrigger>
-    <DialogContent>
+    <DialogContent
+      :class="{
+        'bg-white border-black text-black': !darkModeStore.darkMode,
+        'bg-gray-900 text-white border-none': darkModeStore.darkMode,
+      }"
+    >
       <DialogHeader>
         <DialogTitle>Update Reading Progress</DialogTitle>
         <div class="flex flex-row mt-4">
