@@ -8,7 +8,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/toast';
 import { useListsStore } from '@/store/lists-store';
 import { useUserBooksStore } from '@/store/user-books-store';

@@ -85,13 +85,7 @@ const handleSeeMore = () => {
       @click="handleResultClick(result)"
     >
       <template v-if="isAuthorResult(result)">
-        <div class="relative w-10 h-14 mr-3">
-          <font-awesome-icon
-            icon="fa-solid fa-user"
-            class="w-full h-full text-goingTeal absolute inset-0"
-          />
-        </div>
-        <div>
+        <div class="ml-4">
           <p class="font-semibold text-lg">{{ result.name }}</p>
           <p
             class="text-sm"

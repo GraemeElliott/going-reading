@@ -158,7 +158,7 @@ const getBookCount = (): string => {
                 <div class="min-w-0 flex-grow">
                   <h4 class="font-medium">{{ book.title }}</h4>
                   <p class="text-sm text-muted-foreground truncate">
-                    {{ book.authors.join(', ') }}
+                    by {{ book.authors.join(', ') }}
                   </p>
                 </div>
               </div>

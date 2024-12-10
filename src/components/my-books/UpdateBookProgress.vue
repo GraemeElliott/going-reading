@@ -39,18 +39,44 @@ const { handleSubmit, setFieldValue, validate } = useForm({
   validationSchema: updateProgressSchema,
 });
 
+// Function to toggle body scroll
+const toggleBodyScroll = (disable: boolean) => {
+  if (disable) {
+    document.documentElement.classList.add('overflow-hidden');
+    document.body.classList.add('overflow-hidden');
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+  } else {
+    document.documentElement.classList.remove('overflow-hidden');
+    document.body.classList.remove('overflow-hidden');
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.height = '';
+  }
+};
+
+// Watch for dialog state changes
+watch(isDialogOpen, (newValue) => {
+  toggleBodyScroll(newValue);
+});
+
 // Watch for changes in currentPage and validate against total pages
 watch(currentPage, (newValue) => {
-  if (newValue > totalPages.value) {
-    currentPageError.value = `Current page cannot exceed total pages (${totalPages.value})`;
-  } else {
-    currentPageError.value = '';
+  if (!isEditingTotalPages.value) {
+    if (newValue > totalPages.value) {
+      currentPageError.value = `Current page cannot exceed total pages (${totalPages.value})`;
+    } else {
+      currentPageError.value = '';
+    }
+    setFieldValue('currentPage', newValue);
   }
-  setFieldValue('currentPage', newValue);
 });
 
 watch(timeReadingInMins, (newValue) => {
-  setFieldValue('timeReadingInMins', newValue);
+  if (!isEditingTotalPages.value) {
+    setFieldValue('timeReadingInMins', newValue);
+  }
 });
 
 const emit = defineEmits<{
@@ -76,6 +102,11 @@ const validateForm = async () => {
 
 const handleUpdate = async (e: Event) => {
   e.preventDefault();
+
+  if (isEditingTotalPages.value) {
+    await handleTotalPagesUpdate();
+    return;
+  }
 
   if (!(await validateForm())) return;
 
@@ -169,6 +200,11 @@ const handleTotalPagesUpdate = async () => {
       return;
     }
 
+    // If current page is greater than new total pages, adjust it
+    if (currentPage.value > totalPages.value) {
+      currentPage.value = totalPages.value;
+    }
+
     await userBooksStore.updateBookTotalPages(
       props.book.isbn,
       totalPages.value
@@ -213,7 +249,9 @@ const handleTotalPagesUpdate = async () => {
             class="w-[80px] rounded-lg mr-4"
             @error="book.image = '/default-book-cover.jpg'"
           />
-          <DialogDescription class="flex flex-col gap-1 justify-center">
+          <DialogDescription
+            class="flex flex-col gap-1 justify-center text-left"
+          >
             <p class="font-bold">{{ book.title }}</p>
             <p class="text-xs">by: {{ book.authors.join(', ') }}</p>
             <p class="text-xs">{{ book.publisher }}</p>
@@ -226,14 +264,17 @@ const handleTotalPagesUpdate = async () => {
       </DialogHeader>
       <form @submit.prevent="handleUpdate" class="space-y-4" novalidate>
         <div class="flex items-center justify-between">
-          <FormField v-slot="{ field, errorMessage }" name="currentPage">
+          <FormField v-slot="{ errorMessage }" name="currentPage">
             <FormItem class="flex-grow">
-              <FormLabel required>Current Page</FormLabel>
+              <FormLabel :required="!isEditingTotalPages"
+                >Current Page</FormLabel
+              >
               <FormControl>
                 <input
                   type="number"
                   v-model="currentPage"
                   min="0"
+                  :disabled="isEditingTotalPages"
                   class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </FormControl>
@@ -249,7 +290,9 @@ const handleTotalPagesUpdate = async () => {
                 </p>
               </div>
               <p
-                v-if="currentPageError || errorMessage"
+                v-if="
+                  !isEditingTotalPages && (currentPageError || errorMessage)
+                "
                 class="text-sm font-medium text-destructive"
               >
                 {{ currentPageError || errorMessage }}
@@ -260,7 +303,7 @@ const handleTotalPagesUpdate = async () => {
 
         <FormField
           v-if="isEditingTotalPages"
-          v-slot="{ field }"
+          v-slot="{ errorMessage }"
           name="totalPages"
         >
           <FormItem>
@@ -288,7 +331,7 @@ const handleTotalPagesUpdate = async () => {
                 <Button
                   size="sm"
                   class="text-xs p-2 text-black bg-white rounded-full hover:bg-goingGreen hover:text-white hover:border-none"
-                  @click="handleTotalPagesUpdate"
+                  type="submit"
                 >
                   <font-awesome-icon icon="fa-solid fa-floppy-disk" />
                 </Button>
@@ -297,9 +340,11 @@ const handleTotalPagesUpdate = async () => {
           </FormItem>
         </FormField>
 
-        <FormField v-slot="{ field, errorMessage }" name="timeReadingInMins">
+        <FormField v-slot="{ errorMessage }" name="timeReadingInMins">
           <FormItem>
-            <FormLabel required>Session time spent reading (mins)</FormLabel>
+            <FormLabel :required="!isEditingTotalPages"
+              >Session time spent reading (mins)</FormLabel
+            >
             <FormControl>
               <input
                 type="number"
@@ -307,16 +352,23 @@ const handleTotalPagesUpdate = async () => {
                 min="0"
                 max="1440"
                 placeholder="Enter time in minutes"
+                :disabled="isEditingTotalPages"
                 class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               />
             </FormControl>
-            <p v-if="errorMessage" class="text-sm font-medium text-destructive">
+            <p
+              v-if="!isEditingTotalPages && errorMessage"
+              class="text-sm font-medium text-destructive"
+            >
               {{ errorMessage }}
             </p>
           </FormItem>
         </FormField>
 
-        <DialogFooter class="grid grid-cols-2 gap-4">
+        <DialogFooter
+          v-if="!isEditingTotalPages"
+          class="grid grid-cols-2 gap-4"
+        >
           <Button
             type="button"
             @click="handleFinish"

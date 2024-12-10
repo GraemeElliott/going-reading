@@ -120,18 +120,14 @@ const cancelEditing = () => {
 </script>
 
 <template>
-  <div class="space-y-4 max-h-[calc(90vh-400px)] overflow-y-auto">
+  <div class="space-y-4">
     <div
       v-if="!notes.length"
       class="text-center py-4 text-sm text-muted-foreground"
     >
       No notes yet
     </div>
-    <div
-      v-for="note in notes"
-      :key="note.id"
-      class="space-y-3 p-4 bg-accent rounded-lg"
-    >
+    <div v-for="note in notes" :key="note.id" class="space-y-3">
       <div v-if="editingNote?.id === note.id">
         <Input
           v-model="editingTitle"
@@ -158,32 +154,30 @@ const cancelEditing = () => {
         </div>
       </div>
       <div v-else>
-        <div class="flex flex-col sm:flex-row sm:items-start gap-3">
-          <div class="flex-grow space-y-2">
+        <div class="flex flex-col gap-3">
+          <div class="space-y-2">
             <h4 v-if="note.title" class="font-medium text-base">
               {{ note.title }}
             </h4>
+            <p class="text-xs text-muted-foreground">
+              {{ formatDate(note.created_at) }}
+            </p>
             <div
               v-html="note.note"
               class="prose prose-sm max-w-none text-sm md:text-base"
             ></div>
-            <p class="text-xs text-muted-foreground">
-              {{ formatDate(note.created_at) }}
-            </p>
           </div>
-          <div class="flex sm:flex-col gap-2">
+          <div class="flex flex-row space-x-6 my-4">
             <Button
-              variant="ghost"
               size="sm"
-              class="flex-1 sm:flex-none h-8 px-3"
+              class="flex-1 h-8 px-3"
               @click="startEditing(note)"
             >
               Edit
             </Button>
             <Button
-              variant="ghost"
               size="sm"
-              class="flex-1 sm:flex-none h-8 px-3 hover:text-red-500 hover:bg-red-50"
+              class="flex-1 h-8 px-3 bg-goingRed"
               @click="handleDeleteNote(note.id)"
             >
               Delete
