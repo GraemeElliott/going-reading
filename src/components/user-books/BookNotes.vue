@@ -5,6 +5,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -86,6 +87,9 @@ const handleError = (errorMessage: string | null) => {
                   }"
                   >Notes for {{ bookTitle }}</SheetTitle
                 >
+                <SheetDescription>
+                  Add and manage your notes, quotes, and reviews for this book.
+                </SheetDescription>
               </SheetHeader>
               <!-- Notes List -->
               <div class="mt-6">

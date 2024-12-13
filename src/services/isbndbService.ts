@@ -3,7 +3,7 @@ import type {
   Book,
   APIBookResponse,
   ScoredBook,
-  CacheEntry,
+  SearchCache,
   AuthorBookResponse,
 } from '@/types/book';
 import type { Author } from '@/types/author';
@@ -14,7 +14,7 @@ const baseURL = 'https://api2.isbndb.com';
 // Cache configuration
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const AUTHOR_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes for authors
-const searchCache = new Map<string, CacheEntry>();
+const searchCache = new Map<string, SearchCache<Book | Author>>();
 
 // Initialize axios instance with common configuration
 const api = axios.create({

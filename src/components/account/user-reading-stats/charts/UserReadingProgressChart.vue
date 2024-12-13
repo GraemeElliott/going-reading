@@ -19,7 +19,7 @@ import {
 import { Chart } from 'vue-chartjs';
 import { useUserAnalyticsStore } from '@/store/user-analytics-store';
 import { ref, onMounted, watch, computed } from 'vue';
-import type { TimePeriod, ReadingData } from '@/store/user-analytics-store';
+import type { TimePeriod, ReadingData } from '@/types/analytics';
 
 const props = defineProps<{
   initialPeriod: TimePeriod;

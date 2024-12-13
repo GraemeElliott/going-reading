@@ -22,12 +22,21 @@ export const useDarkModeStore = defineStore('darkMode', {
     initializeDarkMode() {
       this.darkMode = Cookies.get('darkMode') === 'true';
       this.initialized = true;
+      // Apply dark mode class to html element
+      this._applyDarkMode();
     },
     toggleDarkMode() {
       this.darkMode = !this.darkMode;
       Cookies.set('darkMode', this.darkMode ? 'true' : 'false', {
         expires: 365,
       });
+      // Apply dark mode class to html element
+      this._applyDarkMode();
+    },
+    // Using underscore prefix as a convention for "internal" method
+    _applyDarkMode() {
+      // Toggle the 'dark' class on the html element
+      document.documentElement.classList.toggle('dark', this.darkMode);
     },
   },
 });
