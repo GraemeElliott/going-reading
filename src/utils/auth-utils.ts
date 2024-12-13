@@ -1,6 +1,6 @@
 import { rawSchema } from '@/store/form-validation-schemas';
 import { supabase } from '@/supabase/supabase';
-import { registrationErrorMessages } from './error-handler';
+import { registrationErrorMessages } from '../store/error-handler';
 import { ref } from 'vue';
 import { UserCredentials } from '@/types/user';
 

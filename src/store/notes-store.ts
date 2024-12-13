@@ -15,7 +15,7 @@ export interface Note {
 
 interface NotesState {
   notesByBookId: Record<string, Note[]>;
-  loading: boolean;
+  loadingStates: Record<string, boolean>;
   error: string | null;
 }
 
@@ -24,20 +24,27 @@ export const useNotesStore = defineStore({
 
   state: (): NotesState => ({
     notesByBookId: {},
-    loading: false,
+    loadingStates: {},
     error: null,
   }),
 
   getters: {
-    getNotesForBook: (state) => (bookId: string) => {
-      return state.notesByBookId[bookId] || [];
-    },
+    getNotesForBook:
+      (state) =>
+      (bookId: string): Note[] => {
+        return state.notesByBookId[bookId] || [];
+      },
+    isLoading:
+      (state) =>
+      (bookId: string): boolean => {
+        return !!state.loadingStates[bookId];
+      },
   },
 
   actions: {
     async fetchBookNotes(bookId: string) {
       try {
-        this.loading = true;
+        this.loadingStates[bookId] = true;
         const { data, error } = await supabase
           .from('book_notes')
           .select('*')
@@ -54,7 +61,7 @@ export const useNotesStore = defineStore({
       } catch (error) {
         handleError(error, 'Failed to fetch book notes');
       } finally {
-        this.loading = false;
+        this.loadingStates[bookId] = false;
       }
     },
 
@@ -64,6 +71,7 @@ export const useNotesStore = defineStore({
       title: string | null = null
     ) {
       try {
+        this.loadingStates[bookId] = true;
         const { data: userData, error: userError } =
           await supabase.auth.getUser();
         if (userError) throw userError;
@@ -114,6 +122,8 @@ export const useNotesStore = defineStore({
         console.error('Error in createNote:', error);
         handleError(error, 'Failed to create note');
         throw error;
+      } finally {
+        this.loadingStates[bookId] = false;
       }
     },
 

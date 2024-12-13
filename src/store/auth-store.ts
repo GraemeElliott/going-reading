@@ -7,7 +7,7 @@ import {
   validateRegistrationForm,
   checkIfUsernameExists,
   checkIfEmailExists,
-} from '@/store/auth-utils';
+} from '@/utils/auth-utils';
 import {
   handleError,
   handleSupabaseError,
