@@ -67,7 +67,7 @@ watch(isDialogOpen, (newValue) => {
 watch(currentPage, (newValue) => {
   if (!isEditingTotalPages.value) {
     if (newValue > totalPages.value) {
-      currentPageError.value = `Current page cannot exceed total pages (${totalPages.value})`;
+      currentPageError.value = `Current page cannot exceed total pages`;
     } else {
       currentPageError.value = '';
     }
@@ -91,7 +91,7 @@ const validateForm = async () => {
   if (!result.valid) return false;
 
   if (currentPage.value > totalPages.value) {
-    currentPageError.value = `Current page cannot exceed total pages (${totalPages.value})`;
+    currentPageError.value = `Current page cannot exceed total pages`;
     return false;
   }
 
@@ -282,7 +282,12 @@ const handleTotalPagesUpdate = async () => {
                   v-model="currentPage"
                   min="0"
                   :disabled="isEditingTotalPages"
-                  class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  :class="{
+                    'bg-white border-black text-black': !darkModeStore.darkMode,
+                    'bg-gray-900 text-white border-white':
+                      darkModeStore.darkMode,
+                  }"
                 />
               </FormControl>
               <div class="flex items-center justify-between">
@@ -320,7 +325,11 @@ const handleTotalPagesUpdate = async () => {
                 type="number"
                 v-model="totalPages"
                 min="1"
-                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                :class="{
+                  'bg-white border-black text-black': !darkModeStore.darkMode,
+                  'bg-gray-900 text-white border-white': darkModeStore.darkMode,
+                }"
               />
             </FormControl>
             <div class="flex items-center justify-between mt-2">
@@ -360,7 +369,11 @@ const handleTotalPagesUpdate = async () => {
                 max="1440"
                 placeholder="Enter time in minutes"
                 :disabled="isEditingTotalPages"
-                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                class="flex h-9 w-full rounded-md border border-input px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                :class="{
+                  'bg-white border-black text-black': !darkModeStore.darkMode,
+                  'bg-gray-900 text-white border-white': darkModeStore.darkMode,
+                }"
               />
             </FormControl>
             <p

@@ -222,9 +222,8 @@ const handleRatingChange = async (newRating: number | null) => {
                 Cancel
               </Button>
               <Button
-                variant="destructive"
                 size="sm"
-                class="bg-goingRed"
+                class="bg-goingRed text-white border-none hover:bg-goingRed"
                 @click="handleDelete"
               >
                 Delete

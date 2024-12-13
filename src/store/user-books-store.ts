@@ -10,6 +10,24 @@ import {
 } from '../services/activityService';
 import { ReadingProgressService } from '../services/readingProgressService';
 
+// Utility function to extract year from date string
+const extractYear = (dateStr: string | undefined | null): number | null => {
+  if (!dateStr) return null;
+
+  // If it's already a year (4 digits), convert to number
+  if (/^\d{4}$/.test(dateStr)) {
+    return parseInt(dateStr, 10);
+  }
+
+  // Try to extract year from the date string
+  const matches = dateStr.toString().match(/\d{4}/);
+  if (matches) {
+    return parseInt(matches[0], 10);
+  }
+
+  return null;
+};
+
 export const useUserBooksStore = defineStore('userBooks', () => {
   const booksMap = ref(new Map<string, UserBook>());
   const loading = ref(false);
@@ -348,9 +366,9 @@ export const useUserBooksStore = defineStore('userBooks', () => {
             image: bookOrIsbn.image,
             date_added: now,
             date_updated: now,
-            date_published: bookOrIsbn.date_published,
+            date_published: extractYear(bookOrIsbn.date_published),
             publisher: bookOrIsbn.publisher,
-            pages: bookOrIsbn.pages,
+            pages: bookOrIsbn.pages || 0,
             user_rating: null,
           })
           .select()
