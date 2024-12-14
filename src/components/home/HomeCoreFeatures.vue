@@ -39,13 +39,16 @@ const coreFeatures = [
       'Track the books you read and view a detailed history of your journey for each book you interact with.',
     details: [
       {
-        text: 'Add your book to bookshelves based on the status or create a custom list',
+        text: 'Add a book to bookshelves based on the status or create a custom list',
         icon: 'fa-solid fa-plus',
       },
-      { text: 'View the full history of a book', icon: 'fa-solid fa-book' },
+      {
+        text: 'View the full history of a book',
+        icon: 'fa-solid fa-bars-staggered',
+      },
       {
         text: 'Leave notes to remind you of your thoughts, learnings or leave a review',
-        icon: 'fa-solid fa-share-nodes',
+        icon: 'fa-solid fa-note-sticky',
       },
     ],
     visual: 'homepage-reading-activity.png',
@@ -117,11 +120,11 @@ const coreFeatures = [
                       class="flex items-start gap-4 group/item"
                     >
                       <div
-                        class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-[#0F3538]/5 to-[#0F3538]/10 flex items-center justify-center shadow-sm group-hover/item:shadow-md group-hover/item:from-[#0F3538]/10 group-hover/item:to-[#0F3538]/15 transition-all duration-300"
+                        class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-sm border border-black"
                       >
                         <font-awesome-icon
                           :icon="detail.icon"
-                          class="text-[#0F3538] w-5 h-5 sm:w-6 sm:h-6 group-hover/item:scale-110 transition-transform duration-300"
+                          class="text-[#0F3538] w-5 h-5 sm:w-6 sm:h-6"
                         />
                       </div>
                       <span
