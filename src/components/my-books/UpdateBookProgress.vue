@@ -41,28 +41,6 @@ const { handleSubmit, setFieldValue, validate } = useForm({
   validationSchema: updateProgressSchema,
 });
 
-// Function to toggle body scroll
-const toggleBodyScroll = (disable: boolean) => {
-  if (disable) {
-    document.documentElement.classList.add('overflow-hidden');
-    document.body.classList.add('overflow-hidden');
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
-  } else {
-    document.documentElement.classList.remove('overflow-hidden');
-    document.body.classList.remove('overflow-hidden');
-    document.body.style.position = '';
-    document.body.style.width = '';
-    document.body.style.height = '';
-  }
-};
-
-// Watch for dialog state changes
-watch(isDialogOpen, (newValue) => {
-  toggleBodyScroll(newValue);
-});
-
 // Watch for changes in currentPage and validate against total pages
 watch(currentPage, (newValue) => {
   if (!isEditingTotalPages.value) {

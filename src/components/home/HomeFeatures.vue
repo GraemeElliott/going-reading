@@ -6,12 +6,7 @@ const features = [
     description:
       'Keep track of your reading journey with easy-to-use tools for managing your library and reading progress.',
   },
-  {
-    icon: 'fa-solid fa-compass',
-    title: 'Discover New Books',
-    description:
-      'Find your next great read with personalised recommendations and explore books across different genres.',
-  },
+
   {
     icon: 'fa-solid fa-list-check',
     title: 'Create Reading Lists',
@@ -27,10 +22,10 @@ const features = [
 ];
 </script>
 <template>
-  <div class="container mx-auto">
+  <div class="mx-auto">
     <div class="">
       <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto"
       >
         <div
           v-for="feature in features"
