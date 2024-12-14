@@ -144,7 +144,7 @@ const coreFeatures = [
                 <template v-if="feature.isImage">
                   <div class="w-full min-h-[500px] p-4">
                     <img
-                      :src="'/src/assets/images/' + feature.visual"
+                      :src="`/images/${feature.visual}`"
                       :alt="feature.title"
                       class="w-full h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-500"
                     />
