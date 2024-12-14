@@ -55,7 +55,7 @@ const coreFeatures = [
 </script>
 
 <template>
-  <section class="bg-white pt-24 pb-40 overflow-hidden relative">
+  <section class="bg-white pt-16 md:pt-20 pb-32 overflow-hidden relative">
     <!-- Decorative background elements with animations -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
       <div
@@ -72,11 +72,11 @@ const coreFeatures = [
       />
     </div>
 
-    <div class="relative max-w-7xl mx-auto px-6 lg:px-8">
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl lg:max-w-none">
-        <div class="text-center mb-32">
+        <div class="text-center mb-24">
           <h2
-            class="text-4xl font-bold tracking-tight text-[#0F3538] sm:text-5xl mb-8"
+            class="text-4xl font-bold tracking-tight text-[#0F3538] sm:text-5xl mb-6"
           >
             Everything you need to track your reading journey
           </h2>
@@ -86,7 +86,7 @@ const coreFeatures = [
           </p>
         </div>
 
-        <div class="space-y-48">
+        <div class="space-y-32 md:space-y-40">
           <!-- Feature sections with alternating layouts -->
           <div
             v-for="(feature, index) in coreFeatures"
@@ -95,7 +95,7 @@ const coreFeatures = [
           >
             <div
               :class="[
-                'grid grid-cols-1 md:grid-cols-12 gap-16 lg:gap-24 items-center',
+                'grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-10 md:gap-6 lg:gap-12 items-center',
                 index % 2 === 1 ? 'lg:flex-row-reverse' : '',
               ]"
             >
@@ -103,29 +103,29 @@ const coreFeatures = [
               <div class="flex flex-col justify-center md:col-span-5">
                 <div>
                   <h3
-                    class="text-3xl font-bold tracking-tight text-[#0F3538] sm:text-4xl mb-8"
+                    class="text-3xl font-bold tracking-tight text-[#0F3538] sm:text-4xl mb-6"
                   >
                     {{ feature.title }}
                   </h3>
-                  <p class="text-xl text-gray-600 mb-12 leading-relaxed">
+                  <p class="text-xl text-gray-600 mb-8 leading-relaxed">
                     {{ feature.description }}
                   </p>
-                  <ul class="space-y-8">
+                  <ul class="space-y-6">
                     <li
                       v-for="detail in feature.details"
                       :key="detail.text"
-                      class="flex items-start gap-5 group/item"
+                      class="flex items-start gap-4 group/item"
                     >
                       <div
-                        class="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-[#0F3538]/5 to-[#0F3538]/10 flex items-center justify-center shadow-sm group-hover/item:shadow-md group-hover/item:from-[#0F3538]/10 group-hover/item:to-[#0F3538]/15 transition-all duration-300"
+                        class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-[#0F3538]/5 to-[#0F3538]/10 flex items-center justify-center shadow-sm group-hover/item:shadow-md group-hover/item:from-[#0F3538]/10 group-hover/item:to-[#0F3538]/15 transition-all duration-300"
                       >
                         <font-awesome-icon
                           :icon="detail.icon"
-                          class="text-[#0F3538] w-6 h-6 group-hover/item:scale-110 transition-transform duration-300"
+                          class="text-[#0F3538] w-5 h-5 sm:w-6 sm:h-6 group-hover/item:scale-110 transition-transform duration-300"
                         />
                       </div>
                       <span
-                        class="text-lg text-gray-600 pt-4 leading-relaxed"
+                        class="text-base sm:text-lg text-gray-600 pt-3 leading-relaxed"
                         >{{ detail.text }}</span
                       >
                     </li>
@@ -142,7 +142,7 @@ const coreFeatures = [
               >
                 <!-- Icon or Image -->
                 <template v-if="feature.isImage">
-                  <div class="w-full min-h-[500px] p-4">
+                  <div class="w-full min-h-[400px] md:min-h-[450px] p-2 sm:p-4">
                     <img
                       :src="`/images/${feature.visual}`"
                       :alt="feature.title"
