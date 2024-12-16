@@ -9,7 +9,7 @@ const features = [
 
   {
     icon: 'fa-solid fa-list-check',
-    title: 'Organise your bookshelves',
+    title: 'Organise Your Bookshelves',
     description:
       'Organise your bookshelves and create your own shelves to group your books by what works best for you.',
   },
