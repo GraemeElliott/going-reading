@@ -9,9 +9,9 @@ const features = [
 
   {
     icon: 'fa-solid fa-list-check',
-    title: 'Create Reading Lists',
+    title: 'Organise your bookshelves',
     description:
-      'Organise your reading with custom lists - from your current reads to your future favorites.',
+      'Organise your bookshelves and create your own shelves to group your books by what works best for you.',
   },
   {
     icon: 'fa-solid fa-chart-line',

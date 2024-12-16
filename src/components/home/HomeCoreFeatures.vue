@@ -89,7 +89,7 @@ const coreFeatures = [
           </p>
         </div>
 
-        <div class="space-y-32 md:space-y-40">
+        <div class="md:space-y-40">
           <!-- Feature sections with alternating layouts -->
           <div
             v-for="(feature, index) in coreFeatures"
@@ -98,7 +98,7 @@ const coreFeatures = [
           >
             <div
               :class="[
-                'grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-10 md:gap-6 lg:gap-12 items-center',
+                'grid grid-cols-1 md:grid-cols-12 md:gap-6 lg:gap-12 items-center',
                 index % 2 === 1 ? 'lg:flex-row-reverse' : '',
               ]"
             >
