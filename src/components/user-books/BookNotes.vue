@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import {
   Sheet,
   SheetContent,
@@ -24,21 +24,6 @@ const notesStore = useNotesStore();
 const darkModeStore = useDarkModeStore();
 const error = ref<string | null>(null);
 const createNoteRef = ref<InstanceType<typeof CreateNote> | null>(null);
-
-watch(isSheetOpen, (isOpen) => {
-  const html = document.documentElement;
-  if (isOpen) {
-    // Store current scroll position
-    const scrollY = window.scrollY;
-    html.style.setProperty('--scroll-position', `${scrollY}px`);
-    html.classList.add('modal-open');
-  } else {
-    html.classList.remove('modal-open');
-    // Restore scroll position
-    const scrollY = html.style.getPropertyValue('--scroll-position');
-    window.scrollTo(0, parseInt(scrollY || '0'));
-  }
-});
 
 onMounted(async () => {
   try {

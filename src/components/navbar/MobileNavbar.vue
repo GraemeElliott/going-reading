@@ -117,7 +117,7 @@ const handleNavClick = () => {
 </script>
 
 <template>
-  <div class="lg:hidden">
+  <div class="lg:hidden mb-3">
     <!-- Mobile Header -->
     <div class="fixed top-0 left-0 right-0 z-50">
       <div

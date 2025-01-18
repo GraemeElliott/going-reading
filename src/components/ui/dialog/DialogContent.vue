@@ -10,7 +10,7 @@ import {
   DialogPortal,
   useForwardPropsEmits,
 } from 'radix-vue';
-import { computed, type HTMLAttributes } from 'vue';
+import { computed, type HTMLAttributes, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps<
   DialogContentProps & { class?: HTMLAttributes['class'] }
@@ -19,11 +19,21 @@ const emits = defineEmits<DialogContentEmits>();
 
 const delegatedProps = computed(() => {
   const { class: _, ...delegated } = props;
-
   return delegated;
 });
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits);
+
+// Add/remove scroll lock class when dialog mounts/unmounts
+onMounted(() => {
+  document.documentElement.style.setProperty('overflow', 'hidden');
+  document.body.style.setProperty('overflow', 'hidden');
+});
+
+onBeforeUnmount(() => {
+  document.documentElement.style.setProperty('overflow', '');
+  document.body.style.setProperty('overflow', '');
+});
 </script>
 
 <template>
