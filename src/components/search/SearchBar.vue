@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
+import { useRouter } from 'vue-router';
 import {
   Select,
   SelectContent,
@@ -32,8 +33,24 @@ const totalResults = ref(0);
 const isInputFocused = ref(false);
 const searchType = ref<SearchType>('title');
 const searchContainer = ref<HTMLDivElement | null>(null);
+const router = useRouter();
 
 const emit = defineEmits(['search-complete']);
+
+const handleSubmit = (e: Event) => {
+  e.preventDefault();
+  if (searchQuery.value.length >= 3) {
+    router.push({
+      path: '/search',
+      query: {
+        q: searchQuery.value,
+        type: searchType.value,
+      },
+    });
+    clearSearch();
+    isInputFocused.value = false;
+  }
+};
 
 const performSearch = debounce(async (newQuery: string) => {
   if (!newQuery || newQuery.length < 3) {
@@ -94,7 +111,7 @@ watch(searchType, () => {
 
 <template>
   <div class="relative w-full" ref="searchContainer">
-    <div class="flex gap-2">
+    <form @submit="handleSubmit" class="flex gap-2">
       <Select :model-value="searchType" @update:model-value="setSearchType">
         <SelectTrigger :class="['w-[100px]']" :isHome="isHome">
           <SelectValue
@@ -105,9 +122,9 @@ watch(searchType, () => {
         </SelectTrigger>
         <SelectContent :isHome="isHome">
           <SelectGroup>
-            <SelectItem value="title" :isHome="isHome"> Title </SelectItem>
-            <SelectItem value="author" :isHome="isHome"> Author </SelectItem>
-            <SelectItem value="isbn" :isHome="isHome"> ISBN </SelectItem>
+            <SelectItem value="title" :isHome="isHome">Title</SelectItem>
+            <SelectItem value="author" :isHome="isHome">Author</SelectItem>
+            <SelectItem value="isbn" :isHome="isHome">ISBN</SelectItem>
           </SelectGroup>
         </SelectContent>
       </Select>
@@ -125,14 +142,13 @@ watch(searchType, () => {
           @focus="handleFocus"
           @blur="handleBlur"
         />
-        <!-- Search Results -->
         <div
           v-if="
             searchQuery.length >= 3 &&
             isInputFocused &&
             (totalResults > 0 || isSearching)
           "
-          class="absolute w-full left-0 right-0 mt-2 border border-gray-200 shadow-lg z-50 rounded-md overflow-hidden"
+          class="fixed w-full left-0 right-0 mt-2 mb-20 border border-gray-200 shadow-lg z-50 rounded-md overflow-hidden"
           :class="{
             'bg-white text-black': !darkModeStore.darkMode || isHome,
             'bg-gray-900 text-white hover:bg-gray-900':
@@ -150,6 +166,6 @@ watch(searchType, () => {
           />
         </div>
       </div>
-    </div>
+    </form>
   </div>
 </template>
