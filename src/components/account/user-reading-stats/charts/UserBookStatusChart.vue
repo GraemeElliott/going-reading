@@ -92,7 +92,7 @@ const chartOptions = computed(() => ({
 </script>
 
 <template>
-  <div class="w-full h-[300px] sm:h-[400px]">
+  <div class="w-full h-[300px] sm:h-[400px] pl-4 pb-4 lg:pl-0 lg:pb-2">
     <Doughnut :data="chartData" :options="chartOptions" />
   </div>
 </template>
