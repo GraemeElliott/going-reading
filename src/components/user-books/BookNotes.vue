@@ -41,7 +41,7 @@ const handleError = (errorMessage: string | null) => {
 
 <template>
   <div class="relative">
-    <Sheet>
+    <Sheet v-model:open="isSheetOpen">
       <SheetTrigger>
         <Button
           class="cursor-pointer w-[180px]"
@@ -49,12 +49,13 @@ const handleError = (errorMessage: string | null) => {
             'bg-white border-black text-black': !darkModeStore.darkMode,
             'bg-gray-900 border-white text-white': darkModeStore.darkMode,
           }"
-          @click="isSheetOpen = true"
+          @pointerdown.stop
         >
           Notes
         </Button>
       </SheetTrigger>
       <SheetContent
+        @pointerdown.stop
         class="h-full flex flex-col border-none"
         :class="{
           'bg-white text-black': !darkModeStore.darkMode,
