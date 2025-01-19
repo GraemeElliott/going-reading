@@ -45,9 +45,10 @@ const yearOverYearDifference = computed(() => {
     value: Math.abs(diff),
     percentage: Math.abs(percentage),
     increased: diff > 0,
+    same: diff === 0,
     text: `${Math.abs(percentage)}% ${
-      diff >= 0 ? 'more' : 'less'
-    } than last year`,
+      diff > 0 ? 'more' : diff < 0 ? 'less' : 'same as'
+    } last year`,
   };
 });
 </script>
@@ -71,6 +72,11 @@ const yearOverYearDifference = computed(() => {
             v-if="yearOverYearDifference.increased"
             class="text-goingGreen mr-1"
             ><font-awesome-icon icon="fa-solid fa-arrow-up"
+          /></span>
+          <span
+            v-else-if="yearOverYearDifference.same"
+            class="text-goingYellow mr-1"
+            ><font-awesome-icon icon="fa-solid fa-minus"
           /></span>
           <span v-else class="text-goingRed mr-1"
             ><font-awesome-icon icon="fa-solid fa-arrow-down"
