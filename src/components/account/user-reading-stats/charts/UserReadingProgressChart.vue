@@ -20,6 +20,9 @@ import { Chart } from 'vue-chartjs';
 import { useUserAnalyticsStore } from '@/store/user-analytics-store';
 import { ref, onMounted, watch, computed } from 'vue';
 import type { TimePeriod, ReadingData } from '@/types/analytics';
+import { useDarkModeStore } from '@/store/store';
+
+const darkModeStore = useDarkModeStore();
 
 const props = defineProps<{
   initialPeriod: TimePeriod;
@@ -89,8 +92,12 @@ const chartData = ref<{
       label: 'Pages Read',
       data: [],
       fill: false,
-      borderColor: 'rgb(0, 0, 0)',
-      backgroundColor: 'rgb(0, 0, 0)',
+      borderColor: computed(() =>
+        darkModeStore.darkMode ? '#FFFFFF' : '#000000'
+      ).value,
+      backgroundColor: computed(() =>
+        darkModeStore.darkMode ? '#FFFFFF' : '#000000'
+      ).value,
       borderWidth: 3,
       pointStyle: 'circle',
       pointHoverRadius: 2,
@@ -125,15 +132,18 @@ const chartOptions = computed(
             font: {
               size: window.innerWidth < 640 ? 8 : 12,
             },
+            color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
           },
         },
         tooltip: {
           padding: window.innerWidth < 640 ? 6 : 10,
           titleSpacing: window.innerWidth < 640 ? 6 : 10,
           bodySpacing: window.innerWidth < 640 ? 3 : 5,
-          backgroundColor: 'rgba(255,255,255, 1)',
-          titleColor: 'rgb(0, 0, 0)',
-          bodyColor: 'rgb(0, 0, 0)',
+          backgroundColor: darkModeStore.darkMode
+            ? 'rgba(0, 0, 0, 0.8)'
+            : 'rgba(255, 255, 255, 1)',
+          titleColor: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+          bodyColor: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
           titleFont: {
             size: window.innerWidth < 640 ? 16 : 26,
           },
@@ -142,7 +152,9 @@ const chartOptions = computed(
           },
           boxPadding: window.innerWidth < 640 ? 6 : 10,
           borderWidth: 1,
-          borderColor: 'rgba(220,220,220, 1)',
+          borderColor: darkModeStore.darkMode
+            ? 'rgba(255, 255, 255, 0.1)'
+            : 'rgba(220, 220, 220, 1)',
           usePointStyle: true,
           callbacks: {
             label: function (context: any) {
@@ -162,6 +174,7 @@ const chartOptions = computed(
           ticks: {
             maxRotation: window.innerWidth < 640 ? 45 : 0,
             minRotation: window.innerWidth < 640 ? 45 : 0,
+            color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
             font: {
               size:
                 window.innerWidth < 640
@@ -188,6 +201,7 @@ const chartOptions = computed(
             font: {
               size: window.innerWidth < 640 ? 11 : 14,
             },
+            color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
           },
           ticks: {
             stepSize: 1,
@@ -195,6 +209,13 @@ const chartOptions = computed(
             font: {
               size: window.innerWidth < 640 ? 10 : 12,
             },
+            color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+          },
+          grid: {
+            color: darkModeStore.darkMode
+              ? 'rgba(255, 255, 255, 0.1)'
+              : 'rgba(102, 102, 102, 0.1)',
+            lineWidth: 1,
           },
         },
         y1: {
@@ -208,15 +229,21 @@ const chartOptions = computed(
             font: {
               size: window.innerWidth < 640 ? 11 : 14,
             },
+            color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
           },
           grid: {
-            drawOnChartArea: false,
+            drawOnChartArea: true,
+            color: darkModeStore.darkMode
+              ? 'rgba(255, 255, 255, 0.1)'
+              : 'rgba(102, 102, 102, 0.1)',
+            lineWidth: 1,
           },
           ticks: {
             callback: formatTickValue,
             font: {
               size: window.innerWidth < 640 ? 10 : 12,
             },
+            color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
           },
         },
       },
@@ -248,6 +275,8 @@ const updateChartData = () => {
         data: pagesData,
         pointRadius: isYearlyView.value ? 2 : 1.5,
         pointHoverRadius: isYearlyView.value ? 3 : 2.5,
+        borderColor: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+        backgroundColor: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
       } as Dataset,
     ],
   };
@@ -262,6 +291,7 @@ watch(selectedPeriod, () =>
   analyticsStore.updateMonthlyData(selectedPeriod.value)
 );
 watch(() => analyticsStore.monthlyData, updateChartData, { deep: true });
+watch(() => darkModeStore.darkMode, updateChartData);
 </script>
 
 <template>

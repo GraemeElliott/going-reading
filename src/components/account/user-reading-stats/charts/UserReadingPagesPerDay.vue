@@ -16,6 +16,9 @@ import { Line } from 'vue-chartjs';
 import { computed, onMounted, ref, watch } from 'vue';
 import { ReadingProgressService } from '@/services/readingProgressService';
 import { useAuthStore } from '@/store/auth-store';
+import { useDarkModeStore } from '@/store/store';
+
+const darkModeStore = useDarkModeStore();
 
 // Register ChartJS components
 ChartJS.register(
@@ -42,7 +45,7 @@ const authStore = useAuthStore();
 const chartData = ref<ChartDataPoint[]>([]);
 const viewMode = ref<'daily' | 'weekly'>('daily');
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   interaction: {
@@ -52,17 +55,26 @@ const chartOptions = {
   plugins: {
     legend: {
       display: false,
+      labels: {
+        color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+      },
     },
     tooltip: {
       enabled: true,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      titleColor: 'white',
-      bodyColor: 'white',
-      padding: 10,
+      backgroundColor: darkModeStore.darkMode
+        ? 'rgba(0, 0, 0, 0.8)'
+        : 'rgba(255, 255, 255, 1)',
+      titleColor: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+      bodyColor: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+      padding: window.innerWidth < 640 ? 6 : 10,
       displayColors: false,
+      borderWidth: 1,
+      borderColor: darkModeStore.darkMode
+        ? 'rgba(255, 255, 255, 0.1)'
+        : 'rgba(220, 220, 220, 1)',
       callbacks: {
         label: function (context: any) {
-          return `${context.parsed.y} pages read`;
+          return `${context.parsed.y.toLocaleString()} pages read`;
         },
       },
     },
@@ -77,6 +89,7 @@ const chartOptions = {
         maxTicksLimit: viewMode.value === 'weekly' ? 4 : 7,
         maxRotation: 0,
         autoSkip: true,
+        color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
       },
     },
     y: {
@@ -89,15 +102,20 @@ const chartOptions = {
         font: {
           size: window.innerWidth < 640 ? 11 : 14,
         },
+        color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
       },
       grid: {
-        color: 'rgba(0, 0, 0, 0.1)',
+        color: darkModeStore.darkMode
+          ? 'rgba(255, 255, 255, 0.1)'
+          : 'rgba(102, 102, 102, 0.1)',
+        lineWidth: 1,
       },
       ticks: {
         maxTicksLimit: 6,
         callback: function (tickValue: number | string) {
           return Math.round(Number(tickValue)).toLocaleString('en-US');
         },
+        color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
       },
     },
   },
@@ -112,7 +130,7 @@ const chartOptions = {
       hoverRadius: 4,
     },
   },
-};
+}));
 
 const processReadingData = (data: any[]) => {
   if (viewMode.value === 'weekly') {
@@ -206,10 +224,15 @@ const computedChartData = computed(() => ({
     {
       label: 'Pages Read',
       data: chartData.value.map((d: ChartDataPoint) => d.pagesRead),
-      fill: 'start',
-      backgroundColor: 'rgba(255, 205, 86, 0.8)',
-      borderColor: 'rgb(255, 205, 86)',
-      tension: 0.4,
+      fill: false,
+      borderColor: darkModeStore.darkMode
+        ? 'rgb(255, 205, 86)'
+        : 'rgb(178, 34, 34)',
+      borderWidth: 2,
+      tension: 0.3,
+      pointStyle: 'circle',
+      pointRadius: 2,
+      pointHoverRadius: 4,
     },
   ],
 }));
@@ -231,6 +254,16 @@ const fetchData = async () => {
 watch(viewMode, () => {
   fetchData();
 });
+
+watch(
+  () => darkModeStore.darkMode,
+  () => {
+    // Force chart update when dark mode changes
+    if (chartData.value.length > 0) {
+      chartData.value = [...chartData.value];
+    }
+  }
+);
 
 onMounted(() => {
   fetchData();

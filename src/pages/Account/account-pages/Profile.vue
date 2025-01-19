@@ -83,34 +83,10 @@ onMounted(async () => {
         />
       </template>
       <template v-else>
-        <TotalBooksReadCard
-          :class="{
-            'bg-white text-black': !darkModeStore.darkMode,
-            'bg-gray-900 text-white border border-white':
-              darkModeStore.darkMode,
-          }"
-        />
-        <TotalPagesReadCard
-          :class="{
-            'bg-white text-black': !darkModeStore.darkMode,
-            'bg-gray-900 text-white border border-white':
-              darkModeStore.darkMode,
-          }"
-        />
-        <TotalReadingTimeCard
-          :class="{
-            'bg-white text-black': !darkModeStore.darkMode,
-            'bg-gray-900 text-white border border-white':
-              darkModeStore.darkMode,
-          }"
-        />
-        <CurrentYearBooksAddedCard
-          :class="{
-            'bg-white text-black': !darkModeStore.darkMode,
-            'bg-gray-900 text-white border border-white':
-              darkModeStore.darkMode,
-          }"
-        />
+        <TotalBooksReadCard />
+        <TotalPagesReadCard />
+        <TotalReadingTimeCard />
+        <CurrentYearBooksAddedCard />
       </template>
     </div>
 

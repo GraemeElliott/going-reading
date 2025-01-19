@@ -1,25 +1,13 @@
 <script setup lang="ts">
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Bar } from 'vue-chartjs';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Doughnut, Pie } from 'vue-chartjs';
 import { useUserBooksStore } from '@/store/user-books-store';
+import { useDarkModeStore } from '@/store/store';
 import { computed } from 'vue';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+const darkModeStore = useDarkModeStore();
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const userBooksStore = useUserBooksStore();
 
@@ -60,65 +48,51 @@ const chartData = computed(() => {
   };
 });
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: {
-      display: false,
+      display: true,
+      position: 'right' as const,
+      labels: {
+        color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+        font: {
+          size: window.innerWidth < 640 ? 10 : 12,
+        },
+        padding: window.innerWidth < 640 ? 10 : 20,
+      },
     },
     tooltip: {
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      titleColor: 'white',
-      bodyColor: 'white',
-      padding: 10,
-      displayColors: false,
+      backgroundColor: darkModeStore.darkMode
+        ? 'rgba(0, 0, 0, 0.8)'
+        : 'rgba(255, 255, 255, 1)',
+      titleColor: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+      bodyColor: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+      padding: window.innerWidth < 640 ? 6 : 10,
+      displayColors: true,
+      borderWidth: 1,
+      borderColor: darkModeStore.darkMode
+        ? 'rgba(255, 255, 255, 0.1)'
+        : 'rgba(220, 220, 220, 1)',
       callbacks: {
         label: function (context: any) {
-          return `${context.parsed.y} books`;
+          const value = context.raw;
+          const percentage = (
+            (value /
+              context.dataset.data.reduce((a: number, b: number) => a + b, 0)) *
+            100
+          ).toFixed(1);
+          return `${value} books (${percentage}%)`;
         },
       },
     },
   },
-  scales: {
-    x: {
-      grid: {
-        display: false,
-      },
-      ticks: {
-        maxRotation: window.innerWidth < 640 ? 45 : 0,
-        minRotation: window.innerWidth < 640 ? 45 : 0,
-        font: {
-          size: window.innerWidth < 640 ? 10 : 12,
-        },
-      },
-    },
-    y: {
-      beginAtZero: true,
-      title: {
-        display: true,
-        text: 'Books',
-        padding: { top: 10, bottom: 10 },
-        font: {
-          size: window.innerWidth < 640 ? 11 : 14,
-        },
-      },
-      ticks: {
-        stepSize: 1,
-        font: {
-          size: window.innerWidth < 640 ? 10 : 12,
-        },
-      },
-      grid: {
-        color: 'rgba(0, 0, 0, 0.1)',
-      },
-    },
-  },
-};
+}));
 </script>
 
 <template>
-  <div class="w-full h-[250px] sm:h-[400px]">
-    <Bar :data="chartData" :options="chartOptions" />
+  <div class="w-full h-[300px] sm:h-[400px]">
+    <Doughnut :data="chartData" :options="chartOptions" />
   </div>
 </template>

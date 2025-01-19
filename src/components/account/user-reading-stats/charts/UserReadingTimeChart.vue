@@ -16,7 +16,10 @@ import { Line } from 'vue-chartjs';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useAuthStore } from '@/store/auth-store';
 import { useUserAnalyticsStore } from '@/store/user-analytics-store';
+import { useDarkModeStore } from '@/store/store';
 import { supabase } from '@/supabase/supabase';
+
+const darkModeStore = useDarkModeStore();
 
 ChartJS.register(
   CategoryScale,
@@ -38,7 +41,7 @@ const analyticsStore = useUserAnalyticsStore();
 const chartData = ref<{ date: string; readingTime: number }[]>([]);
 const viewMode = ref<'daily' | 'weekly'>('weekly');
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   interaction: {
@@ -48,14 +51,23 @@ const chartOptions = {
   plugins: {
     legend: {
       display: false,
+      labels: {
+        color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+      },
     },
     tooltip: {
       enabled: true,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      titleColor: 'white',
-      bodyColor: 'white',
-      padding: 10,
+      backgroundColor: darkModeStore.darkMode
+        ? 'rgba(0, 0, 0, 0.8)'
+        : 'rgba(255, 255, 255, 1)',
+      titleColor: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+      bodyColor: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
+      padding: window.innerWidth < 640 ? 6 : 10,
       displayColors: false,
+      borderWidth: 1,
+      borderColor: darkModeStore.darkMode
+        ? 'rgba(255, 255, 255, 0.1)'
+        : 'rgba(220, 220, 220, 1)',
       callbacks: {
         label: function (context: any) {
           return analyticsStore.formatReadingTime(context.parsed.y);
@@ -73,6 +85,7 @@ const chartOptions = {
         maxTicksLimit: 7,
         maxRotation: 0,
         autoSkip: true,
+        color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
       },
     },
     y: {
@@ -86,9 +99,13 @@ const chartOptions = {
         font: {
           size: window.innerWidth < 640 ? 11 : 14,
         },
+        color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
       },
       grid: {
-        color: 'rgba(0, 0, 0, 0.1)',
+        color: darkModeStore.darkMode
+          ? 'rgba(255, 255, 255, 0.1)'
+          : 'rgba(102, 102, 102, 0.1)',
+        lineWidth: 1,
       },
       ticks: {
         maxTicksLimit: 6,
@@ -99,6 +116,7 @@ const chartOptions = {
         ) {
           return Math.round(Number(tickValue)).toLocaleString('en-US');
         },
+        color: darkModeStore.darkMode ? '#FFFFFF' : '#000000',
       },
     },
   },
@@ -113,7 +131,7 @@ const chartOptions = {
       hoverRadius: 4,
     },
   },
-};
+}));
 
 const processReadingData = async () => {
   try {
@@ -229,6 +247,16 @@ const computedChartData = computed(() => ({
 watch(viewMode, () => {
   processReadingData();
 });
+
+watch(
+  () => darkModeStore.darkMode,
+  () => {
+    // Force chart update when dark mode changes
+    if (chartData.value.length > 0) {
+      chartData.value = [...chartData.value];
+    }
+  }
+);
 
 onMounted(() => {
   processReadingData();

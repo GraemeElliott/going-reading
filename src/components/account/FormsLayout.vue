@@ -20,7 +20,7 @@ defineProps<{
     </div>
     <Separator class="my-6" />
     <div class="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
-      <aside class="lg:w-1/5">
+      <aside class="w-full lg:w-1/5">
         <slot name="sidebar">
           <SidebarNav
             :items="sidebarNavItems"

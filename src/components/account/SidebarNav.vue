@@ -15,7 +15,9 @@ const handleClick = (title: string) => {
 </script>
 
 <template>
-  <nav class="flex flex-row flex-wrap gap-2 lg:flex-col lg:gap-1">
+  <nav
+    class="flex flex-row flex-wrap justify-center gap-2 lg:flex-col lg:gap-1"
+  >
     <Button
       v-for="item in items"
       :key="item.title"
