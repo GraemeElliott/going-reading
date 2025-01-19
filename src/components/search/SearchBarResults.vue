@@ -54,85 +54,83 @@ const handleSeeMore = () => {
 </script>
 
 <template>
-  <div class="max-h-[50dvh] overflow-y-auto overscroll-contain">
-    <ul>
-      <div v-if="isSearching" class="flex flex-col p-2">
-        <div class="flex flex-row p-2">
-          <Skeleton class="h-9 w-9 rounded-full mr-2" />
-          <div class="space-y-2 mt-2">
-            <Skeleton class="h-4 w-[250px]" />
-            <Skeleton class="h-4 w-[200px]" />
-          </div>
-        </div>
-        <div class="flex flex-row p-2">
-          <Skeleton class="h-9 w-9 rounded-full mr-2" />
-          <div class="space-y-2 mt-2">
-            <Skeleton class="h-4 w-[250px]" />
-            <Skeleton class="h-4 w-[200px]" />
-          </div>
-        </div>
-        <div class="flex flex-row p-2">
-          <Skeleton class="h-9 w-9 rounded-full mr-2" />
-          <div class="space-y-2 mt-2">
-            <Skeleton class="h-4 w-[250px]" />
-            <Skeleton class="h-4 w-[200px]" />
-          </div>
+  <ul>
+    <div v-if="isSearching" class="flex flex-col p-2">
+      <div class="flex flex-row p-2">
+        <Skeleton class="h-9 w-9 rounded-full mr-2" />
+        <div class="space-y-2 mt-2">
+          <Skeleton class="h-4 w-[250px]" />
+          <Skeleton class="h-4 w-[200px]" />
         </div>
       </div>
-      <li
-        v-for="result in searchResults"
-        :key="isAuthorResult(result) ? result.name : result.isbn"
-        class="flex items-center p-2 cursor-pointer border-b border-gray-100 last:border-b-0"
-        @click="handleResultClick(result)"
-      >
-        <template v-if="isAuthorResult(result)">
-          <div class="ml-4">
-            <p class="font-semibold text-lg">{{ result.name }}</p>
-            <p
-              class="text-sm"
-              :class="{
-                'text-black': isHome || (!darkModeStore.darkMode && !isHome),
-                'text-gray-400': darkModeStore.darkMode && !isHome,
-              }"
-            >
-              Author
-            </p>
-          </div>
-        </template>
-
-        <template v-else>
-          <img
-            :src="result.image"
-            alt="Book cover"
-            class="w-10 h-14 mr-3 object-cover rounded"
-          />
-          <div>
-            <p class="font-semibold">{{ result.title }}</p>
-            <p
-              class="text-sm"
-              :class="{
-                'text-black': isHome || (!darkModeStore.darkMode && !isHome),
-                'text-gray-400': darkModeStore.darkMode && !isHome,
-              }"
-            >
-              by {{ result.authors.join(', ') }}
-            </p>
-          </div>
-        </template>
-      </li>
-    </ul>
-
-    <div v-if="totalResults > 5" class="text-center border-t border-gray-100">
-      <button
-        @click="handleSeeMore"
-        class="w-full py-3 font-medium text-sm transition-colors"
-        :class="{
-          'text-black': isHome || (!darkModeStore.darkMode && !isHome),
-          'text-white': darkModeStore.darkMode && !isHome,
-        }"
-      >
-        See more results
-      </button>
+      <div class="flex flex-row p-2">
+        <Skeleton class="h-9 w-9 rounded-full mr-2" />
+        <div class="space-y-2 mt-2">
+          <Skeleton class="h-4 w-[250px]" />
+          <Skeleton class="h-4 w-[200px]" />
+        </div>
+      </div>
+      <div class="flex flex-row p-2">
+        <Skeleton class="h-9 w-9 rounded-full mr-2" />
+        <div class="space-y-2 mt-2">
+          <Skeleton class="h-4 w-[250px]" />
+          <Skeleton class="h-4 w-[200px]" />
+        </div>
+      </div>
     </div>
+    <li
+      v-for="result in searchResults"
+      :key="isAuthorResult(result) ? result.name : result.isbn"
+      class="flex items-center p-2 cursor-pointer border-b border-gray-100 last:border-b-0"
+      @click="handleResultClick(result)"
+    >
+      <template v-if="isAuthorResult(result)">
+        <div class="ml-4">
+          <p class="font-semibold text-lg">{{ result.name }}</p>
+          <p
+            class="text-sm"
+            :class="{
+              'text-black': isHome || (!darkModeStore.darkMode && !isHome),
+              'text-gray-400': darkModeStore.darkMode && !isHome,
+            }"
+          >
+            Author
+          </p>
+        </div>
+      </template>
+
+      <template v-else>
+        <img
+          :src="result.image"
+          alt="Book cover"
+          class="w-10 h-14 mr-3 object-cover rounded"
+        />
+        <div>
+          <p class="font-semibold">{{ result.title }}</p>
+          <p
+            class="text-sm"
+            :class="{
+              'text-black': isHome || (!darkModeStore.darkMode && !isHome),
+              'text-gray-400': darkModeStore.darkMode && !isHome,
+            }"
+          >
+            by {{ result.authors.join(', ') }}
+          </p>
+        </div>
+      </template>
+    </li>
+  </ul>
+
+  <div v-if="totalResults > 5" class="text-center border-t border-gray-100">
+    <button
+      @click="handleSeeMore"
+      class="w-full py-3 font-medium text-sm transition-colors"
+      :class="{
+        'text-black': isHome || (!darkModeStore.darkMode && !isHome),
+        'text-white': darkModeStore.darkMode && !isHome,
+      }"
+    >
+      See more results
+    </button>
   </div>
 </template>

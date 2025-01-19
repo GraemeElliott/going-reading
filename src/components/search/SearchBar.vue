@@ -148,7 +148,7 @@ watch(searchType, () => {
             isInputFocused &&
             (totalResults > 0 || isSearching)
           "
-          class="fixed w-full left-0 right-0 mt-2 mb-20 border border-gray-200 shadow-lg z-50 rounded-md overflow-hidden"
+          class="fixed left-4 right-4 mt-2 mb-20 border border-gray-200 shadow-lg z-50 rounded-md overflow-hidden md:left-1/2 md:right-auto md:w-[500px] md:-translate-x-1/2"
           :class="{
             'bg-white text-black': !darkModeStore.darkMode || isHome,
             'bg-gray-900 text-white hover:bg-gray-900':
