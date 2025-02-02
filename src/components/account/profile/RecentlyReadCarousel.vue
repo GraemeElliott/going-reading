@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useUserBooksStore } from '@/store/user-books-store';
+import { truncateText } from '@/utils/book-utils';
 import {
   Carousel,
   CarouselContent,
@@ -14,7 +15,10 @@ const userBooksStore = useUserBooksStore();
 // Get recently read books (top 5)
 const recentlyReadBooks = computed(() => {
   const readBooks = userBooksStore.groupedBooks.read || [];
-  return readBooks.slice(0, 5);
+  return readBooks.slice(0, 4).map((book) => ({
+    ...book,
+    truncatedTitle: truncateText(book.title, 50), // Truncate the title
+  }));
 });
 </script>
 
@@ -27,7 +31,7 @@ const recentlyReadBooks = computed(() => {
           <CarouselItem
             v-for="book in recentlyReadBooks"
             :key="book.isbn"
-            class="pl-1 basis-full md:basis-1/2 lg:basis-1/5"
+            class="pl-1 basis-full md:basis-1/2 lg:basis-1/4"
           >
             <div class="flex flex-col items-center p-1">
               <router-link :to="`/book/${book.isbn}`">
@@ -39,13 +43,15 @@ const recentlyReadBooks = computed(() => {
               </router-link>
               <router-link :to="`/book/${book.isbn}`">
                 <h3 class="text-sm font-medium text-center mt-2">
-                  {{ book.title }}
+                  {{ truncateText(book.title, 40) }}
                 </h3>
               </router-link>
               <router-link
                 :to="`/author/${encodeURIComponent(book.authors.join(', '))}`"
               >
-                <p class="text-xs text-gray-600 dark:text-gray-400 text-center">
+                <p
+                  class="text-xs text-gray-600 dark:text-gray-400 text-center mt-2"
+                >
                   {{ book.authors.join(', ') }}
                 </p>
               </router-link>

@@ -116,6 +116,15 @@ const handleSeeMore = () => {
           >
             by {{ result.authors.join(', ') }}
           </p>
+          <p
+            class="text-sm"
+            :class="{
+              'text-black': isHome || (!darkModeStore.darkMode && !isHome),
+              'text-gray-400': darkModeStore.darkMode && !isHome,
+            }"
+          >
+            Pages: {{ result.pages }}
+          </p>
         </div>
       </template>
     </li>
