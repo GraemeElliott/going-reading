@@ -5,27 +5,44 @@ import {
   type DialogRootProps,
   useForwardPropsEmits,
 } from 'radix-vue';
-import { watch } from 'vue';
+import { watch, onBeforeUnmount } from 'vue';
 
 const props = defineProps<DialogRootProps>();
 const emits = defineEmits<DialogRootEmits>();
 
 const forwarded = useForwardPropsEmits(props, emits);
 
+// Function to apply scroll lock
+const applyScrollLock = () => {
+  document.documentElement.style.setProperty('overflow', 'hidden');
+  document.body.style.setProperty('overflow', 'hidden');
+};
+
+// Function to remove scroll lock
+const removeScrollLock = () => {
+  document.documentElement.style.setProperty('overflow', '');
+  document.body.style.setProperty('overflow', '');
+};
+
 // Watch for sheet state changes to manage scroll lock
 watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
-      document.documentElement.style.setProperty('overflow', 'hidden');
-      document.body.style.setProperty('overflow', 'hidden');
+      applyScrollLock();
     } else {
-      document.documentElement.style.setProperty('overflow', '');
-      document.body.style.setProperty('overflow', '');
+      removeScrollLock();
     }
   },
   { immediate: true }
 );
+
+// Ensure scroll lock is removed when component is unmounted
+onBeforeUnmount(() => {
+  if (props.open) {
+    removeScrollLock();
+  }
+});
 </script>
 
 <template>
