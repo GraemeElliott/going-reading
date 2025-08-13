@@ -170,9 +170,14 @@ onMounted(() => {
     </div>
 
     <div v-else class="relative">
-      <!-- Timeline line -->
+      <!-- Timeline line - hidden on mobile -->
       <div
-        class="absolute left-1/2 transform -translate-x-1/2 h-full w-px bg-gray-200"
+        class="absolute left-1/2 transform -translate-x-1/2 h-full w-px bg-gray-200 hidden md:block"
+      ></div>
+
+      <!-- Mobile timeline line -->
+      <div
+        class="absolute left-4 top-0 h-full w-px bg-gray-200 md:hidden"
       ></div>
 
       <!-- Timeline items -->
@@ -185,7 +190,8 @@ onMounted(() => {
           <!-- Timeline icon -->
           <div
             :class="[
-              'absolute left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full border-2 border-gray-200 z-10 flex items-center justify-center',
+              'absolute w-8 h-8 rounded-full border-2 border-gray-200 z-10 flex items-center justify-center',
+              'left-0 md:left-1/2 md:transform md:-translate-x-1/2',
               darkModeStore.darkMode ? 'bg-gray-900' : 'bg-white',
             ]"
           >
@@ -202,17 +208,23 @@ onMounted(() => {
           <!-- Content container -->
           <div
             class="flex items-center justify-between w-full"
-            :class="index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'"
+            :class="index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'"
           >
             <!-- Activity content -->
             <div
-              class="w-[calc(50%-0.25rem)]"
-              :class="index % 2 === 0 ? 'text-right pr-8' : 'text-left pl-8'"
+              class="w-full md:w-[calc(50%-0.25rem)] ml-12 md:ml-0"
+              :class="
+                index % 2 === 0
+                  ? 'md:text-right md:pr-8'
+                  : 'md:text-left md:pl-8'
+              "
             >
               <div class="p-4 rounded-lg border shadow-sm">
                 <div
-                  class="flex items-center gap-2"
-                  :class="index % 2 === 0 ? 'justify-end' : 'justify-start'"
+                  class="flex flex-col sm:flex-row sm:items-center gap-2"
+                  :class="
+                    index % 2 === 0 ? 'md:justify-end' : 'md:justify-start'
+                  "
                 >
                   <p
                     class="text-xs md:text-sm"
@@ -226,15 +238,15 @@ onMounted(() => {
                 </div>
                 <p
                   class="text-xs text-muted-foreground mt-1"
-                  :class="index % 2 === 0 ? 'text-right' : 'text-left'"
+                  :class="index % 2 === 0 ? 'md:text-right' : 'md:text-left'"
                 >
                   {{ getTimeAgo(activity.created_at) }}
                 </p>
               </div>
             </div>
 
-            <!-- Empty space for the other side -->
-            <div class="w-[calc(50%-0.25rem)]"></div>
+            <!-- Empty space for the other side - only on desktop -->
+            <div class="hidden md:block md:w-[calc(50%-0.25rem)]"></div>
           </div>
         </div>
       </div>

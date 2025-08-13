@@ -46,14 +46,13 @@ export class ReadingActivityService {
     }
   }
 
-  static async getUserActivities(userId: string, limit = 50): Promise<any[]> {
+  static async getUserActivities(userId: string): Promise<any[]> {
     try {
       const { data, error } = await supabase
         .from('reading_activities')
         .select('*')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(limit);
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data || [];

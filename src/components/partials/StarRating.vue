@@ -45,7 +45,7 @@ const getStarClass = (star: number) => {
 </script>
 
 <template>
-  <div class="flex gap-1" @mouseleave="handleMouseLeave">
+  <div class="flex gap-1 flex-shrink-0" @mouseleave="handleMouseLeave">
     <font-awesome-icon
       v-for="star in stars"
       :key="star"
