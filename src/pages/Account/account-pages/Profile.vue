@@ -28,6 +28,7 @@ onMounted(async () => {
     await Promise.all([
       userBooksStore.initialize(),
       listsStore.fetchUserListsAndBooks(),
+      userAnalyticsStore.calculateTotalPagesRead(),
       userAnalyticsStore.calculateTotalReadingTime(),
     ]);
   } finally {

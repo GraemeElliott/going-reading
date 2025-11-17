@@ -28,7 +28,8 @@ onMounted(async () => {
   await userBooksStore.initialize();
   // Load yearly data first for the cards
   await userAnalyticsStore.updateYearlyData();
-  // Calculate total reading time
+  // Calculate total pages read and reading time
+  await userAnalyticsStore.calculateTotalPagesRead();
   await userAnalyticsStore.calculateTotalReadingTime();
   // Then load monthly data for the chart
   await userAnalyticsStore.updateMonthlyData('by-year');

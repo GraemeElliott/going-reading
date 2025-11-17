@@ -5,6 +5,7 @@ import { useAuthStore } from './auth-store';
 import { AnalyticsService, dateUtils } from '../services/analyticsService';
 import type { ReadingData, TimePeriod } from '../types/analytics';
 import { formatUtils } from '../utils/format-utils';
+import { supabase } from '../supabase/supabase';
 
 export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
   const userBooksStore = useUserBooksStore();
@@ -12,24 +13,12 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
   const monthlyData = ref<ReadingData[]>([]);
   const yearlyData = ref<ReadingData[]>([]);
   const totalReadingTime = ref<number>(0);
+  const totalPagesRead = ref<number>(0);
 
   // Computed values for total statistics
   const totalBooksRead = computed(
     () => userBooksStore.groupedBooks.read.length
   );
-
-  const totalPagesRead = computed(() => {
-    const {
-      read,
-      'currently-reading': currentlyReading,
-      'did-not-finish': didNotFinish,
-    } = userBooksStore.groupedBooks;
-
-    return [...read, ...currentlyReading, ...didNotFinish].reduce(
-      (total, book) => total + (book.current_page ?? 0),
-      0
-    );
-  });
 
   // Formatted computed values
   const formattedTotalBooksRead = computed(() =>
@@ -52,6 +41,28 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
   });
 
   // Data fetching methods
+  async function calculateTotalPagesRead() {
+    try {
+      if (!authStore.user?.id) return;
+
+      const { data, error } = await supabase
+        .from('reading_progress')
+        .select('pages_read_in_session')
+        .eq('user_id', authStore.user.id);
+
+      if (error) throw error;
+
+      totalPagesRead.value = (data || []).reduce(
+        (total: number, entry: any) =>
+          total + (entry.pages_read_in_session || 0),
+        0
+      );
+    } catch (error) {
+      console.error('Error calculating total pages read:', error);
+      totalPagesRead.value = 0;
+    }
+  }
+
   async function calculateTotalReadingTime() {
     try {
       if (!authStore.user?.id) return;
@@ -183,6 +194,7 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
     maxMonthlyBooks,
     updateMonthlyData,
     updateYearlyData,
+    calculateTotalPagesRead,
     calculateTotalReadingTime,
     // Expose formatting utilities that components might need
     formatReadingTime: formatUtils.formatReadingTime,
