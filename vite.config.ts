@@ -1,6 +1,7 @@
 import path from 'path';
 import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vite';
+import { cloudflare } from '@cloudflare/vite-plugin';
 
 import tailwind from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
@@ -11,7 +12,7 @@ export default defineConfig({
       plugins: [tailwind(), autoprefixer()],
     },
   },
-  plugins: [vue()],
+  plugins: [vue(), cloudflare()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

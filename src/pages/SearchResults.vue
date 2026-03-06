@@ -38,7 +38,7 @@ const isAuthor = (result: Book | Author): result is Author => {
 
 const updateBookStatus = async (book: Book, newStatus: BookStatus) => {
   const bookIndex = results.value.findIndex(
-    (result) => !isAuthor(result) && result.isbn === book.isbn
+    (result) => !isAuthor(result) && result.isbn === book.isbn,
   );
   if (bookIndex !== -1) {
     // Create a new array with the updated book to maintain reactivity
@@ -65,7 +65,7 @@ const fetchResults = async (searchQuery: string, page: number = 1) => {
     const newResults = await isbndbService.searchQuery(
       searchQuery,
       searchType.value,
-      page
+      page,
     );
 
     if (newResults.length === 0) {
@@ -83,7 +83,7 @@ const fetchResults = async (searchQuery: string, page: number = 1) => {
               };
             }
             return result;
-          })
+          }),
         );
 
         // Append new results to existing ones
@@ -110,7 +110,7 @@ const loadMore = () => {
 };
 
 // Watch for query changes in URL with debounce
-let debounceTimeout: NodeJS.Timeout;
+let debounceTimeout: ReturnType<typeof setTimeout>;
 watch(
   () => route.query,
   (newQuery) => {
@@ -129,7 +129,7 @@ watch(
         }
       }, 300);
     }
-  }
+  },
 );
 
 // Initialize store and fetch results

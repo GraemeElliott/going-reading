@@ -11,10 +11,11 @@ const selectedAvatar = ref<File | null>(null);
 const previewAvatarUrl = ref<string | null>(null);
 const isImageLoaded = ref(false);
 const hasAttemptedLoad = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
 
 // Cache avatar URL with computed property
 const avatarUrl = computed(
-  () => previewAvatarUrl.value || authStore.userMetadata.avatarURL
+  () => previewAvatarUrl.value || authStore.userMetadata.avatarURL,
 );
 
 // Preload avatar image only if not already loaded
@@ -33,7 +34,7 @@ const preloadAvatar = () => {
 onMounted(preloadAvatar);
 
 // Watch for avatar URL changes
-watch(avatarUrl, (newValue, oldValue) => {
+watch(avatarUrl, (newValue: any, oldValue: any) => {
   if (newValue && newValue !== oldValue) {
     isImageLoaded.value = false;
     hasAttemptedLoad.value = false;
@@ -97,7 +98,7 @@ const onSubmit = async () => {
         class="hidden"
         ref="fileInput"
       />
-      <Button type="button" variant="outline" @click="$refs.fileInput.click()">
+      <Button type="button" variant="outline" @click="fileInput?.click()">
         Select New Avatar
       </Button>
       <Button type="submit"> Update Avatar </Button>
