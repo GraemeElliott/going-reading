@@ -275,8 +275,8 @@ const getAuthorDetails = async (
 };
 
 const searchByIsbn = async (isbn: string): Promise<Book[]> => {
-  const response = await api.get(`/books/${isbn}`);
-  const bookData = response.data.books?.[0];
+  const response = await api.get(`/book/${isbn}`);
+  const bookData = response.data.book;
 
   if (!bookData) return [];
 
