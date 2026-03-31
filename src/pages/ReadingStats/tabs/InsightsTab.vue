@@ -260,7 +260,7 @@ function insightGoalPace(): Highlight | null {
     const projected = Math.floor(booksRead + pace * daysRemaining);
     return {
       color: '#993556',
-      text: 'On track for ',
+      text: 'Projected to finish ',
       bold: `${projected} of ${goal} books`,
       after: ` this year — ${goal - projected} short of goal.`,
     };

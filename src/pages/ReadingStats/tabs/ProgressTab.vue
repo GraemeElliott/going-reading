@@ -246,10 +246,30 @@ const metricCards = computed(() => {
       value: goalValue.value
         ? `${booksThis} / ${goalValue.value}`
         : `${booksThis} read`,
-      sub: goalValue.value
-        ? `${Math.round((booksThis / goalValue.value) * 100)}% · ${booksThis >= goalValue.value ? 'complete!' : 'on track'}`
-        : 'No goal set',
-      pos: true,
+      sub: (() => {
+        if (!goalValue.value) return 'No goal set';
+        if (booksThis >= goalValue.value) return `${Math.round((booksThis / goalValue.value) * 100)}% · complete!`;
+        const now = new Date();
+        const startOfYear = new Date(currentYear, 0, 1);
+        const endOfYear = new Date(currentYear, 11, 31);
+        const daysElapsed = Math.max(1, Math.ceil((now.getTime() - startOfYear.getTime()) / 86400000));
+        const daysInYear = Math.ceil((endOfYear.getTime() - startOfYear.getTime()) / 86400000);
+        const pace = booksThis / daysElapsed;
+        const projected = Math.floor(booksThis + pace * (daysInYear - daysElapsed));
+        const onTrack = projected >= goalValue.value;
+        return `${Math.round((booksThis / goalValue.value) * 100)}% · ${onTrack ? 'on track' : 'behind pace'}`;
+      })(),
+      pos: (() => {
+        if (!goalValue.value || booksThis >= goalValue.value) return true;
+        const now = new Date();
+        const startOfYear = new Date(currentYear, 0, 1);
+        const endOfYear = new Date(currentYear, 11, 31);
+        const daysElapsed = Math.max(1, Math.ceil((now.getTime() - startOfYear.getTime()) / 86400000));
+        const daysInYear = Math.ceil((endOfYear.getTime() - startOfYear.getTime()) / 86400000);
+        const pace = booksThis / daysElapsed;
+        const projected = Math.floor(booksThis + pace * (daysInYear - daysElapsed));
+        return projected >= goalValue.value;
+      })(),
     },
   ];
 });
