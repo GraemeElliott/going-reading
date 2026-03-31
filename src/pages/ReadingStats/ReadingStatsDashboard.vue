@@ -76,7 +76,7 @@ onMounted(async () => {
 
 <template>
   <div
-    class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
+    class="py-6"
     :class="darkModeStore.darkMode ? 'text-white' : 'text-gray-900'"
   >
     <!-- Header -->

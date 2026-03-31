@@ -20,10 +20,10 @@ const { weeks, monthLabels } = computed(() => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Roll back to the most recent Monday, then go back 51 more weeks
+  // Roll back to the most recent Monday, then go back 25 more weeks
   const dow = (today.getDay() + 6) % 7; // Mon=0 … Sun=6
   const start = new Date(today);
-  start.setDate(start.getDate() - dow - 51 * 7);
+  start.setDate(start.getDate() - dow - 25 * 7);
 
   const weeksArr: Array<Array<{ dateStr: string; pages: number; level: 0|1|2|3|4; isFuture: boolean; tooltip: string }>> = [];
   const monthMap: { label: string; col: number }[] = [];
@@ -32,7 +32,7 @@ const { weeks, monthLabels } = computed(() => {
   const cur = new Date(start);
   let col = 0;
 
-  while (cur <= today || (weeksArr.length < 52 && col < 52)) {
+  while (cur <= today || (weeksArr.length < 26 && col < 26)) {
     const week: typeof weeksArr[0] = [];
     for (let d = 0; d < 7; d++) {
       const dateStr = cur.toISOString().slice(0, 10);
@@ -56,7 +56,7 @@ const { weeks, monthLabels } = computed(() => {
     }
     weeksArr.push(week);
     col++;
-    if (weeksArr.length >= 53) break;
+    if (weeksArr.length >= 27) break;
   }
 
   return { weeks: weeksArr, monthLabels: monthMap };
@@ -71,8 +71,8 @@ function cellColor(level: 0|1|2|3|4, isFuture: boolean): string {
 }
 
 const dayLabels = ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'];
-// Each week column = w-3 (12px) + mr-0.5 (2px) = 14px
-const WEEK_WIDTH = 14;
+// Each week column = w-3 (12px) + mr-1 (4px) = 16px
+const WEEK_WIDTH = 16;
 // Day label column = w-6 (24px) + mr-2 (8px) = 32px
 const DAY_COL_WIDTH = 32;
 </script>
@@ -83,11 +83,11 @@ const DAY_COL_WIDTH = 32;
     :class="isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'"
   >
     <div class="text-xs font-medium uppercase tracking-wider mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-500'">
-      Reading activity · past year
+      Reading activity · past 6 months
     </div>
 
-    <div class="overflow-x-auto">
-      <div class="inline-flex flex-col min-w-max">
+    <div>
+      <div class="flex flex-col">
 
         <!-- Month labels row -->
         <div class="relative h-4 mb-1" :style="{ marginLeft: DAY_COL_WIDTH + 'px' }">
@@ -107,7 +107,7 @@ const DAY_COL_WIDTH = 32;
             <div
               v-for="(label, di) in dayLabels"
               :key="di"
-              class="h-3 mb-0.5 text-[10px] leading-none flex items-center justify-end pr-1"
+              class="h-3 mb-1 text-[10px] leading-none flex items-center justify-end pr-1"
               :class="isDark ? 'text-gray-400' : 'text-gray-500'"
             >
               {{ label }}
@@ -119,12 +119,12 @@ const DAY_COL_WIDTH = 32;
             <div
               v-for="(week, wi) in weeks"
               :key="wi"
-              class="flex flex-col mr-0.5"
+              class="flex flex-col mr-1"
             >
               <div
                 v-for="(day, di) in week"
                 :key="di"
-                class="w-3 h-3 rounded-sm mb-0.5 flex-shrink-0 cursor-default"
+                class="w-3 h-3 rounded-sm mb-1 flex-shrink-0 cursor-default"
                 :style="{ background: cellColor(day.level, day.isFuture) }"
                 :title="day.tooltip"
               ></div>

@@ -230,6 +230,23 @@ const booksPerYearData = computed(() => {
   };
 });
 
+// Top genres by number of books read
+const GENRE_COLORS = ['#185FA5', '#3B6D11', '#BA7517', '#3C3489', '#993556'];
+const topGenresByCount = computed(() => {
+  const counts: Record<string, number> = {};
+  for (const book of userBooksStore.groupedBooks.read) {
+    if (!book.genres?.length) continue;
+    for (const genre of book.genres) {
+      counts[genre] = (counts[genre] ?? 0) + 1;
+    }
+  }
+  return Object.entries(counts)
+    .map(([genre, count]) => ({ genre, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+});
+const maxGenreCount = computed(() => topGenresByCount.value[0]?.count ?? 1);
+
 const booksPerYearOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
@@ -449,14 +466,32 @@ const booksPerYearOptions = computed(() => ({
       </div>
     </div>
 
-    <!-- Books read per year -->
-    <div
-      class="rounded-lg border p-4 mb-3"
-      :class="isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'"
-    >
-      <div class="text-xs font-medium uppercase tracking-wider mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-500'">Books read per year</div>
-      <div class="h-44">
-        <Chart type="bar" :data="booksPerYearData" :options="booksPerYearOptions" />
+    <!-- Books read per year + Top genres by books read -->
+    <div class="grid grid-cols-1 md:grid-cols-[1.3fr_1fr] gap-3 mb-3">
+      <div
+        class="rounded-lg border p-4"
+        :class="isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'"
+      >
+        <div class="text-xs font-medium uppercase tracking-wider mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-500'">Books read per year</div>
+        <div class="h-44">
+          <Chart type="bar" :data="booksPerYearData" :options="booksPerYearOptions" />
+        </div>
+      </div>
+      <div
+        class="rounded-lg border p-4"
+        :class="isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'"
+      >
+        <div class="text-xs font-medium uppercase tracking-wider mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-500'">Top genres by books read</div>
+        <div v-if="topGenresByCount.length > 0" class="mt-1">
+          <div v-for="(item, i) in topGenresByCount" :key="item.genre" class="flex items-center gap-2.5 mb-2.5 last:mb-0">
+            <span class="text-xs w-32 flex-shrink-0 truncate" :class="isDark ? 'text-gray-300' : 'text-gray-600'">{{ item.genre }}</span>
+            <div class="flex-1 h-1.5 rounded-full overflow-hidden" :class="isDark ? 'bg-gray-700' : 'bg-gray-200'">
+              <div class="h-full rounded-full" :style="{ width: Math.round(item.count / maxGenreCount * 100) + '%', background: GENRE_COLORS[i] }"></div>
+            </div>
+            <span class="text-xs w-7 text-right flex-shrink-0" :class="isDark ? 'text-gray-400' : 'text-gray-500'">{{ item.count }}</span>
+          </div>
+        </div>
+        <p v-else class="text-sm" :class="isDark ? 'text-gray-400' : 'text-gray-500'">No genre data yet.</p>
       </div>
     </div>
 
