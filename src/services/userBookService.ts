@@ -65,6 +65,7 @@ export class UserBookService {
         publisher: book.publisher,
         pages: book.pages || 0,
         user_rating: null,
+        genres: book.genres ?? null,
       })
       .select()
       .single();

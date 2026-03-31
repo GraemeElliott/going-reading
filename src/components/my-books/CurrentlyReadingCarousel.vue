@@ -16,7 +16,9 @@ const userBooksStore = useUserBooksStore();
 
 const currentlyReadingBooks = computed(() => {
   const books = userBooksStore.groupedBooks['currently-reading'] || [];
-  return books;
+  return [...books].sort(
+    (a, b) => new Date(a.date_added).getTime() - new Date(b.date_added).getTime()
+  );
 });
 
 async function handleBookUpdate(

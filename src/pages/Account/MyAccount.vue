@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import Profile from './account-pages/Profile.vue';
 import Account from './account-pages/Account.vue';
-import ReadingStats from './account-pages/ReadingStats.vue';
+import ReadingGoals from './account-pages/ReadingGoals.vue';
 import FormsLayout from '@/components/account/FormsLayout.vue';
 
 const selectedOption = ref('Account');
@@ -14,7 +14,7 @@ const handleOptionSelect = (option: string) => {
 const sidebarNavItems = [
   { title: 'Account', href: '#account' },
   { title: 'Profile', href: '#profile' },
-  { title: 'Reading Stats', href: '#reading-stats' },
+  { title: 'Reading Goals', href: '#reading-goals' },
 ];
 </script>
 
@@ -30,8 +30,8 @@ const sidebarNavItems = [
           ? Account
           : selectedOption === 'Profile'
           ? Profile
-          : selectedOption === 'Reading Stats'
-          ? ReadingStats
+          : selectedOption === 'Reading Goals'
+          ? ReadingGoals
           : ''
       "
     />

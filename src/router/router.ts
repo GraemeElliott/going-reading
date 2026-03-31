@@ -12,6 +12,7 @@ import BookDetails from '@/pages/BookDetails.vue';
 import MyBooks from '@/pages/MyBooks.vue';
 import MyBooksByStatus from '@/pages/MyBooksByStatus.vue';
 import AuthorDetails from '@/pages/AuthorDetails.vue';
+import ReadingStatsDashboard from '@/pages/ReadingStats/ReadingStatsDashboard.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -43,6 +44,12 @@ const router = createRouter({
       name: 'author-details',
       component: AuthorDetails,
       props: true,
+    },
+    {
+      path: '/user/:username/reading-stats',
+      name: 'reading-stats',
+      component: ReadingStatsDashboard,
+      meta: { requiresAuth: true, requiresOwner: true },
     },
     {
       path: '/user/:username/my-books',

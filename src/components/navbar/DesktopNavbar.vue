@@ -65,6 +65,18 @@ const logoDestination = computed(() => {
 
           <router-link
             v-if="authStore.userMetadata && authStore.userMetadata.username"
+            :to="`/user/${authStore.userMetadata.username}/reading-stats`"
+            @click="emit('closeMenuIfOpen')"
+          >
+            <font-awesome-icon
+              icon="fa-solid fa-chart-bar"
+              class="fa-xl"
+              :class="{ 'text-white': isHome }"
+            />
+          </router-link>
+
+          <router-link
+            v-if="authStore.userMetadata && authStore.userMetadata.username"
             :to="`/user/${authStore.userMetadata.username}/account`"
             @click="emit('closeMenuIfOpen')"
           >

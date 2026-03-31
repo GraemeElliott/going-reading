@@ -53,6 +53,7 @@ const bookData = computed(() => {
       date_published: book.value.date_published,
       publisher: book.value.publisher,
       pages: book.value.pages,
+      subjects: book.value.subjects,
     } as BookBasicInfo,
   };
 });

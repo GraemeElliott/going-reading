@@ -22,7 +22,7 @@ const userAnalyticsStore = useUserAnalyticsStore();
       <div class="text-2xl font-bold">
         {{ userAnalyticsStore.formattedTotalReadingTime }}
       </div>
-      <p class="text-xs text-muted-foreground">Time spent reading</p>
+      <p class="text-xs text-muted-foreground">Total time spent reading</p>
     </CardContent>
   </Card>
 </template>

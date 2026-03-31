@@ -9,6 +9,8 @@ export interface BookCore {
   date_published?: string;
   publisher?: string;
   pages?: number;
+  genres?: string[];
+  subjects?: string[];
 }
 
 // Basic book info type for UserStatus table

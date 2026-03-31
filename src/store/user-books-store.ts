@@ -9,11 +9,12 @@ import {
 } from '../services/activityService';
 import { ReadingProgressService } from '../services/readingProgressService';
 import { UserBookService } from '../services/userBookService';
-import { groupBooksByStatus } from '../utils/book-utils';
+import { groupBooksByStatus, normaliseSubjects } from '../utils/book-utils';
 import { useAsyncOperation } from '../composables/useAsyncOperation';
 
 export const useUserBooksStore = defineStore('userBooks', () => {
   const booksMap = ref(new Map<string, UserBook>());
+  const initialized = ref(false);
   const statusUpdateInProgress = ref(new Set<string>());
   const authStore = useAuthStore();
   const { loading, error, execute } = useAsyncOperation();
@@ -21,6 +22,26 @@ export const useUserBooksStore = defineStore('userBooks', () => {
   // Computed properties
   const userBooks = computed(() => Array.from(booksMap.value.values()));
   const groupedBooks = computed(() => groupBooksByStatus(userBooks.value));
+
+  const totalBooksRead = computed(() =>
+    userBooks.value.filter((b) => b.status === 'read').length
+  );
+
+  const booksReadThisYear = computed(() => {
+    const currentYear = new Date().getFullYear();
+    return userBooks.value.filter((b) => {
+      if (b.status !== 'read' || !b.date_finished) return false;
+      return new Date(b.date_finished).getFullYear() === currentYear;
+    }).length;
+  });
+
+  const avgBooksPerYear = computed(() => {
+    if (userBooks.value.length === 0) return 0;
+    const currentYear = new Date().getFullYear();
+    const joinYear = Math.min(...userBooks.value.map(b => new Date(b.date_added).getFullYear()));
+    const yearsElapsed = currentYear - joinYear + 1;
+    return Math.round(totalBooksRead.value / yearsElapsed);
+  });
 
   // Helper function to update local state
   const updateLocalBook = (isbn: string, updates: Partial<UserBook>) => {
@@ -44,6 +65,7 @@ export const useUserBooksStore = defineStore('userBooks', () => {
       );
       booksMap.value = new Map(books.map((book) => [book.isbn, book]));
     });
+    initialized.value = true;
   };
 
   const initialize = async (): Promise<void> => {
@@ -226,9 +248,10 @@ export const useUserBooksStore = defineStore('userBooks', () => {
             throw new Error('Full book info required for new books');
           }
 
+          const genres = normaliseSubjects(bookOrIsbn.subjects);
           const newBook = await UserBookService.addNewBook(
             userId,
-            bookOrIsbn,
+            { ...bookOrIsbn, genres },
             status,
             now
           );
@@ -297,7 +320,11 @@ export const useUserBooksStore = defineStore('userBooks', () => {
   return {
     userBooks,
     groupedBooks,
+    totalBooksRead,
+    booksReadThisYear,
+    avgBooksPerYear,
     loading,
+    initialized,
     error,
     getUserBookStatus,
     getUserBookRating,

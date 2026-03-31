@@ -67,6 +67,7 @@ const ensureBookInUserBooks = async () => {
     date_published: props.book.date_published,
     publisher: props.book.publisher,
     pages: props.book.pages,
+    subjects: (props.book as { subjects?: string[] }).subjects,
   };
 
   // Get current status if it exists

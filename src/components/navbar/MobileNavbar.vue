@@ -233,6 +233,17 @@ const handleNavClick = () => {
               <p class="text-md font-medium">My Books</p>
             </div>
           </router-link>
+          <router-link
+            v-if="authStore.user && userData.username"
+            :to="`/user/${userData.username}/reading-stats`"
+            class="w-full"
+            @click="handleNavClick"
+          >
+            <div class="flex flex-row space-x-3 items-center">
+              <font-awesome-icon icon="fa-solid fa-chart-bar" class="fa-xl" />
+              <p class="text-md font-medium">Reading Stats</p>
+            </div>
+          </router-link>
 
           <!-- Admin Links -->
           <router-link
