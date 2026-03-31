@@ -65,8 +65,8 @@ const { weeks, monthLabels } = computed(() => {
 // Color per level, light + dark variants
 function cellColor(level: 0|1|2|3|4, isFuture: boolean): string {
   if (isFuture) return isDark.value ? '#1f2937' : '#f3f4f6';
-  const dark = ['#374151','#b2d8d8','#66b2b2','#008080','#006666'];
-  const light = ['#e5e7eb','#b2d8d8','#66b2b2','#008080','#006666'];
+  const dark = ['#374151','#66b2b2','#008080','#006666','#004c4c'];
+  const light = ['#e5e7eb','#66b2b2','#008080','#006666','#004c4c'];
   return isDark.value ? dark[level] : light[level];
 }
 
