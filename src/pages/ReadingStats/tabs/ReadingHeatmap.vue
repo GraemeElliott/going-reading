@@ -16,7 +16,7 @@ function pageLevel(pages: number): 0 | 1 | 2 | 3 | 4 {
 }
 
 // Build the 52-week grid (Mon → Sun columns)
-const { weeks, monthLabels } = computed(() => {
+const heatmapGrid = computed(() => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -35,7 +35,7 @@ const { weeks, monthLabels } = computed(() => {
   while (cur <= today || (weeksArr.length < 26 && col < 26)) {
     const week: typeof weeksArr[0] = [];
     for (let d = 0; d < 7; d++) {
-      const dateStr = cur.toISOString().slice(0, 10);
+      const dateStr = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
       const isFuture = cur > today;
       const pages = isFuture ? 0 : (analyticsStore.dailyPagesMap.get(dateStr) ?? 0);
       const level = isFuture ? 0 : pageLevel(pages);
@@ -60,7 +60,7 @@ const { weeks, monthLabels } = computed(() => {
   }
 
   return { weeks: weeksArr, monthLabels: monthMap };
-}).value;
+});
 
 // Color per level, light + dark variants
 function cellColor(level: 0|1|2|3|4, isFuture: boolean): string {
@@ -86,13 +86,13 @@ const DAY_COL_WIDTH = 32;
       Reading activity · past 6 months
     </div>
 
-    <div>
-      <div class="flex flex-col">
+    <div class="overflow-x-auto">
+      <div class="inline-flex flex-col min-w-max">
 
         <!-- Month labels row -->
         <div class="relative h-4 mb-1" :style="{ marginLeft: DAY_COL_WIDTH + 'px' }">
           <span
-            v-for="m in monthLabels"
+            v-for="m in heatmapGrid.monthLabels"
             :key="m.col"
             class="absolute top-0 text-[10px] leading-none whitespace-nowrap"
             :class="isDark ? 'text-gray-400' : 'text-gray-500'"
@@ -117,7 +117,7 @@ const DAY_COL_WIDTH = 32;
           <!-- Week columns -->
           <div class="flex">
             <div
-              v-for="(week, wi) in weeks"
+              v-for="(week, wi) in heatmapGrid.weeks"
               :key="wi"
               class="flex flex-col mr-1"
             >

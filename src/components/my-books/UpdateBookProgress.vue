@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/form';
 import { useForm } from 'vee-validate';
 import { useUserBooksStore } from '@/store/user-books-store';
+import { useUserAnalyticsStore } from '@/store/user-analytics-store';
 import { toast } from '@/components/ui/toast';
 import { updateBookErrorMessages } from '@/store/error-handler';
 import { updateProgressSchema } from '@/store/form-validation-schemas';
@@ -29,6 +30,7 @@ const props = defineProps<{
 }>();
 
 const userBooksStore = useUserBooksStore();
+const analyticsStore = useUserAnalyticsStore();
 const currentPage = ref(props.book.current_page || 0);
 const timeReadingInMins = ref<number>();
 const totalPages = ref(props.book.pages || 0);
@@ -97,6 +99,8 @@ const handleUpdate = async (e: Event) => {
       timeReadingInMins.value!
     );
 
+    analyticsStore.invalidate();
+
     // If current page equals total pages, mark as read
     if (totalPages.value && currentPage.value === totalPages.value) {
       await userBooksStore.updateBookStatus(props.book.isbn, 'read');
@@ -144,6 +148,7 @@ const handleFinish = async (e: Event) => {
       timeReadingInMins.value!
     );
     await userBooksStore.updateBookStatus(props.book.isbn, 'read');
+    analyticsStore.invalidate();
 
     emit('statusUpdate', 'read');
     toast({

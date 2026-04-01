@@ -346,6 +346,12 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
     }
   }
 
+  function invalidate() {
+    pagesReadInitialized.value = false;
+    streakInitialized.value = false;
+    readingTimeInitialized.value = false;
+  }
+
   return {
     totalBooksRead,
     totalPagesRead,
@@ -368,6 +374,7 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
     calculateTotalPagesRead,
     calculateStreakData,
     calculateTotalReadingTime,
+    invalidate,
     // Expose formatting utilities that components might need
     formatReadingTime: formatUtils.formatReadingTime,
     formatNumber: formatUtils.formatNumber,

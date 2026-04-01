@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import OverviewTab from './tabs/OverviewTab.vue';
 import ProgressTab from './tabs/ProgressTab.vue';
@@ -50,6 +50,14 @@ const tabs = [
   { key: 'insights', label: 'Insights' },
 ] as const;
 
+async function refreshAnalytics() {
+  await Promise.all([
+    analyticsStore.calculateTotalPagesRead(),
+    analyticsStore.calculateStreakData(),
+    analyticsStore.calculateTotalReadingTime(),
+  ]);
+}
+
 onMounted(async () => {
   const userId = authStore.user?.id;
   if (!userId) return;
@@ -71,6 +79,11 @@ onMounted(async () => {
   } finally {
     isBackfilling.value = false;
   }
+});
+
+// When analytics are invalidated (e.g. after a progress update), refetch immediately
+watch(() => analyticsStore.pagesReadInitialized, (initialized) => {
+  if (!initialized) refreshAnalytics();
 });
 </script>
 
