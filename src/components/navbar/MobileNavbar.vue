@@ -240,7 +240,7 @@ const handleNavClick = () => {
             @click="handleNavClick"
           >
             <div class="flex flex-row space-x-3 items-center">
-              <font-awesome-icon icon="fa-solid fa-chart-bar" class="fa-xl" />
+              <font-awesome-icon icon="fa-solid fa-chart-simple" class="fa-xl" />
               <p class="text-md font-medium">Reading Stats</p>
             </div>
           </router-link>

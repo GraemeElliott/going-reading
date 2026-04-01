@@ -69,7 +69,7 @@ const logoDestination = computed(() => {
             @click="emit('closeMenuIfOpen')"
           >
             <font-awesome-icon
-              icon="fa-solid fa-chart-bar"
+              icon="fa-solid fa-chart-simple"
               class="fa-xl"
               :class="{ 'text-white': isHome }"
             />
