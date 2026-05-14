@@ -261,13 +261,12 @@ const booksPerYearOptions = computed(() => ({
 <template>
   <div>
     <!-- Metric cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-5">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5 mb-5">
       <div
         v-for="metric in [
           { label: 'Total Books Read', value: String(userBooksStore.totalBooksRead), sub: userBooksStore.avgBooksPerYear ? `avg ${userBooksStore.avgBooksPerYear}/year` : '', subClass: '' },
           { label: 'Total Pages Read', value: analyticsStore.formattedTotalPagesRead, sub: avgPagesPerBook ? `avg ${avgPagesPerBook}/book` : '', subClass: '' },
           { label: 'Reading Streak', value: analyticsStore.currentStreak === 1 ? '1 day' : `${analyticsStore.currentStreak} days`, sub: analyticsStore.personalBestStreak > 0 ? `${analyticsStore.personalBestStreak} day personal best` : '', subClass: 'text-green-700 dark:text-green-400' },
-          { label: 'Total Reading Time', value: analyticsStore.formattedTotalReadingTime, sub: '', subClass: '' },
         ]"
         :key="metric.label"
         class="rounded-lg p-4"
