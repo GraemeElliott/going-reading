@@ -236,9 +236,8 @@ const topGenresByCount = computed(() => {
   const counts: Record<string, number> = {};
   for (const book of userBooksStore.groupedBooks.read) {
     if (!book.genres?.length) continue;
-    for (const genre of book.genres) {
-      counts[genre] = (counts[genre] ?? 0) + 1;
-    }
+    const primaryGenre = book.genres[0];
+    counts[primaryGenre] = (counts[primaryGenre] ?? 0) + 1;
   }
   return Object.entries(counts)
     .map(([genre, count]) => ({ genre, count }))
