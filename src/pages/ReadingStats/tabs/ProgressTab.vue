@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { localDateUtils } from '@/utils/date-utils';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -62,7 +63,7 @@ const pagesPerYearMonthly = computed(() => {
   const thisYear = Array(12).fill(0);
   const prevYear = Array(12).fill(0);
   for (const [dateStr, pages] of analyticsStore.dailyPagesMap) {
-    const d = new Date(dateStr);
+    const d = localDateUtils.parseLocalDate(dateStr);
     const y = d.getFullYear();
     const m = d.getMonth();
     if (y === currentYear) thisYear[m] += pages;
@@ -147,7 +148,7 @@ const readingPaceByMonth = computed(() => {
   const activeDays = Array(12).fill(0);
   for (const [dateStr, pages] of analyticsStore.dailyPagesMap) {
     if (pages <= 0) continue;
-    const d = new Date(dateStr);
+    const d = localDateUtils.parseLocalDate(dateStr);
     if (d.getFullYear() !== currentYear) continue;
     const m = d.getMonth();
     totals[m] += pages;

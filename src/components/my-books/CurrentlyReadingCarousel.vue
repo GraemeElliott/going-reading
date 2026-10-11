@@ -45,12 +45,12 @@ async function handleBookUpdate(
 
 <template>
   <div v-if="currentlyReadingBooks.length > 0" class="w-full">
-    <div class="flex flex-col gap-1">
-      <h3 class="text-lg font-medium">Currently Reading</h3>
-      <span class="text-sm text-muted-foreground"
-        >{{ currentlyReadingBooks.length || 0 }}
-        {{ currentlyReadingBooks.length === 1 ? 'book' : 'books' }}</span
-      >
+    <div class="flex items-baseline justify-between gap-4">
+      <h3 class="text-xl font-medium">Currently Reading</h3>
+      <span class="text-sm text-muted-foreground">
+        {{ currentlyReadingBooks.length || 0 }}
+        {{ currentlyReadingBooks.length === 1 ? 'book' : 'books' }}
+      </span>
     </div>
     <Separator class="my-6" />
     <Carousel class="w-full max-w-5xl mx-auto">

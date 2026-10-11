@@ -4,7 +4,8 @@ import { useDarkModeStore } from '@/store/store';
 import { useAuthStore } from '@/store/auth-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { supabase } from '@/supabase/supabase';
-import StarRating from '@/components/partials/StarRating.vue';
+import UserRating from '@/components/user-books/UserRating.vue';
+import { toast } from '@/components/ui/toast';
 
 const darkModeStore = useDarkModeStore();
 const authStore = useAuthStore();
@@ -79,6 +80,19 @@ const pagedBooks = computed(() => {
   return filteredBooks.value.slice(start, start + PAGE_SIZE);
 });
 
+async function handleRatingChange(isbn: string, title: string, rating: number | null) {
+  try {
+    await userBooksStore.updateBookRating(isbn, rating);
+  } catch (error) {
+    toast({
+      title: 'Error Updating Rating',
+      description: `There was an error updating your rating for ${title}: ${error}.`,
+      variant: 'destructive',
+      duration: 4000,
+    });
+  }
+}
+
 function formatDateFinished(dateStr: string | null | undefined): string {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
@@ -97,7 +111,8 @@ const COVERS = ['#B5D4F4','#C0DD97','#F4C0D1','#FAC775','#9FE1CB','#CECBF6','#F0
 const COVER_TEXT = ['#0C447C','#3B6D11','#72243E','#633806','#085041','#3C3489','#993C1D'];
 
 const selectClass = computed(() =>
-  `text-sm px-3 py-1.5 rounded-md border ${isDark.value ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`
+  // Transparent control; options keep a solid background so the native dropdown list stays readable
+  `text-sm px-3 py-1.5 rounded-md border bg-transparent ${isDark.value ? 'border-gray-700 text-white [&>option]:bg-gray-900' : 'border-gray-300 text-gray-900 [&>option]:bg-white'}`
 );
 </script>
 
@@ -165,7 +180,11 @@ const selectClass = computed(() =>
             <div class="text-xs truncate" :class="isDark ? 'text-gray-400' : 'text-gray-500'">
               {{ book.authors.join(', ') }}<template v-if="book.genres?.length"> · {{ book.genres[0] }}</template>
             </div>
-            <StarRating :model-value="book.user_rating ?? 0" readonly class="mt-1 text-xs" />
+            <UserRating
+              :model-value="book.user_rating ?? null"
+              class="mt-1 text-xs [&_button]:!text-xs"
+              @update:model-value="(rating) => handleRatingChange(book.isbn, book.title, rating)"
+            />
           </div>
 
           <!-- Meta -->

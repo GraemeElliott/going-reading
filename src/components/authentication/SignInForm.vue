@@ -17,7 +17,6 @@ import {
 import { useForm } from 'vee-validate';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/toast';
-import { TabsContent } from '@/components/ui/tabs';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/store/auth-store';
 import { signInFormSchema } from '@/store/form-validation-schemas';
@@ -59,7 +58,7 @@ const onSubmit = handleSubmit(async (formData) => {
 });
 </script>
 <template>
-  <TabsContent value="sign-in">
+  <div>
     <Card class="h-full flex flex-col border-none bg-transparent">
       <CardHeader class="space-y-1 pl-0 md:p-6">
         <CardTitle class="text-2xl text-white">
@@ -105,7 +104,7 @@ const onSubmit = handleSubmit(async (formData) => {
         </CardFooter>
       </form>
     </Card>
-  </TabsContent>
+  </div>
 </template>
 <style scoped>
 :deep(input) {

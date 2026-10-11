@@ -172,7 +172,7 @@ const statusOptions = computed(() => ({
   cutout: '65%',
 }));
 
-// Avg pages per session line chart
+// Avg pages per reading day line chart (weekdays with no reading are gaps)
 const sessionData = computed(() => ({
   labels: analyticsStore.avgPagesPerDayOfWeek.labels,
   datasets: [{
@@ -183,13 +183,25 @@ const sessionData = computed(() => ({
     tension: 0.4,
     pointRadius: 3,
     pointBackgroundColor: '#7F77DD',
+    spanGaps: false,
   }],
 }));
 
 const sessionOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
-  plugins: { legend: { display: false }, tooltip: { ...baseTooltip.value } },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      ...baseTooltip.value,
+      callbacks: {
+        label: (ctx: { dataIndex: number; parsed: { y: number } }) => {
+          const days = analyticsStore.avgPagesPerDayOfWeek.dayCounts[ctx.dataIndex];
+          return `${ctx.parsed.y} pages (${days} ${days === 1 ? 'day' : 'days'})`;
+        },
+      },
+    },
+  },
   scales: {
     x: { grid: { display: false }, ticks: { color: tickColor.value, font: { size: 10 } } },
     y: { display: false },
@@ -300,12 +312,14 @@ const booksPerYearOptions = computed(() => ({
           </div>
           <button
             v-if="goalValue && !isEditingGoal"
-            class="text-xs flex items-center gap-1"
-            :class="isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'"
+            type="button"
+            title="Edit goal"
+            aria-label="Edit annual goal"
+            class="h-7 w-7 flex items-center justify-center rounded-md border transition-colors hover:bg-goingTeal hover:border-goingTeal hover:text-white"
+            :class="isDark ? 'border-gray-600 text-white' : 'border-gray-300 text-black'"
             @click="startEditingGoal"
           >
-            <font-awesome-icon icon="fa-solid fa-pen" class="text-[10px]" />
-            Edit
+            <font-awesome-icon icon="fa-regular fa-pen-to-square" class="text-xs" />
           </button>
         </div>
 
@@ -493,14 +507,14 @@ const booksPerYearOptions = computed(() => ({
       </div>
     </div>
 
-    <!-- Reading activity + Avg pages per session -->
+    <!-- Reading activity + Avg pages per reading day -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <ReadingHeatmap />
       <div
         class="rounded-lg border p-4"
         :class="isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'"
       >
-        <div class="text-xs font-medium uppercase tracking-wider mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-500'">Avg pages per session</div>
+        <div class="text-xs font-medium uppercase tracking-wider mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-500'">Avg pages per reading day</div>
         <div class="h-28">
           <Chart type="line" :data="sessionData" :options="sessionOptions" />
         </div>

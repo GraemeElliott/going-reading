@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { localDateUtils } from '@/utils/date-utils';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -29,7 +30,7 @@ const router = useRouter();
 
 const hasReadBooks = computed(() => userBooksStore.groupedBooks.read.length > 0);
 const noRatings = computed(() => ratingData.value.datasets[0].data.every(v => v === 0));
-const noDowData = computed(() => analyticsStore.avgPagesPerDayOfWeek.avgs.every(v => v === 0));
+const noDowData = computed(() => analyticsStore.avgPagesPerDayOfWeek.avgs.every(v => v === null));
 
 const gridColor = computed(() => isDark.value ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)');
 const tickColor = computed(() => isDark.value ? '#9ca3af' : '#6b7280');
@@ -85,35 +86,43 @@ const dowData = computed(() => ({
   }],
 }));
 
-// Top genres by avg rating — aggregate user_rating per genre from read books
+// Top genres by avg rating. Each rated read book counts once, under its primary
+// genre only (matching "Top genres by books read" on the Overview tab), and a
+// genre needs MIN_BOOKS_PER_GENRE rated books before it can be ranked.
 const GENRE_COLORS = ['#185FA5', '#3B6D11', '#BA7517', '#3C3489', '#993556'];
+const MIN_BOOKS_PER_GENRE = 5;
 const topGenresByRating = computed(() => {
   const totals: Record<string, { sum: number; count: number }> = {};
   for (const book of userBooksStore.groupedBooks.read) {
     if (!book.user_rating || !book.genres?.length) continue;
-    for (const genre of book.genres) {
-      if (!totals[genre]) totals[genre] = { sum: 0, count: 0 };
-      totals[genre].sum += book.user_rating;
-      totals[genre].count++;
-    }
+    const primaryGenre = book.genres[0];
+    if (!totals[primaryGenre]) totals[primaryGenre] = { sum: 0, count: 0 };
+    totals[primaryGenre].sum += book.user_rating;
+    totals[primaryGenre].count++;
   }
   return Object.entries(totals)
-    .filter(([, v]) => v.count >= 2)
-    .map(([genre, v]) => ({ genre, avg: Math.round((v.sum / v.count) * 10) / 10 }))
-    .sort((a, b) => b.avg - a.avg)
-    .slice(0, 5);
+    .filter(([, v]) => v.count >= MIN_BOOKS_PER_GENRE)
+    .map(([genre, v]) => ({ genre, rawAvg: v.sum / v.count, count: v.count }))
+    // Rank on the unrounded average; ties go to the genre with more books
+    .sort((a, b) => b.rawAvg - a.rawAvg || b.count - a.count)
+    .slice(0, 5)
+    .map(({ genre, rawAvg, count }) => ({ genre, avg: Math.round(rawAvg * 10) / 10, count }));
 });
-const genres = computed(() => topGenresByRating.value.map(g => g.genre));
-const avgRatings = computed(() => topGenresByRating.value.map(g => g.avg));
 const gColors = GENRE_COLORS;
 
 type Highlight = { color: string; text: string; bold: string; after: string; bold2?: string; after2?: string };
 
 // Weekend vs weekday reading ratio
 function insightWeekendRatio(): Highlight | null {
-  const { avgs, bestDay } = analyticsStore.avgPagesPerDayOfWeek;
-  const weekdayAvg = avgs.slice(0, 5).reduce((a, b) => a + b, 0) / 5;
-  const weekendAvg = (avgs[5] + avgs[6]) / 2;
+  const { totals, dayCounts, bestDay } = analyticsStore.avgPagesPerDayOfWeek;
+  if (bestDay === '—') return null;
+  // Pages per reading day across all weekdays (Mon–Fri) vs weekends (Sat–Sun)
+  const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
+  const weekdayDays = sum(dayCounts.slice(0, 5));
+  const weekendDays = sum(dayCounts.slice(5));
+  if (weekdayDays === 0 || weekendDays === 0) return null;
+  const weekdayAvg = sum(totals.slice(0, 5)) / weekdayDays;
+  const weekendAvg = sum(totals.slice(5)) / weekendDays;
   if (weekdayAvg === 0 || weekendAvg === 0) return null;
   const pct = Math.round(Math.abs(weekendAvg - weekdayAvg) / weekdayAvg * 100);
   if (pct < 5) return null;
@@ -135,14 +144,14 @@ function insightBusiestMonth(): Highlight | null {
   if (map.size === 0) return null;
   const monthTotals: Record<string, { pages: number; year: number; month: number }> = {};
   for (const [dateStr, pages] of map) {
-    const d = new Date(dateStr);
+    const d = localDateUtils.parseLocalDate(dateStr);
     const key = `${d.getFullYear()}-${d.getMonth()}`;
     if (!monthTotals[key]) monthTotals[key] = { pages: 0, year: d.getFullYear(), month: d.getMonth() };
     monthTotals[key].pages += pages;
   }
   const best = Object.values(monthTotals).sort((a, b) => b.pages - a.pages)[0];
   if (!best || best.pages === 0) return null;
-  const monthName = new Date(best.year, best.month, 1).toLocaleString('default', { month: 'long' });
+  const monthName = new Date(best.year, best.month, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
   const booksInMonth = userBooksStore.groupedBooks.read.filter(b => {
     if (!b.date_finished) return false;
     const d = new Date(b.date_finished);
@@ -153,7 +162,7 @@ function insightBusiestMonth(): Highlight | null {
     color: '#3C3489',
     text: 'Busiest month was ',
     bold: monthName,
-    after: ` — ${best.pages.toLocaleString()} pages${bookStr}.`,
+    after: ` (${best.pages.toLocaleString()} pages${bookStr}).`,
   };
 }
 
@@ -203,7 +212,7 @@ function insightHighestRatedBook(): Highlight | null {
     color: '#185FA5',
     text: 'Top-rated read: ',
     bold: fiveStars[0].title,
-    after: ' — 5★.',
+    after: ' (5★).',
   };
 }
 
@@ -216,7 +225,7 @@ function insightLongestBook(): Highlight | null {
     color: '#993556',
     text: 'Longest read: ',
     bold: book.title,
-    after: ` — ${book.pages!.toLocaleString()} pages.`,
+    after: ` (${book.pages!.toLocaleString()} pages).`,
   };
 }
 
@@ -262,7 +271,7 @@ function insightGoalPace(): Highlight | null {
       color: '#993556',
       text: 'Projected to finish ',
       bold: `${projected} of ${goal} books`,
-      after: ` this year — ${goal - projected} short of goal.`,
+      after: ` this year (${goal - projected} short of goal).`,
     };
   }
 }
@@ -321,17 +330,22 @@ const highlights = computed(() =>
           :class="isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'"
         >
           <div class="text-xs font-medium uppercase tracking-wider mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-500'">Top genres by avg rating</div>
-          <div class="mt-1">
-            <div v-if="genres.length > 0">
-              <div v-for="(genre, i) in genres" :key="genre" class="flex items-center gap-2.5 mb-2.5 last:mb-0">
-                <span class="text-xs w-20 flex-shrink-0" :class="isDark ? 'text-gray-300' : 'text-gray-600'">{{ genre }}</span>
-                <div class="flex-1 h-1.5 rounded-full overflow-hidden" :class="isDark ? 'bg-gray-700' : 'bg-gray-200'">
-                  <div class="h-full rounded-full" :style="{ width: Math.round(avgRatings[i] / 5 * 100) + '%', background: gColors[i] }"></div>
+          <div class="h-44">
+            <div v-if="topGenresByRating.length > 0" class="h-full flex flex-col justify-around">
+              <div
+                v-for="(g, i) in topGenresByRating"
+                :key="g.genre"
+                class="flex items-center gap-3"
+                :title="`${g.genre}: ${g.avg.toFixed(1)}★ across ${g.count} books`"
+              >
+                <span class="text-xs w-32 flex-shrink-0 truncate" :class="isDark ? 'text-gray-300' : 'text-gray-600'">{{ g.genre }}</span>
+                <div class="flex-1 h-2 rounded-full overflow-hidden" :class="isDark ? 'bg-gray-700' : 'bg-gray-200'">
+                  <div class="h-full rounded-full" :style="{ width: Math.round(g.avg / 5 * 100) + '%', background: gColors[i] }"></div>
                 </div>
-                <span class="text-xs w-7 text-right flex-shrink-0" :class="isDark ? 'text-gray-400' : 'text-gray-500'">{{ avgRatings[i]?.toFixed(1) }}</span>
+                <span class="text-xs w-7 text-right flex-shrink-0" :class="isDark ? 'text-gray-400' : 'text-gray-500'">{{ g.avg.toFixed(1) }}</span>
               </div>
             </div>
-            <EmptyState v-else icon="fa-solid fa-tags" title="Rate 2+ books in the same genre to see rankings" size="sm" />
+            <EmptyState v-else icon="fa-solid fa-tags" :title="`Rate ${MIN_BOOKS_PER_GENRE}+ books in the same genre to see rankings`" size="sm" />
           </div>
         </div>
       </div>

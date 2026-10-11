@@ -1,186 +1,112 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
+import { computed } from 'vue';
 import type { UserBook } from '@/types/book';
 import type { List } from '@/types/list';
 import { useDarkModeStore } from '@/store/store';
-import { useListsStore } from '@/store/lists-store';
-import { toast } from '@/components/ui/toast';
-import EditListDetails from '@/components/lists/EditListDetails.vue';
-
-const darkModeStore = useDarkModeStore();
-const listsStore = useListsStore();
-const removingBookIsbn = ref<string | null>(null);
 
 interface Props {
   list: List;
-  expanded: boolean;
-  loadingBooks: boolean;
   books?: UserBook[];
-  isProfilePage?: boolean;
+  readonly?: boolean;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: 'bookListUpdated', listId: string): void;
-  (e: 'listDeleted', listId: string): void;
-  (e: 'toggleExpansion', listId: string): void;
+  (e: 'open', listId: string): void;
+  (e: 'edit', listId: string): void;
+  (e: 'delete', listId: string): void;
 }>();
 
-const handleDeleteList = async (listId: string) => {
-  try {
-    await listsStore.deleteList(listId);
-    emit('listDeleted', listId);
-    toast({
-      title: 'List deleted',
-      description: `You have successfully deleted ${props.list.name}.`,
-      variant: 'success',
-      duration: 2000,
-    });
-  } catch (error) {
-    toast({
-      title: 'Error Deleting List',
-      description: `There has been an error deleting ${props.list.name}: ${error}.`,
-      variant: 'destructive',
-      duration: 4000,
-    });
-  }
-};
+const darkModeStore = useDarkModeStore();
 
-const handleRemoveBook = async (listId: string, isbn: string) => {
-  if (removingBookIsbn.value) return;
+// One spine per book (up to six); colours and sizes taken from the design mock-up
+const SPINES = [
+  { color: 'rgb(65, 137, 216)', width: 17, height: 65 },
+  { color: 'rgb(102, 152, 54)', width: 13, height: 50 },
+  { color: 'rgb(212, 94, 57)', width: 18, height: 61 },
+  { color: 'rgb(128, 119, 215)', width: 15, height: 54 },
+  { color: 'rgb(208, 87, 125)', width: 17, height: 68 },
+  { color: 'rgb(183, 119, 43)', width: 13, height: 47 },
+];
 
-  try {
-    const book = props.books?.find((b) => b.isbn === isbn);
-    if (!book) return;
+const bookCount = computed(() => props.books?.length || 0);
+const spines = computed(() => SPINES.slice(0, Math.min(bookCount.value, 6)));
 
-    removingBookIsbn.value = isbn;
-    await listsStore.removeBookFromList(listId, isbn);
-    emit('bookListUpdated', listId);
-    toast({
-      title: 'Book Removed',
-      description: `You have successfully removed ${book.title} from ${props.list.name}.`,
-      variant: 'success',
-      duration: 2000,
-    });
-  } catch (error) {
-    const book = props.books?.find((b) => b.isbn === isbn);
-    toast({
-      title: 'Error Removing Book',
-      description: `There was an error removing ${
-        book?.title || 'the book'
-      } from ${props.list.name}: "${error}".`,
-      variant: 'destructive',
-      duration: 4000,
-    });
-  } finally {
-    removingBookIsbn.value = null;
-  }
-};
+const bookCountLabel = computed(
+  () => `${bookCount.value} ${bookCount.value === 1 ? 'book' : 'books'}`
+);
 
-const getBookCount = (): string => {
-  const count = props.books?.length || 0;
-  return `${count} ${count === 1 ? 'book' : 'books'}`;
-};
+const iconButtonClass = computed(() =>
+  darkModeStore.darkMode
+    ? 'border-gray-600 text-white'
+    : 'border-gray-300 text-black'
+);
 </script>
 
 <template>
-  <div class="mt-8">
-    <div
-      class="py-6 px-1 flex items-center justify-between cursor-pointer border-l-4 border-goingTeal rounded shadow-md"
-    >
-      <div class="w-full ml-2" @click="emit('toggleExpansion', list.id)">
-        <h3 class="text-lg font-semibold">{{ list.name }}</h3>
-        <div class="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>{{ getBookCount() }}</span>
-        </div>
-        <p v-if="list.details" class="mt-2 text-sm text-muted-foreground">
-          {{ list.details }}
-        </p>
-      </div>
-      <div v-if="!isProfilePage" class="flex items-center gap-2 mr-4">
-        <EditListDetails :list="list" />
-        <Button
-          size="sm"
-          class="hover:bg-goingRed hover:text-white hover:border hover:border-goingRed"
-          :class="{
-            'bg-white text-black': !darkModeStore.darkMode,
-            'bg-gray-900 text-white border border-white':
-              darkModeStore.darkMode,
+  <div
+    role="button"
+    tabindex="0"
+    class="group relative w-full rounded-xl border p-5 text-left transition-all duration-200 hover:cursor-pointer hover:shadow-md focus-visible:outline-none focus-visible:ring-2"
+    :class="{
+      'bg-transparent text-black hover:border-black focus-visible:ring-black':
+          !darkModeStore.darkMode,
+      'bg-transparent text-white border-gray-700 hover:border-white focus-visible:ring-white':
+          darkModeStore.darkMode,
+    }"
+    @click="emit('open', list.id)"
+    @keydown.enter.self="emit('open', list.id)"
+    @keydown.space.self.prevent="emit('open', list.id)"
+  >
+    <div v-if="!readonly" class="absolute top-4 right-4 flex gap-1.5">
+      <button
+        type="button"
+        title="Edit list"
+        :aria-label="`Edit ${list.name}`"
+        class="h-7 w-7 flex items-center justify-center rounded-md border transition-colors hover:bg-goingTeal hover:border-goingTeal hover:text-white"
+        :class="iconButtonClass"
+        @click.stop="emit('edit', list.id)"
+      >
+        <font-awesome-icon icon="fa-regular fa-pen-to-square" class="text-xs" />
+      </button>
+      <button
+        type="button"
+        title="Delete list"
+        :aria-label="`Delete ${list.name}`"
+        class="h-7 w-7 flex items-center justify-center rounded-md border transition-colors hover:bg-goingRed hover:border-goingRed hover:text-white"
+        :class="iconButtonClass"
+        @click.stop="emit('delete', list.id)"
+      >
+        <font-awesome-icon icon="fa-regular fa-trash-can" class="text-xs" />
+      </button>
+    </div>
+
+    <!-- Book spines -->
+    <div class="mt-10 h-[68px] flex items-end gap-1">
+      <template v-if="spines.length">
+        <span
+          v-for="(spine, i) in spines"
+          :key="i"
+          class="rounded-[3px] transition-transform duration-200 group-hover:-translate-y-1"
+          :style="{
+            backgroundColor: spine.color,
+            width: `${spine.width}px`,
+            height: `${spine.height}px`,
+            transitionDelay: `${i * 30}ms`,
           }"
-          @click.stop="handleDeleteList(list.id)"
-        >
-          <font-awesome-icon icon="fa-regular fa-trash-can" />
-        </Button>
-      </div>
+        ></span>
+      </template>
+      <template v-else>
+        <span
+          v-for="n in 3"
+          :key="n"
+          class="w-4 h-12 rounded-[3px] border-2 border-dashed border-gray-500"
+        ></span>
+      </template>
     </div>
-    <div
-      :class="{
-        hidden: !expanded,
-      }"
-    >
-      <div class="border-t">
-        <div v-if="loadingBooks" class="divide-y">
-          <div v-for="n in 3" :key="n" class="p-4">
-            <div class="flex items-center gap-4">
-              <Skeleton class="w-16 h-24 rounded" />
-              <div class="flex-grow space-y-2">
-                <Skeleton class="h-5 w-3/4" />
-                <Skeleton class="h-4 w-1/2" />
-              </div>
-              <Skeleton class="h-9 w-24" />
-            </div>
-          </div>
-        </div>
 
-        <div v-else-if="!books?.length" class="p-4 mt-4 text-center">
-          <p class="text-muted-foreground">No books in this list</p>
-        </div>
-
-        <div v-else>
-          <div
-            v-for="book in books"
-            :key="book.isbn"
-            class="p-4 mt-4 flex items-center"
-            :class="{ 'opacity-50': removingBookIsbn === book.isbn }"
-          >
-            <router-link :to="`/book/${book.isbn}`" class="flex-grow min-w-0">
-              <div class="flex items-center gap-4">
-                <img
-                  :src="book.image"
-                  :alt="book.title"
-                  class="w-16 h-24 object-cover rounded shrink-0"
-                  @error="book.image = '/default-book-cover.jpg'"
-                />
-                <div class="min-w-0 flex-grow">
-                  <h4 class="font-medium">{{ book.title }}</h4>
-                  <p class="text-sm text-muted-foreground truncate">
-                    by {{ book.authors.join(', ') }}
-                  </p>
-                </div>
-              </div>
-            </router-link>
-            <Button
-              v-if="!isProfilePage"
-              size="sm"
-              @click="handleRemoveBook(list.id, book.isbn)"
-              class="hover:bg-goingRed hover:border-none hover:text-white rounded-full p-2"
-              :class="{
-                'pointer-events-none': removingBookIsbn === book.isbn,
-                'bg-white text-black': !darkModeStore.darkMode,
-                'bg-gray-900 text-white border border-white':
-                  darkModeStore.darkMode,
-              }"
-              :disabled="removingBookIsbn === book.isbn"
-            >
-              <font-awesome-icon icon="fa-solid fa-minus" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <p class="mt-5 text-lg font-semibold line-clamp-1">{{ list.name }}</p>
+    <span class="text-sm text-gray-500">{{ bookCountLabel }}</span>
   </div>
 </template>

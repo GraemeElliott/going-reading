@@ -5,6 +5,7 @@ import { useAuthStore } from './auth-store';
 import { AnalyticsService, dateUtils } from '../services/analyticsService';
 import type { ReadingData, TimePeriod } from '../types/analytics';
 import { formatUtils } from '../utils/format-utils';
+import { localDateUtils } from '../utils/date-utils';
 import { supabase } from '../supabase/supabase';
 
 export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
@@ -39,21 +40,28 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
     formatUtils.formatReadingTime(totalReadingTime.value)
   );
 
+  // Minimum reading days a weekday needs before it can be the "best day"
+  const MIN_DAYS_FOR_BEST_DAY = 3;
+
+  // Average pages per reading day, by weekday. dailyPagesMap already holds one
+  // total per calendar day (all sessions that day summed), so each weekday's
+  // average is its total pages / the number of days read on that weekday.
   const avgPagesPerDayOfWeek = computed(() => {
     const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const totals = Array(7).fill(0);
-    const counts = Array(7).fill(0);
+    const totals: number[] = Array(7).fill(0);
+    const dayCounts: number[] = Array(7).fill(0);
 
     for (const [dateStr, pages] of dailyPagesMap.value) {
-      const d = new Date(dateStr);
+      const d = localDateUtils.parseLocalDate(dateStr);
       // getDay(): 0=Sun,1=Mon...6=Sat → remap to Mon=0...Sun=6
       const dow = (d.getDay() + 6) % 7;
       totals[dow] += pages;
-      counts[dow]++;
+      dayCounts[dow]++;
     }
 
-    const avgs = totals.map((total, i) =>
-      counts[i] > 0 ? Math.round(total / counts[i]) : 0
+    // null = no reading days on that weekday yet (shown as a gap, not a zero)
+    const avgs: (number | null)[] = totals.map((total, i) =>
+      dayCounts[i] > 0 ? Math.round(total / dayCounts[i]) : null
     );
 
     const totalPages = totals.reduce((a, b) => a + b, 0);
@@ -62,16 +70,21 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
     const allDates = Array.from(dailyPagesMap.value.keys()).sort();
     let weeklyAvg = 0;
     if (allDates.length > 0) {
-      const firstDay = new Date(allDates[0]);
+      const firstDay = localDateUtils.parseLocalDate(allDates[0]);
       const today = new Date();
       const calendarWeeks = Math.max(1, (today.getTime() - firstDay.getTime()) / (7 * 86400000));
       weeklyAvg = Math.round(totalPages / calendarWeeks);
     }
 
-    const bestDowIndex = avgs.indexOf(Math.max(...avgs));
-    const bestDay = avgs[bestDowIndex] > 0 ? DAY_NAMES[bestDowIndex] : '—';
+    // Best day only considers weekdays with enough reading days to be meaningful
+    let bestDowIndex = -1;
+    avgs.forEach((avg, i) => {
+      if (avg === null || dayCounts[i] < MIN_DAYS_FOR_BEST_DAY) return;
+      if (bestDowIndex === -1 || avg > avgs[bestDowIndex]!) bestDowIndex = i;
+    });
+    const bestDay = bestDowIndex !== -1 ? DAY_NAMES[bestDowIndex] : '—';
 
-    return { labels: DAY_NAMES, avgs, weeklyAvg, bestDay };
+    return { labels: DAY_NAMES, avgs, totals, dayCounts, weeklyAvg, bestDay };
   });
 
   const last12MonthsPagesPerMonth = computed(() => {
@@ -89,7 +102,7 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
 
     const totals = Array(12).fill(0);
     for (const [dateStr, pages] of dailyPagesMap.value) {
-      const d = new Date(dateStr);
+      const d = localDateUtils.parseLocalDate(dateStr);
       const y = d.getFullYear();
       const m = d.getMonth();
       const idx = months.findIndex((e) => e.year === y && e.month === m);
@@ -192,8 +205,7 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
           : null;
 
       if (anchor) {
-        const check = new Date(anchor);
-        check.setHours(0, 0, 0, 0);
+        const check = localDateUtils.parseLocalDate(anchor);
         while (readingDaySet.has(`${check.getFullYear()}-${String(check.getMonth() + 1).padStart(2, '0')}-${String(check.getDate()).padStart(2, '0')}`)) {
           streak++;
           check.setDate(check.getDate() - 1);
@@ -206,9 +218,8 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
       let run = 0;
       let prev: Date | null = null;
       for (const dateStr of sortedDates) {
-        const d = new Date(dateStr);
-        d.setHours(0, 0, 0, 0);
-        if (prev === null || (d.getTime() - prev.getTime()) / 86400000 !== 1) {
+        const d = localDateUtils.parseLocalDate(dateStr);
+        if (prev === null || localDateUtils.daysBetween(prev, d) !== 1) {
           run = 1;
         } else {
           run++;

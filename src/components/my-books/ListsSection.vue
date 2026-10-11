@@ -1,90 +1,92 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, ref } from 'vue';
 import { Separator } from '../../components/ui/separator';
+import { Skeleton } from '../../components/ui/skeleton';
 import { useListsStore } from '../../store/lists-store';
 import ListCard from '../../components/lists/ListCard.vue';
+import ListDialog from '../../components/lists/ListDialog.vue';
 import CreateList from '../lists/CreateList.vue';
-import type { UserBook } from '../../types/book';
 
-const props = defineProps<{
+defineProps<{
   isProfilePage?: boolean;
 }>();
 
 const listsStore = useListsStore();
-const expandedLists = ref<Set<string>>(new Set());
-const loadingBooks = ref<Set<string>>(new Set());
+const selectedListId = ref<string | null>(null);
+const dialogOpen = ref(false);
+const dialogMode = ref<'view' | 'edit' | 'delete'>('view');
 
-const handleNewList = async (listId: string) => {
-  loadingBooks.value.add(listId);
-  try {
-    await listsStore.fetchUserListsAndBooks();
-  } catch (error) {
-    console.error('Error loading books for new list:', error);
-  } finally {
-    loadingBooks.value.delete(listId);
-  }
-};
+const selectedList = computed(
+  () => listsStore.lists.find((l) => l.id === selectedListId.value) ?? null
+);
 
-const toggleExpansion = async (listId: string) => {
-  if (expandedLists.value.has(listId)) {
-    expandedLists.value.delete(listId);
-  } else {
-    expandedLists.value.add(listId);
-  }
-};
-
-const handleListDeleted = (listId: string) => {
-  expandedLists.value.delete(listId);
-};
-
-const handleBookListUpdated = async (listId: string) => {
-  loadingBooks.value.add(listId);
-  try {
-    await listsStore.fetchUserListsAndBooks();
-  } finally {
-    loadingBooks.value.delete(listId);
-  }
+const openList = (
+  listId: string,
+  mode: 'view' | 'edit' | 'delete' = 'view'
+) => {
+  selectedListId.value = listId;
+  dialogMode.value = mode;
+  dialogOpen.value = true;
 };
 </script>
 
 <template>
-  <div class="mt-8 space-y-4">
-    <div class="w-full py-4">
-      <div class="flex flex-col gap-1">
-        <h3 class="text-lg font-medium">Lists</h3>
-      </div>
-      <Separator class="my-6" />
-      <CreateList v-if="!isProfilePage" @list-created="handleNewList" />
-
-      <div v-if="listsStore.loading" class="text-center py-4">
-        <div class="animate-spin h-6 w-6 mx-auto"></div>
-      </div>
-
-      <div v-else-if="listsStore.error" class="text-center py-4 text-red-500">
-        {{ listsStore.error }}
-      </div>
-
-      <div
-        v-else-if="listsStore.lists.length === 0"
-        class="text-center py-4 text-muted-foreground"
-      >
-        You haven't created any lists yet.
-      </div>
-
-      <div v-else class="mt-8 space-y-8 lg:mx-10 mb-10">
-        <ListCard
-          v-for="list in listsStore.lists"
-          :key="list.id"
-          :list="list"
-          :expanded="expandedLists.has(list.id)"
-          :loading-books="loadingBooks.has(list.id)"
-          :books="listsStore.booksInLists[list.id]"
-          :is-profile-page="isProfilePage"
-          @toggle-expansion="toggleExpansion"
-          @list-deleted="handleListDeleted"
-          @book-list-updated="handleBookListUpdated"
-        />
-      </div>
+  <div class="w-full">
+    <div class="flex items-baseline justify-between gap-4">
+      <h3 class="text-xl font-medium">Lists</h3>
+      <span class="text-sm text-muted-foreground">
+        {{ listsStore.lists.length }}
+        {{ listsStore.lists.length === 1 ? 'list' : 'lists' }}
+      </span>
     </div>
+    <Separator class="my-6" />
+    <div v-if="!isProfilePage" class="mb-6">
+      <CreateList @list-created="(id) => openList(id)" />
+    </div>
+
+    <div
+      v-if="listsStore.loading && !listsStore.lists.length"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+    >
+      <Skeleton v-for="n in 3" :key="n" class="h-56 rounded-xl" />
+    </div>
+
+    <div
+      v-else-if="listsStore.error && !listsStore.lists.length"
+      class="text-center py-4 text-red-500"
+    >
+      {{ listsStore.error }}
+    </div>
+
+    <div
+      v-else-if="!listsStore.lists.length"
+      class="text-center py-4 text-muted-foreground"
+    >
+      You haven't created any lists yet.
+    </div>
+
+    <div
+      v-else
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10"
+    >
+      <ListCard
+        v-for="list in listsStore.lists"
+        :key="list.id"
+        :list="list"
+        :books="listsStore.booksInLists[list.id]"
+        :readonly="isProfilePage"
+        @open="openList($event)"
+        @edit="openList($event, 'edit')"
+        @delete="openList($event, 'delete')"
+      />
+    </div>
+
+    <ListDialog
+      v-model:open="dialogOpen"
+      :list="selectedList"
+      :books="selectedList ? listsStore.booksInLists[selectedList.id] : []"
+      :readonly="isProfilePage"
+      :mode="dialogMode"
+    />
   </div>
 </template>

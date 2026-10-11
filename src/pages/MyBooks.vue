@@ -57,19 +57,14 @@ onMounted(async () => {
 
       <!-- Book Status Navigation Skeleton -->
       <div class="mb-8">
-        <div class="flex gap-4">
-          <Skeleton v-for="n in 4" :key="n" class="h-10 w-24" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Skeleton v-for="n in 3" :key="n" class="h-80 rounded-xl" />
         </div>
       </div>
 
       <!-- Lists Section Skeleton -->
-      <div class="space-y-4">
-        <div v-for="n in 3" :key="n" class="border rounded-lg">
-          <div class="p-6">
-            <Skeleton class="h-6 w-1/4 mb-2" />
-            <Skeleton class="h-4 w-1/3" />
-          </div>
-        </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <Skeleton v-for="n in 3" :key="n" class="h-56 rounded-xl" />
       </div>
     </div>
 

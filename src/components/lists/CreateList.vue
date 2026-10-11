@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useListsStore } from '@/store/lists-store';
+import { useDarkModeStore } from '@/store/store';
 import { useForm, useField } from 'vee-validate';
 import { listDetailsFormSchema } from '@/store/form-validation-schemas';
 import { toast } from '@/components/ui/toast';
@@ -18,6 +19,7 @@ const emit = defineEmits<{
 }>();
 
 const listsStore = useListsStore();
+const darkModeStore = useDarkModeStore();
 const isPopoverOpen = ref(false);
 
 const { handleSubmit } = useForm({
@@ -66,8 +68,19 @@ const onSubmit = handleSubmit(async (values) => {
         Create List
       </Button>
     </PopoverTrigger>
-    <PopoverContent class="w-80" :auto-focus="false">
-      <form @submit.prevent="onSubmit" class="grid gap-4">
+    <PopoverContent
+      class="w-80"
+      :class="{
+        'bg-white text-black': !darkModeStore.darkMode,
+        'bg-gray-900 text-white border-gray-700': darkModeStore.darkMode,
+      }"
+      :auto-focus="false"
+    >
+      <form
+        @submit.prevent="onSubmit"
+        class="grid gap-4"
+        :class="darkModeStore.darkMode ? 'form-dark' : 'form-light'"
+      >
         <div class="space-y-2">
           <div class="flex flex-row justify-between">
             <h4 class="font-medium leading-none">Create New List</h4>
@@ -116,10 +129,12 @@ const onSubmit = handleSubmit(async (values) => {
   </Popover>
 </template>
 <style scoped>
-:deep(input) {
+.form-light :deep(input),
+.form-light :deep(textarea) {
   @apply bg-white text-black !important;
 }
-:deep(textarea) {
-  @apply bg-white text-black !important;
+.form-dark :deep(input),
+.form-dark :deep(textarea) {
+  @apply bg-white/5 backdrop-blur-sm text-white border-gray-600 placeholder:text-gray-500 !important;
 }
 </style>
