@@ -195,7 +195,7 @@ const sessionOptions = computed(() => ({
     tooltip: {
       ...baseTooltip.value,
       callbacks: {
-        label: (ctx: { dataIndex: number; parsed: { y: number } }) => {
+        label: (ctx: { dataIndex: number; parsed: { y: number | null } }) => {
           const days = analyticsStore.avgPagesPerDayOfWeek.dayCounts[ctx.dataIndex];
           return `${ctx.parsed.y} pages (${days} ${days === 1 ? 'day' : 'days'})`;
         },
