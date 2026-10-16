@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300..900&family=Newsreader:opsz,wght@6..72,500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -50,6 +51,55 @@
     /* change to any hsl value you want */
     --vis-secondary-color: var(--goingTeal);
     --vis-text-color: var(--muted-foreground);
+
+    /* Design tokens for the standard page format (light) */
+    --gr-bg: #f4f6f8;
+    --gr-surface: #ffffff;
+    --gr-surface-2: #eef1f5;
+    --gr-line: #dde3ea;
+    --gr-text: #131a26;
+    --gr-muted: #56627a;
+    --gr-accent: #0f7b7f;
+    --gr-accent-soft: rgba(15, 123, 127, 0.1);
+    --gr-accent-ink: #ffffff;
+    --gr-star: #b7791f;
+    --gr-star-off: #cfd6df;
+    --gr-danger-text: #b3261e;
+    --gr-danger-bg: #c2363b;
+    --gr-on-danger: #ffffff;
+    --gr-backdrop: rgba(19, 26, 38, 0.55);
+    --gr-modal-shadow: 0 24px 64px rgba(19, 26, 38, 0.22);
+    --gr-control-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    --gr-track: #e1e7ee;
+    --gr-shelf-read: #2f7d3a;
+    --gr-shelf-want: #2f5fbf;
+    --gr-shelf-dnf: #a8641a;
+    --gr-card-shadow: 0 1px 2px rgba(19, 26, 38, 0.06),
+      0 4px 16px rgba(19, 26, 38, 0.05);
+    /* Home page header, until the home page is migrated */
+    --gr-hero: #0f3538;
+    --gr-on-hero: #ffffff;
+  }
+  .dark {
+    --gr-bg: #0f1623;
+    --gr-surface: #171f2f;
+    --gr-surface-2: #1f293b;
+    --gr-line: #2a3549;
+    --gr-text: #eef2f7;
+    --gr-muted: #9aa7ba;
+    --gr-accent: #3fb6b2;
+    --gr-accent-soft: rgba(63, 182, 178, 0.14);
+    --gr-accent-ink: #0f1623;
+    --gr-star: #f5b544;
+    --gr-star-off: #3a4558;
+    --gr-danger-text: #ff9494;
+    --gr-backdrop: rgba(0, 0, 0, 0.7);
+    --gr-modal-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+    --gr-track: #2a3549;
+    --gr-shelf-read: #7bc67e;
+    --gr-shelf-want: #8ab4ff;
+    --gr-shelf-dnf: #e0a458;
+    --gr-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
   * {
     @apply border-border;
@@ -91,6 +141,162 @@
   * {
     -ms-overflow-style: none;
   }
+}
+
+@layer components {
+  /* Centred content column shared by the header and every standard page */
+  .gr-container {
+    width: 100%;
+    max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  @media (min-width: 768px) {
+    .gr-container {
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+  }
+  .gr-card {
+    @apply rounded-2xl border border-gr-line bg-gr-surface shadow-gr-card;
+  }
+
+  /* Buttons: .gr-btn plus one of the variants below */
+  .gr-btn {
+    @apply inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-transparent px-4 font-medium transition;
+  }
+  .gr-btn:focus-visible,
+  .gr-input:focus-visible {
+    outline: 2px solid var(--gr-accent);
+    outline-offset: 2px;
+  }
+  .gr-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .gr-btn-outline {
+    @apply border-gr-line bg-transparent text-gr-text;
+  }
+  .gr-btn-outline:hover:not(:disabled) {
+    @apply bg-gr-surface-2;
+  }
+  .gr-btn-solid {
+    @apply bg-gr-text text-gr-surface;
+  }
+  .gr-btn-accent {
+    @apply bg-gr-accent text-gr-accent-ink;
+  }
+  /* Neutral primary: near-black in light mode, white in dark mode */
+  .gr-btn-primary {
+    @apply bg-gr-text text-gr-bg;
+  }
+  .gr-btn-danger {
+    @apply bg-gr-danger-bg text-gr-on-danger;
+  }
+  .gr-btn-solid:hover:not(:disabled),
+  .gr-btn-primary:hover:not(:disabled),
+  .gr-btn-accent:hover:not(:disabled),
+  .gr-btn-danger:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  .gr-input {
+    @apply h-11 w-full rounded-[10px] border border-gr-line bg-gr-bg px-3 text-gr-text placeholder:text-gr-muted;
+  }
+
+  /* Raised panel for menus and popovers */
+  .gr-panel {
+    @apply rounded-[14px] border border-gr-line bg-gr-surface font-body text-base text-gr-text shadow-gr-modal;
+  }
+  .gr-icon-btn {
+    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] text-gr-muted transition-colors;
+  }
+  .gr-icon-btn:hover {
+    @apply bg-gr-surface-2 text-gr-text;
+  }
+  .gr-icon-btn:focus-visible {
+    outline: 2px solid var(--gr-accent);
+    outline-offset: 2px;
+  }
+  .gr-empty {
+    @apply rounded-2xl border-[1.5px] border-dashed border-gr-line px-4 py-8 text-center text-gr-muted;
+  }
+}
+
+/* Quill editor restyled with the theme tokens (wrap the editor in .gr-editor) */
+.gr-editor {
+  border: 1px solid var(--gr-line);
+  border-radius: 10px;
+  background: var(--gr-bg);
+}
+.gr-editor .ql-toolbar.ql-snow {
+  border: 0;
+  border-bottom: 1px solid var(--gr-line);
+  border-radius: 9px 9px 0 0;
+  background: var(--gr-surface-2);
+  font-family: inherit;
+}
+.gr-editor .ql-container.ql-snow {
+  border: 0;
+  height: auto;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--gr-text);
+}
+.gr-editor .ql-editor {
+  min-height: 160px;
+}
+.gr-editor .ql-editor.ql-blank::before {
+  color: var(--gr-muted);
+  font-style: normal;
+}
+.gr-editor .ql-snow .ql-stroke {
+  stroke: var(--gr-muted);
+}
+.gr-editor .ql-snow .ql-fill,
+.gr-editor .ql-snow .ql-stroke.ql-fill {
+  fill: var(--gr-muted);
+}
+.gr-editor .ql-snow .ql-picker {
+  color: var(--gr-muted);
+}
+.gr-editor .ql-snow.ql-toolbar button,
+.gr-editor .ql-snow .ql-picker-label {
+  border-radius: 6px;
+}
+.gr-editor .ql-snow.ql-toolbar button:hover,
+.gr-editor .ql-snow.ql-toolbar button.ql-active,
+.gr-editor .ql-snow.ql-toolbar .ql-picker-label:hover,
+.gr-editor .ql-snow.ql-toolbar .ql-picker-label.ql-active {
+  background: var(--gr-surface);
+  color: var(--gr-text);
+}
+.gr-editor .ql-snow.ql-toolbar button:hover .ql-stroke,
+.gr-editor .ql-snow.ql-toolbar button.ql-active .ql-stroke,
+.gr-editor .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke,
+.gr-editor .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke {
+  stroke: var(--gr-text);
+}
+.gr-editor .ql-snow.ql-toolbar button:hover .ql-fill,
+.gr-editor .ql-snow.ql-toolbar button.ql-active .ql-fill {
+  fill: var(--gr-text);
+}
+.gr-editor .ql-snow .ql-picker-options,
+.gr-editor .ql-snow .ql-tooltip {
+  border-color: var(--gr-line);
+  background: var(--gr-surface);
+  color: var(--gr-text);
+  box-shadow: var(--gr-card-shadow);
+}
+.gr-editor .ql-snow .ql-tooltip input[type='text'] {
+  border-color: var(--gr-line);
+  background: var(--gr-bg);
+  color: var(--gr-text);
+}
+.gr-editor .ql-snow a {
+  color: var(--gr-accent);
 }
 
 html {

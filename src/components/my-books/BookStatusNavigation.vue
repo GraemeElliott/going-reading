@@ -1,25 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 import { useUserBooksStore } from '@/store/user-books-store';
-import { useDarkModeStore } from '@/store/store';
-import BookCovers from '@/components/my-books/BookCovers.vue';
+import PageSection from '@/components/layout/PageSection.vue';
 import { STATUS_DISPLAY_NAMES, BookStatus } from '@/types/book';
-import { Separator } from '@/components/ui/separator';
 
-const route = useRoute();
-const router = useRouter();
 const userBooksStore = useUserBooksStore();
-const darkModeStore = useDarkModeStore();
-const username = route.params.username;
 
 const statuses: BookStatus[] = ['want-to-read', 'read', 'did-not-finish'];
-
-const STATUS_BAR_COLOURS: Partial<Record<BookStatus, string>> = {
-  'want-to-read': 'bg-goingTeal',
-  read: 'bg-goingGreen',
-  'did-not-finish': 'bg-gray-500',
-};
 
 const bookCounts = computed(() => {
   const books = userBooksStore.groupedBooks;
@@ -32,81 +19,56 @@ const totalBooks = computed(() =>
   statuses.reduce((sum, status) => sum + (bookCounts.value[status] || 0), 0)
 );
 
-const percentOfTotal = (status: BookStatus): number => {
-  if (!totalBooks.value) return 0;
-  return ((bookCounts.value[status] || 0) / totalBooks.value) * 100;
+const percentLabel = (count: number): string => {
+  const percent = totalBooks.value
+    ? Math.round((count / totalBooks.value) * 100)
+    : 0;
+  if (count > 0 && percent < 1) return 'Under 1% of your library';
+  return `${percent}% of your library`;
 };
 
-const percentLabel = (status: BookStatus): string => {
-  const percent = percentOfTotal(status);
-  if (percent > 0 && percent < 1) return '<1%';
-  return `${Math.round(percent)}%`;
-};
-
-const navigateToStatus = (status: BookStatus) => {
-  router.push(`/user/${username}/my-books/${status}`);
-};
+const shelves = computed(() =>
+  statuses.map((status) => {
+    const count = bookCounts.value[status] || 0;
+    return {
+      status,
+      name: STATUS_DISPLAY_NAMES[status],
+      count,
+      percentLabel: percentLabel(count),
+    };
+  })
+);
 </script>
 
 <template>
-  <div>
-    <div class="flex items-baseline justify-between gap-4">
-      <h3 class="text-xl font-medium">Bookshelves</h3>
-      <span class="text-sm text-muted-foreground">
-        {{ totalBooks }} {{ totalBooks === 1 ? 'book' : 'books' }}
-      </span>
-    </div>
-    <Separator class="my-6" />
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-      <button
-        v-for="status in statuses"
-        :key="status"
-        type="button"
-        class="group w-full rounded-xl border p-6 text-left transition-all duration-200 hover:cursor-pointer hover:shadow-md focus-visible:outline-none focus-visible:ring-2"
-        :class="{
-          'bg-transparent text-black hover:border-black focus-visible:ring-black':
-          !darkModeStore.darkMode,
-          'bg-transparent text-white border-gray-700 hover:border-white focus-visible:ring-white':
-          darkModeStore.darkMode,
-        }"
-        @click="navigateToStatus(status)"
+  <PageSection
+    title="Bookshelves"
+    :count="`${totalBooks} ${totalBooks === 1 ? 'book' : 'books'}`"
+  >
+    <div
+      class="grid grid-cols-1 gap-5 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]"
+    >
+      <router-link
+        v-for="shelf in shelves"
+        :key="shelf.status"
+        :to="{ name: 'bookshelves', query: { shelf: shelf.status } }"
+        class="gr-card group flex items-center justify-between gap-4 p-6 transition duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gr-accent"
       >
-        <BookCovers :status="status" />
-
-        <p class="mt-5 text-lg font-semibold">
-          {{ STATUS_DISPLAY_NAMES[status] }}
-        </p>
-        <div class="flex items-end justify-between">
-          <div>
-            <p class="text-3xl font-semibold leading-tight">
-              {{ bookCounts[status] || 0 }}
-            </p>
-            <span class="text-sm text-gray-500">
-              {{ bookCounts[status] === 1 ? 'book' : 'books' }}
-            </span>
-          </div>
-          <font-awesome-icon
-            icon="fa-solid fa-angle-right"
-            class="mb-1 text-gray-500 transition-transform group-hover:translate-x-1 group-hover:text-goingTeal"
-          />
+        <div class="min-w-0">
+          <p class="font-semibold">{{ shelf.name }}</p>
+          <p
+            class="mt-1 text-4xl font-bold leading-tight transition-colors duration-200 group-hover:text-gr-accent"
+          >
+            {{ shelf.count }}
+          </p>
+          <p class="mt-1 text-sm text-gr-muted">{{ shelf.percentLabel }}</p>
         </div>
-
-        <div
-          class="mt-6 h-1 w-full overflow-hidden rounded-full"
-          :class="darkModeStore.darkMode ? 'bg-gray-700' : 'bg-gray-200'"
-        >
-          <div
-            class="h-full rounded-full transition-all duration-500"
-            :class="STATUS_BAR_COLOURS[status]"
-            :style="{
-              width: `${Math.max(percentOfTotal(status), bookCounts[status] ? 1 : 0)}%`,
-            }"
-          ></div>
-        </div>
-        <p class="mt-2 text-sm text-gray-500">
-          {{ percentLabel(status) }} of total
-        </p>
-      </button>
+        <font-awesome-icon
+          icon="fa-solid fa-angle-right"
+          class="shrink-0 text-gr-muted transition duration-200 group-hover:translate-x-1 group-hover:text-gr-text"
+          aria-hidden="true"
+        />
+      </router-link>
     </div>
-  </div>
+  </PageSection>
 </template>

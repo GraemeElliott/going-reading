@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Separator } from '../../components/ui/separator';
+import PageSection from '../../components/layout/PageSection.vue';
 import { Skeleton } from '../../components/ui/skeleton';
 import { useListsStore } from '../../store/lists-store';
 import ListCard from '../../components/lists/ListCard.vue';
@@ -31,55 +31,56 @@ const openList = (
 </script>
 
 <template>
-  <div class="w-full">
-    <div class="flex items-baseline justify-between gap-4">
-      <h3 class="text-xl font-medium">Lists</h3>
-      <span class="text-sm text-muted-foreground">
-        {{ listsStore.lists.length }}
-        {{ listsStore.lists.length === 1 ? 'list' : 'lists' }}
-      </span>
-    </div>
-    <Separator class="my-6" />
-    <div v-if="!isProfilePage" class="mb-6">
-      <CreateList @list-created="(id) => openList(id)" />
-    </div>
-
+  <PageSection
+    title="Lists"
+    :count="`${listsStore.lists.length} ${
+      listsStore.lists.length === 1 ? 'list' : 'lists'
+    }`"
+  >
     <div
       v-if="listsStore.loading && !listsStore.lists.length"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      class="grid grid-cols-1 gap-5 md:grid-cols-[repeat(auto-fill,minmax(340px,1fr))]"
     >
-      <Skeleton v-for="n in 3" :key="n" class="h-56 rounded-xl" />
-    </div>
-
-    <div
-      v-else-if="listsStore.error && !listsStore.lists.length"
-      class="text-center py-4 text-red-500"
-    >
-      {{ listsStore.error }}
-    </div>
-
-    <div
-      v-else-if="!listsStore.lists.length"
-      class="text-center py-4 text-muted-foreground"
-    >
-      You haven't created any lists yet.
-    </div>
-
-    <div
-      v-else
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10"
-    >
-      <ListCard
-        v-for="list in listsStore.lists"
-        :key="list.id"
-        :list="list"
-        :books="listsStore.booksInLists[list.id]"
-        :readonly="isProfilePage"
-        @open="openList($event)"
-        @edit="openList($event, 'edit')"
-        @delete="openList($event, 'delete')"
+      <Skeleton
+        v-for="n in 3"
+        :key="n"
+        class="h-[78px] rounded-2xl bg-gr-surface-2"
       />
     </div>
+
+    <template v-else>
+      <div
+        v-if="listsStore.error && !listsStore.lists.length"
+        class="py-4 text-center text-destructive"
+      >
+        {{ listsStore.error }}
+      </div>
+
+      <div
+        v-else-if="isProfilePage && !listsStore.lists.length"
+        class="py-4 text-center text-gr-muted"
+      >
+        You haven't created any lists yet.
+      </div>
+
+      <!-- The create tile is always the last item in the grid -->
+      <div
+        v-if="listsStore.lists.length || !isProfilePage"
+        class="grid grid-cols-1 gap-5 md:grid-cols-[repeat(auto-fill,minmax(340px,1fr))]"
+      >
+        <ListCard
+          v-for="list in listsStore.lists"
+          :key="list.id"
+          :list="list"
+          :books="listsStore.booksInLists[list.id]"
+          :readonly="isProfilePage"
+          @open="openList($event)"
+          @edit="openList($event, 'edit')"
+          @delete="openList($event, 'delete')"
+        />
+        <CreateList v-if="!isProfilePage" @list-created="(id) => openList(id)" />
+      </div>
+    </template>
 
     <ListDialog
       v-model:open="dialogOpen"
@@ -88,5 +89,5 @@ const openList = (
       :readonly="isProfilePage"
       :mode="dialogMode"
     />
-  </div>
+  </PageSection>
 </template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import {
   Select,
   SelectContent,
@@ -15,17 +15,28 @@ import type { Book } from '@/types/book';
 import type { Author } from '@/types/author';
 import { debounce } from 'lodash';
 import SearchBarResults from '@/components/search/SearchBarResults.vue';
-import { useDarkModeStore } from '@/store/store';
 
 type SearchType = 'title' | 'author' | 'isbn';
 
 const searchTypes: SearchType[] = ['title', 'author', 'isbn'];
 
-defineProps<{
+const props = defineProps<{
   isHome: boolean;
 }>();
 
-const darkModeStore = useDarkModeStore();
+// The home page keeps its own colours; everywhere else uses the theme tokens.
+// `!` is needed because Input and SelectTrigger apply their colours last.
+const fieldClass = computed(() =>
+  props.isHome
+    ? ''
+    : '!border-gr-line !bg-gr-surface !text-gr-text placeholder:text-gr-muted'
+);
+const menuClass = computed(() =>
+  props.isHome ? '' : 'border-gr-line bg-gr-surface text-gr-text'
+);
+const menuItemClass = computed(() =>
+  props.isHome ? '' : 'text-gr-text focus:bg-gr-surface-2 focus:text-gr-text'
+);
 const searchQuery = ref<string>('');
 const searchResults = ref<(Book | Author)[]>([]);
 const isSearching = ref(false);
@@ -34,6 +45,7 @@ const isInputFocused = ref(false);
 const searchType = ref<SearchType>('title');
 const searchContainer = ref<HTMLDivElement | null>(null);
 const router = useRouter();
+const route = useRoute();
 
 const emit = defineEmits(['search-complete']);
 
@@ -47,7 +59,9 @@ const handleSubmit = (e: Event) => {
         type: searchType.value,
       },
     });
-    clearSearch();
+    // Keep the query in the field on the results page so it can be refined
+    searchResults.value = [];
+    totalResults.value = 0;
     isInputFocused.value = false;
   }
 };
@@ -96,48 +110,84 @@ const setSearchType = (value: string) => {
   }
 };
 
+// While copying the query/type from the URL, don't run the dropdown search
+// or clear the field
+let syncingFromRoute = false;
+
 // Watch for changes in searchQuery
 watch(searchQuery, (newQuery) => {
   searchResults.value = [];
   totalResults.value = 0;
+  if (syncingFromRoute) return;
   performSearch(newQuery);
 });
 
 // Watch for changes in searchType
 watch(searchType, () => {
+  if (syncingFromRoute) return;
   clearSearch();
 });
+
+// On the search results page the field shows the current search; leaving it clears the field
+watch(
+  () => [route.name, route.query.q, route.query.type],
+  ([name, q, type], old) => {
+    if (name === 'search-results') {
+      syncingFromRoute = true;
+      if (searchTypes.includes(type as SearchType)) searchType.value = type as SearchType;
+      searchQuery.value = typeof q === 'string' ? q : '';
+      nextTick(() => {
+        syncingFromRoute = false;
+      });
+    } else if (old?.[0] === 'search-results') {
+      clearSearch();
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
   <div class="relative w-full" ref="searchContainer">
     <form @submit="handleSubmit" class="flex gap-2">
       <Select :model-value="searchType" @update:model-value="setSearchType">
-        <SelectTrigger :class="['w-[100px]']" :isHome="isHome">
+        <SelectTrigger
+          :class="['h-11 w-[100px] shrink-0 rounded-[10px]', fieldClass]"
+          :isHome="isHome"
+          aria-label="Search by"
+        >
           <SelectValue
             :placeholder="
               searchType.charAt(0).toUpperCase() + searchType.slice(1)
             "
           />
         </SelectTrigger>
-        <SelectContent :isHome="isHome">
+        <SelectContent :class="menuClass" :isHome="isHome">
           <SelectGroup>
-            <SelectItem value="title" :isHome="isHome">Title</SelectItem>
-            <SelectItem value="author" :isHome="isHome">Author</SelectItem>
-            <SelectItem value="isbn" :isHome="isHome">ISBN</SelectItem>
+            <SelectItem value="title" :class="menuItemClass" :isHome="isHome"
+              >Title</SelectItem
+            >
+            <SelectItem value="author" :class="menuItemClass" :isHome="isHome"
+              >Author</SelectItem
+            >
+            <SelectItem value="isbn" :class="menuItemClass" :isHome="isHome"
+              >ISBN</SelectItem
+            >
           </SelectGroup>
         </SelectContent>
       </Select>
-      <div class="relative flex-1">
+      <div class="relative min-w-0 flex-1">
         <font-awesome-icon
           icon="fa-solid fa-magnifying-glass"
-          class="absolute left-2 top-3 size-4 text-muted-foreground"
+          class="absolute left-3 top-1/2 -translate-y-1/2 size-4"
+          :class="isHome ? 'text-muted-foreground' : 'text-gr-muted'"
         />
         <Input
           v-model="searchQuery"
           type="search"
           placeholder="Search"
-          :class="['pl-8 w-full']"
+          aria-label="Search"
+          :class="['h-11 w-full rounded-[10px] pl-9', fieldClass]"
           :isHome="isHome"
           @focus="handleFocus"
           @blur="handleBlur"
@@ -148,12 +198,12 @@ watch(searchType, () => {
             isInputFocused &&
             (totalResults > 0 || isSearching)
           "
-          class="fixed left-4 right-4 mt-2 mb-20 border border-gray-200 shadow-lg z-50 rounded-md overflow-hidden md:left-1/2 md:right-auto md:w-[500px] md:-translate-x-1/2"
-          :class="{
-            'bg-white text-black': !darkModeStore.darkMode || isHome,
-            'bg-gray-900 text-white hover:bg-gray-900':
-              darkModeStore.darkMode && !isHome,
-          }"
+          class="fixed left-4 right-4 mt-2 mb-20 border shadow-lg z-50 rounded-[10px] overflow-hidden md:left-1/2 md:right-auto md:w-[500px] md:-translate-x-1/2"
+          :class="
+            isHome
+              ? 'border-gray-200 bg-white text-black'
+              : 'border-gr-line bg-gr-surface text-gr-text'
+          "
         >
           <SearchBarResults
             :searchQuery="searchQuery"

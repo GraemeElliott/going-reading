@@ -4,9 +4,12 @@ import { useAuthStore } from '../store/auth-store';
 import { useUserBooksStore } from '../store/user-books-store';
 import { useListsStore } from '../store/lists-store';
 import { Skeleton } from '../components/ui/skeleton';
+import PageLayout from '../components/layout/PageLayout.vue';
+import PageSection from '../components/layout/PageSection.vue';
 import CurrentlyReadingCarousel from '../components/my-books/CurrentlyReadingCarousel.vue';
 import BookStatusNavigation from '../components/my-books/BookStatusNavigation.vue';
 import ListsSection from '../components/my-books/ListsSection.vue';
+import LibrarySection from '../components/my-books/LibrarySection.vue';
 
 const authStore = useAuthStore();
 const userBooksStore = useUserBooksStore();
@@ -35,61 +38,64 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="mx-auto py-1">
+  <PageLayout title="My Books">
     <!-- Loading State -->
-    <div v-if="isInitialLoading">
-      <h2 class="text-2xl font-bold tracking-tight mb-6">My Books</h2>
-
-      <!-- Currently Reading Carousel Skeleton -->
-      <div class="mb-8">
-        <div class="space-y-4">
-          <div class="flex gap-4 overflow-hidden">
-            <div v-for="n in 3" :key="n" class="shrink-0">
-              <Skeleton class="w-[200px] h-[300px] rounded-lg" />
-              <div class="mt-2 space-y-2">
-                <Skeleton class="h-4 w-3/4" />
-                <Skeleton class="h-3 w-1/2" />
-              </div>
-            </div>
+    <template v-if="isInitialLoading">
+      <PageSection title="Currently Reading" aria-busy="true">
+        <div class="flex justify-around overflow-hidden">
+          <div
+            v-for="n in 3"
+            :key="n"
+            class="flex-col items-center gap-3"
+            :class="n === 1 ? 'flex' : 'hidden md:flex'"
+          >
+            <Skeleton class="h-[225px] w-[150px] rounded-lg bg-gr-surface-2" />
+            <Skeleton class="h-2 w-[150px] bg-gr-surface-2" />
+            <Skeleton class="h-4 w-28 bg-gr-surface-2" />
           </div>
         </div>
-      </div>
+      </PageSection>
 
-      <!-- Book Status Navigation Skeleton -->
-      <div class="mb-8">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Skeleton v-for="n in 3" :key="n" class="h-80 rounded-xl" />
+      <PageSection title="Bookshelves" aria-busy="true">
+        <div
+          class="grid grid-cols-1 gap-5 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]"
+        >
+          <Skeleton
+            v-for="n in 3"
+            :key="n"
+            class="h-[142px] rounded-2xl bg-gr-surface-2"
+          />
         </div>
-      </div>
+      </PageSection>
 
-      <!-- Lists Section Skeleton -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <Skeleton v-for="n in 3" :key="n" class="h-56 rounded-xl" />
-      </div>
-    </div>
+      <PageSection title="Lists" aria-busy="true">
+        <div
+          class="grid grid-cols-1 gap-5 md:grid-cols-[repeat(auto-fill,minmax(340px,1fr))]"
+        >
+          <Skeleton
+            v-for="n in 3"
+            :key="n"
+            class="h-[78px] rounded-2xl bg-gr-surface-2"
+          />
+        </div>
+      </PageSection>
+    </template>
 
     <!-- Error State -->
-    <div v-else-if="error" class="text-center">
-      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p class="text-red-600">{{ error }}</p>
-      </div>
+    <div
+      v-else-if="error"
+      role="alert"
+      class="gr-card p-4 text-center text-destructive"
+    >
+      {{ error }}
     </div>
 
     <!-- Content -->
-    <div v-else>
-      <!-- User Header -->
-      <div class="space-y-8">
-        <h2 class="text-2xl font-bold tracking-tight">My Books</h2>
-
-        <!-- Currently Reading Carousel -->
-        <CurrentlyReadingCarousel />
-
-        <!-- Book Status Navigation -->
-        <BookStatusNavigation />
-
-        <!-- Lists Section -->
-        <ListsSection />
-      </div>
-    </div>
-  </div>
+    <template v-else>
+      <CurrentlyReadingCarousel />
+      <BookStatusNavigation />
+      <LibrarySection />
+      <ListsSection />
+    </template>
+  </PageLayout>
 </template>

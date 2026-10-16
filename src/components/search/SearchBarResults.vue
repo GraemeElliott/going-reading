@@ -2,12 +2,9 @@
 import type { Book } from '@/types/book';
 import type { Author } from '@/types/author';
 import { useRouter } from 'vue-router';
-import { useDarkModeStore } from '@/store/store';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type SearchType = 'title' | 'author' | 'isbn';
-
-const darkModeStore = useDarkModeStore();
 
 const props = defineProps<{
   searchResults: (Book | Author)[];
@@ -81,7 +78,8 @@ const handleSeeMore = () => {
     <li
       v-for="result in searchResults"
       :key="isAuthorResult(result) ? result.name : result.isbn"
-      class="flex items-center p-2 cursor-pointer border-b border-gray-100 last:border-b-0"
+      class="flex items-center p-2 cursor-pointer border-b last:border-b-0"
+      :class="isHome ? 'border-gray-100' : 'border-gr-line'"
       @click="handleResultClick(result)"
     >
       <template v-if="isAuthorResult(result)">
@@ -89,10 +87,7 @@ const handleSeeMore = () => {
           <p class="font-semibold text-lg">{{ result.name }}</p>
           <p
             class="text-sm"
-            :class="{
-              'text-black': isHome || (!darkModeStore.darkMode && !isHome),
-              'text-gray-400': darkModeStore.darkMode && !isHome,
-            }"
+            :class="isHome ? 'text-black' : 'text-gr-muted'"
           >
             Author
           </p>
@@ -109,19 +104,13 @@ const handleSeeMore = () => {
           <p class="font-semibold">{{ result.title }}</p>
           <p
             class="text-sm"
-            :class="{
-              'text-black': isHome || (!darkModeStore.darkMode && !isHome),
-              'text-gray-400': darkModeStore.darkMode && !isHome,
-            }"
+            :class="isHome ? 'text-black' : 'text-gr-muted'"
           >
             by {{ result.authors.join(', ') }}
           </p>
           <p
             class="text-sm"
-            :class="{
-              'text-black': isHome || (!darkModeStore.darkMode && !isHome),
-              'text-gray-400': darkModeStore.darkMode && !isHome,
-            }"
+            :class="isHome ? 'text-black' : 'text-gr-muted'"
           >
             Pages: {{ result.pages }}
           </p>
@@ -130,14 +119,15 @@ const handleSeeMore = () => {
     </li>
   </ul>
 
-  <div v-if="totalResults > 5" class="text-center border-t border-gray-100">
+  <div
+    v-if="totalResults > 5"
+    class="text-center border-t"
+    :class="isHome ? 'border-gray-100' : 'border-gr-line'"
+  >
     <button
       @click="handleSeeMore"
       class="w-full py-3 font-medium text-sm transition-colors"
-      :class="{
-        'text-black': isHome || (!darkModeStore.darkMode && !isHome),
-        'text-white': darkModeStore.darkMode && !isHome,
-      }"
+      :class="isHome ? 'text-black' : 'text-gr-text'"
     >
       See more results
     </button>

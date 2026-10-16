@@ -218,7 +218,7 @@ const metricCards = computed(() => {
       sub: booksLast > 0
         ? `${signedDiff(booksThis, booksLast)} vs ${lastYear}`
         : `0 read in ${lastYear}`,
-      pos: booksThis >= booksLast,
+      trend: Math.sign(booksThis - booksLast),
     },
     {
       label: `Pages read ${currentYear}`,
@@ -226,13 +226,13 @@ const metricCards = computed(() => {
       sub: pagesLast > 0
         ? `${signedDiff(pagesThis, pagesLast, (n) => n.toLocaleString())} vs ${lastYear}`
         : '',
-      pos: pagesThis >= pagesLast,
+      trend: Math.sign(pagesThis - pagesLast),
     },
     {
       label: `Reading time ${currentYear}`,
       value: yearlyDataLoading.value ? '—' : formatHours(timeThis),
       sub: hoursYoYSub(timeThis, timeLast),
-      pos: timeThis >= timeLast,
+      trend: Math.sign(timeThis - timeLast),
     },
     {
       label: `Books added ${currentYear}`,
@@ -240,7 +240,7 @@ const metricCards = computed(() => {
       sub: addedLast > 0
         ? `${signedDiff(addedThis, addedLast)} vs ${lastYear}`
         : '',
-      pos: addedThis >= addedLast,
+      trend: Math.sign(addedThis - addedLast),
     },
     {
       label: `${currentYear} target`,
@@ -405,9 +405,9 @@ const goalOptions = computed(() => ({
         <div
           v-if="card.sub"
           class="text-xs mt-1.5"
-          :class="card.label.includes('target')
+          :class="card.label.includes('target') || !card.trend
             ? (isDark ? 'text-gray-400' : 'text-gray-500')
-            : card.pos
+            : card.trend > 0
               ? 'text-green-700 dark:text-green-400'
               : 'text-red-600 dark:text-red-400'"
         >
@@ -424,7 +424,7 @@ const goalOptions = computed(() => ({
       <div class="text-xs font-medium uppercase tracking-wider mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-500'">
         Pages read · {{ currentYear }} vs {{ lastYear }}
       </div>
-      <div class="h-52">
+      <div class="h-72 md:h-80">
         <Chart type="bar" :data="cmpPagesData" :options="cmpPagesOptions" />
       </div>
     </div>

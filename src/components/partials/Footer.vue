@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import Logo from './Logo.vue';
-import { useDarkModeStore } from '@/store/store';
 import { Separator } from '@/components/ui/separator';
-
-const darkModeStore = useDarkModeStore();
 
 defineProps<{
   isHome: boolean;
@@ -16,11 +13,7 @@ const currentYear = new Date().getFullYear();
   <footer
     :class="[
       'mt-auto py-12',
-      isHome
-        ? 'bg-[#0F3538] text-white'
-        : darkModeStore.darkMode
-        ? 'bg-gray-900 text-white'
-        : 'bg-white text-black',
+      isHome ? 'bg-gr-hero text-gr-on-hero' : 'bg-gr-bg text-gr-text',
     ]"
   >
     <div class="max-w-7xl mx-auto px-6 lg:px-26 xl:px-36">

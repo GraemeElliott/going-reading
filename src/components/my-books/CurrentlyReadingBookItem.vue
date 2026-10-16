@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import type { UserBook, BookStatus } from '@/types/book';
 import UpdateBookProgress from './UpdateBookProgress.vue';
 import Progress from '../ui/progress/Progress.vue';
+import BookTitle from '@/components/partials/BookTitle.vue';
+import { formatAuthors } from '@/utils/book-display';
 
 const props = defineProps<{
   book: UserBook;
@@ -33,44 +35,46 @@ const readingProgress = computed(() => {
 </script>
 
 <template>
-  <div class="p-1">
-    <div class="flex flex-col items-center h-[320px]">
-      <div class="relative group w-32">
-        <img
-          :src="book.image"
-          :alt="book.title"
-          class="w-32 h-48 rounded-md shadow-md transition-all duration-200 object-cover"
-        />
-        <div
-          class="absolute inset-0 w-32 h-48 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-200 rounded-md"
-        ></div>
-        <UpdateBookProgress
-          :book="book"
-          @update="handleProgressUpdate"
-          @statusUpdate="handleStatusUpdate"
-        />
-      </div>
-      <div class="text-center w-full mt-2">
-        <div class="flex flex-row items-center justify-center space-x-3 mb-2">
-          <Progress :model-value="readingProgress" class="my-2" />
-          <span class="text-xs font-semibold"
-            >{{ Math.floor(readingProgress) }}%</span
-          >
-        </div>
-        <router-link :to="`/book/${book.isbn}`" class="block mb-1">
-          <h3 class="font-medium text-sm line-clamp-2">
-            {{ book.title }}
-          </h3>
-        </router-link>
-        <router-link
-          :to="`/author/${encodeURIComponent(book.authors.join(', '))}`"
-        >
-          <p class="text-xs text-gray-500 line-clamp-1">
-            {{ book.authors.join(', ') }}
-          </p>
-        </router-link>
-      </div>
+  <div class="flex flex-col items-center px-1 text-center">
+    <div class="relative group w-[150px]">
+      <img
+        :src="book.image"
+        :alt="book.title"
+        class="w-[150px] h-[225px] rounded-lg shadow-gr-card object-cover transition duration-200 group-hover:brightness-75 group-focus-within:brightness-75"
+      />
+      <UpdateBookProgress
+        :book="book"
+        @update="handleProgressUpdate"
+        @statusUpdate="handleStatusUpdate"
+      />
     </div>
+    <div class="mt-4 flex w-full max-w-[290px] items-center justify-center gap-3">
+      <Progress
+        :model-value="Math.min(readingProgress, 100)"
+        :aria-label="`Reading progress for ${book.title}`"
+        class="h-2 w-auto max-w-[230px] flex-1 bg-gr-track"
+      />
+      <span class="text-sm font-semibold tabular-nums"
+        >{{ Math.floor(readingProgress) }}%</span
+      >
+    </div>
+    <!-- Links are padded out to a 44px touch target -->
+    <router-link
+      :to="`/book/${book.isbn}`"
+      class="flex min-h-11 min-w-11 items-end justify-center pb-0.5 transition-colors hover:text-gr-accent"
+    >
+      <h3 class="text-lg font-[650] leading-snug">
+        <BookTitle :title="book.title" title-class="line-clamp-2" />
+      </h3>
+    </router-link>
+    <router-link
+      :to="`/author/${encodeURIComponent(book.authors.join(', '))}`"
+      class="flex min-h-11 min-w-11 items-start justify-center pt-0.5"
+    >
+      <p class="text-[15px] text-gr-muted line-clamp-1">
+        {{ formatAuthors(book.authors) }}
+      </p>
+    </router-link>
   </div>
 </template>
 

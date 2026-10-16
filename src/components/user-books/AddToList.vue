@@ -5,19 +5,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/toast';
 import { useListsStore } from '@/store/lists-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { storeToRefs } from 'pinia';
 import type { Book, BookBasicInfo, UserBook } from '@/types/book';
-import { useDarkModeStore } from '@/store/store';
 
 const props = defineProps<{
   isbn: string;
   book?: Book | BookBasicInfo | UserBook;
+  /** Icon on the trigger button */
+  icon?: string;
 }>();
 
 const emit = defineEmits<{
@@ -29,7 +27,6 @@ const isPopoverOpen = ref(false);
 const newListName = ref('');
 const listsStore = useListsStore();
 const userBooksStore = useUserBooksStore();
-const darkModeStore = useDarkModeStore();
 const { lists } = storeToRefs(listsStore);
 const feedback = ref<{ message: string; type: 'success' | 'error' } | null>(
   null
@@ -37,6 +34,11 @@ const feedback = ref<{ message: string; type: 'success' | 'error' } | null>(
 const listsContainingBook = ref<Set<string>>(new Set());
 const isAddingToList = ref(false);
 const isCreatingList = ref(false);
+
+const bookCountLabel = (listId: string) => {
+  const count = listsStore.booksInLists[listId]?.length || 0;
+  return `${count} ${count === 1 ? 'book' : 'books'}`;
+};
 
 onMounted(async () => {
   await listsStore.fetchUserLists();
@@ -177,103 +179,108 @@ const handleCreateList = async () => {
 <template>
   <Popover v-model:open="isPopoverOpen">
     <PopoverTrigger as-child>
-      <Button
-        class="cursor-pointer w-[180px]"
-        :class="{
-          'bg-white hover:bg-white border-black text-black hover:text-black':
-            darkModeStore.darkMode,
-          'bg-gray-900 hover:bg-gray900 border-white text-white hover:text-white':
-            !darkModeStore.darkMode,
-        }"
-        @click.stop
-      >
-        Add To List
-      </Button>
+      <button type="button" class="gr-btn gr-btn-outline" @click.stop>
+        <font-awesome-icon :icon="icon || 'fa-solid fa-plus'" />
+        Add to list
+      </button>
     </PopoverTrigger>
     <PopoverContent
-      class="w-80 relative"
-      :class="{
-        'bg-white hover:bg-white border-none text-black hover:text-black':
-          !darkModeStore.darkMode,
-        'bg-gray-900 hover:bg-gray900 border-white text-white hover:text-white':
-          darkModeStore.darkMode,
-      }"
-      :open="isPopoverOpen"
-      @update:open="isPopoverOpen = $event"
+      align="end"
+      :side-offset="6"
+      :collision-padding="16"
+      class="w-[320px] max-w-[calc(100vw-2rem)] rounded-[14px] border-gr-line bg-gr-surface p-0 font-body text-base text-gr-text shadow-gr-modal"
     >
-      <button class="absolute top-2 right-4" @click="isPopoverOpen = false">
-        <font-awesome-icon icon="fa-solid fa-xmark" />
-      </button>
-      <div class="grid gap-4">
-        <div class="space-y-2">
-          <h4 class="font-medium leading-none">Add to List</h4>
-          <p class="text-sm">Choose a list or create a new one</p>
-        </div>
-        <div
-          v-if="feedback"
-          :class="{
-            'p-2 rounded text-sm': true,
-            'bg-red-100 text-goingRed': feedback.type === 'error',
-            'bg-green-100 text-goingGreen': feedback.type === 'success',
-          }"
+      <div class="flex items-center justify-between py-1.5 pl-4 pr-1.5">
+        <h3 class="font-semibold">Add to list</h3>
+        <button
+          type="button"
+          class="gr-icon-btn"
+          aria-label="Close"
+          @click="isPopoverOpen = false"
         >
-          {{ feedback.message }}
-        </div>
-        <div class="grid gap-2">
-          <div class="space-y-4">
-            <div class="grid gap-2">
-              <Input
-                v-model="newListName"
-                type="text"
-                placeholder="New list name"
-                class="w-full"
-              />
-              <div class="flex items-center space-x-2 py-2"></div>
-              <Button
-                @click="handleCreateList"
-                :disabled="!newListName.trim() || isCreatingList"
-              >
-                {{ isCreatingList ? 'Creating...' : 'Create & Add Book' }}
-              </Button>
-            </div>
-          </div>
-          <Separator class="my-2" />
-          <div
-            v-if="!lists.length"
-            class="text-center py-2 text-sm text-muted-foreground"
-          >
-            No lists created yet
-          </div>
-          <div v-else class="space-y-2">
-            <div
-              v-for="list in lists"
-              :key="list.id"
-              class="flex flex-row items-center"
-            >
-              <font-awesome-icon
-                v-if="listsContainingBook.has(list.id)"
-                icon="fa-regular fa-circle-xmark"
-                class="cursor-pointer text-goingRed"
-                @click="handleRemoveFromList(list.id)"
-              />
-              <button
-                class="w-full text-left px-2 py-1 text-sm rounded flex items-center justify-between"
-                @click="handleAddToList(list.id)"
-                :disabled="isAddingToList"
-              >
-                <span>{{ list.name }}</span>
-                <div class="flex items-center gap-2">
-                  <span
-                    v-if="listsContainingBook.has(list.id)"
-                    class="text-goingGreen"
-                    >✓</span
-                  >
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
+          <font-awesome-icon icon="fa-solid fa-xmark" />
+        </button>
       </div>
+
+      <p
+        v-if="feedback"
+        role="status"
+        class="mx-4 mb-2 rounded-lg bg-gr-surface-2 px-3 py-2 text-sm"
+        :class="
+          feedback.type === 'error' ? 'text-gr-danger-text' : 'text-gr-accent'
+        "
+      >
+        {{ feedback.message }}
+      </p>
+
+      <!-- Existing lists -->
+      <p v-if="!lists.length" class="px-4 pb-3 text-sm text-gr-muted">
+        No lists created yet
+      </p>
+      <ul v-else class="max-h-[264px] overflow-y-auto px-1.5 pb-1.5">
+        <li v-for="list in lists" :key="list.id">
+          <!-- Already in the list: offer to remove it instead -->
+          <div
+            v-if="listsContainingBook.has(list.id)"
+            class="flex min-h-[52px] items-center gap-3 rounded-lg pl-2.5"
+          >
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-semibold">{{ list.name }}</p>
+              <p class="text-[13px] text-gr-accent">
+                <font-awesome-icon icon="fa-solid fa-check" />
+                In this list
+              </p>
+            </div>
+            <button
+              type="button"
+              class="gr-icon-btn hover:!text-gr-danger-text"
+              :aria-label="`Remove from ${list.name}`"
+              @click="handleRemoveFromList(list.id)"
+            >
+              <font-awesome-icon icon="fa-regular fa-circle-xmark" />
+            </button>
+          </div>
+          <button
+            v-else
+            type="button"
+            class="flex min-h-[52px] w-full items-center gap-3 rounded-lg px-2.5 text-left transition-colors hover:bg-gr-surface-2 focus-visible:bg-gr-surface-2 focus-visible:outline-none"
+            :disabled="isAddingToList"
+            @click="handleAddToList(list.id)"
+          >
+            <span class="min-w-0 flex-1">
+              <span class="block truncate font-semibold">{{ list.name }}</span>
+              <span class="block text-[13px] text-gr-muted">
+                {{ bookCountLabel(list.id) }}
+              </span>
+            </span>
+            <font-awesome-icon icon="fa-solid fa-plus" class="text-gr-muted" />
+          </button>
+        </li>
+      </ul>
+
+      <!-- New list -->
+      <form
+        class="grid gap-2 border-t border-gr-line p-4"
+        @submit.prevent="handleCreateList"
+      >
+        <label :for="`new-list-${isbn}`" class="text-sm text-gr-muted">
+          Or start a new list
+        </label>
+        <input
+          :id="`new-list-${isbn}`"
+          v-model="newListName"
+          type="text"
+          class="gr-input"
+          placeholder="New list name"
+        />
+        <button
+          type="submit"
+          class="gr-btn gr-btn-primary w-full"
+          :disabled="!newListName.trim() || isCreatingList"
+        >
+          {{ isCreatingList ? 'Creating...' : 'Create and add' }}
+        </button>
+      </form>
     </PopoverContent>
   </Popover>
 </template>

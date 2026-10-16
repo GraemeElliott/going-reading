@@ -9,7 +9,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useListsStore } from '@/store/lists-store';
-import { useDarkModeStore } from '@/store/store';
 import { useForm, useField } from 'vee-validate';
 import { listDetailsFormSchema } from '@/store/form-validation-schemas';
 import { toast } from '@/components/ui/toast';
@@ -19,7 +18,6 @@ const emit = defineEmits<{
 }>();
 
 const listsStore = useListsStore();
-const darkModeStore = useDarkModeStore();
 const isPopoverOpen = ref(false);
 
 const { handleSubmit } = useForm({
@@ -61,36 +59,32 @@ const onSubmit = handleSubmit(async (values) => {
 <template>
   <Popover v-model:open="isPopoverOpen">
     <PopoverTrigger as-child>
-      <Button
-        class="hover:bg-goingGreen hover:border hover:border-goingGreen hover:text-white"
+      <button
+        type="button"
+        class="flex min-h-[78px] w-full items-center justify-center gap-2 rounded-2xl border-[1.5px] border-dashed border-gr-line font-medium text-gr-muted transition-colors hover:border-gr-accent hover:text-gr-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gr-accent"
       >
         <font-awesome-icon icon="fa-solid fa-plus" />
         Create List
-      </Button>
+      </button>
     </PopoverTrigger>
     <PopoverContent
-      class="w-80"
-      :class="{
-        'bg-white text-black': !darkModeStore.darkMode,
-        'bg-gray-900 text-white border-gray-700': darkModeStore.darkMode,
-      }"
+      class="w-80 rounded-2xl border-gr-line bg-gr-surface font-body text-gr-text"
       :auto-focus="false"
     >
-      <form
-        @submit.prevent="onSubmit"
-        class="grid gap-4"
-        :class="darkModeStore.darkMode ? 'form-dark' : 'form-light'"
-      >
+      <form @submit.prevent="onSubmit" class="grid gap-4">
         <div class="space-y-2">
-          <div class="flex flex-row justify-between">
+          <div class="flex flex-row items-center justify-between">
             <h4 class="font-medium leading-none">Create New List</h4>
-            <font-awesome-icon
-              icon="fa-solid fa-xmark"
+            <button
+              type="button"
+              aria-label="Close"
+              class="-m-3 flex h-11 w-11 items-center justify-center rounded-[10px] text-gr-muted transition-colors hover:bg-gr-surface-2 hover:text-gr-text"
               @click="isPopoverOpen = false"
-              class="hover:cursor-pointer"
-            />
+            >
+              <font-awesome-icon icon="fa-solid fa-xmark" />
+            </button>
           </div>
-          <p class="text-sm text-muted-foreground">
+          <p class="text-sm text-gr-muted">
             Create a new list to organise your books.
           </p>
         </div>
@@ -105,7 +99,7 @@ const onSubmit = handleSubmit(async (values) => {
             placeholder="List name"
             :auto-focus="false"
           />
-          <span v-if="nameError" class="text-sm text-red-500">{{
+          <span v-if="nameError" class="text-sm text-destructive">{{
             nameError
           }}</span>
         </div>
@@ -119,22 +113,25 @@ const onSubmit = handleSubmit(async (values) => {
             name="details"
             placeholder="Add some details about your list..."
           />
-          <span v-if="detailsError" class="text-sm text-red-500">{{
+          <span v-if="detailsError" class="text-sm text-destructive">{{
             detailsError
           }}</span>
         </div>
-        <Button type="submit">Create List</Button>
+        <Button
+          type="submit"
+          class="h-11 rounded-[10px] border-transparent bg-gr-accent text-gr-accent-ink hover:border-transparent hover:bg-gr-accent hover:text-gr-accent-ink hover:opacity-90"
+          >Create List</Button
+        >
       </form>
     </PopoverContent>
   </Popover>
 </template>
 <style scoped>
-.form-light :deep(input),
-.form-light :deep(textarea) {
-  @apply bg-white text-black !important;
+form :deep(input),
+form :deep(textarea) {
+  @apply rounded-[10px] border-gr-line bg-gr-surface-2 text-gr-text placeholder:text-gr-muted !important;
 }
-.form-dark :deep(input),
-.form-dark :deep(textarea) {
-  @apply bg-white/5 backdrop-blur-sm text-white border-gray-600 placeholder:text-gray-500 !important;
+form :deep(input) {
+  @apply h-11 !important;
 }
 </style>

@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import type { UserBook } from '@/types/book';
 import type { List } from '@/types/list';
-import { useDarkModeStore } from '@/store/store';
 
 interface Props {
   list: List;
@@ -18,95 +17,51 @@ const emit = defineEmits<{
   (e: 'delete', listId: string): void;
 }>();
 
-const darkModeStore = useDarkModeStore();
-
-// One spine per book (up to six); colours and sizes taken from the design mock-up
-const SPINES = [
-  { color: 'rgb(65, 137, 216)', width: 17, height: 65 },
-  { color: 'rgb(102, 152, 54)', width: 13, height: 50 },
-  { color: 'rgb(212, 94, 57)', width: 18, height: 61 },
-  { color: 'rgb(128, 119, 215)', width: 15, height: 54 },
-  { color: 'rgb(208, 87, 125)', width: 17, height: 68 },
-  { color: 'rgb(183, 119, 43)', width: 13, height: 47 },
-];
-
 const bookCount = computed(() => props.books?.length || 0);
-const spines = computed(() => SPINES.slice(0, Math.min(bookCount.value, 6)));
 
 const bookCountLabel = computed(
   () => `${bookCount.value} ${bookCount.value === 1 ? 'book' : 'books'}`
 );
 
-const iconButtonClass = computed(() =>
-  darkModeStore.darkMode
-    ? 'border-gray-600 text-white'
-    : 'border-gray-300 text-black'
-);
+const ICON_BUTTON_CLASS =
+  'h-11 w-11 flex items-center justify-center rounded-[10px] text-gr-muted transition-colors hover:bg-gr-surface-2 hover:text-gr-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gr-accent';
 </script>
 
 <template>
-  <div
-    role="button"
-    tabindex="0"
-    class="group relative w-full rounded-xl border p-5 text-left transition-all duration-200 hover:cursor-pointer hover:shadow-md focus-visible:outline-none focus-visible:ring-2"
-    :class="{
-      'bg-transparent text-black hover:border-black focus-visible:ring-black':
-          !darkModeStore.darkMode,
-      'bg-transparent text-white border-gray-700 hover:border-white focus-visible:ring-white':
-          darkModeStore.darkMode,
-    }"
-    @click="emit('open', list.id)"
-    @keydown.enter.self="emit('open', list.id)"
-    @keydown.space.self.prevent="emit('open', list.id)"
-  >
-    <div v-if="!readonly" class="absolute top-4 right-4 flex gap-1.5">
+  <div class="gr-card relative flex min-h-[78px] items-center gap-4 p-4">
+    <div class="min-w-0 flex-1">
+      <!-- The ::after stretches the click target over the whole card -->
+      <button
+        type="button"
+        class="block max-w-full text-left transition-colors hover:text-gr-accent focus-visible:outline-none after:absolute after:inset-0 after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-gr-accent"
+        @click="emit('open', list.id)"
+      >
+        <span class="block truncate text-[17px] font-[650]">
+          {{ list.name }}
+        </span>
+      </button>
+      <p class="text-sm text-gr-muted">{{ bookCountLabel }}</p>
+    </div>
+
+    <div v-if="!readonly" class="relative z-10 flex shrink-0">
       <button
         type="button"
         title="Edit list"
         :aria-label="`Edit ${list.name}`"
-        class="h-7 w-7 flex items-center justify-center rounded-md border transition-colors hover:bg-goingTeal hover:border-goingTeal hover:text-white"
-        :class="iconButtonClass"
-        @click.stop="emit('edit', list.id)"
+        :class="ICON_BUTTON_CLASS"
+        @click="emit('edit', list.id)"
       >
-        <font-awesome-icon icon="fa-regular fa-pen-to-square" class="text-xs" />
+        <font-awesome-icon icon="fa-regular fa-pen-to-square" />
       </button>
       <button
         type="button"
         title="Delete list"
         :aria-label="`Delete ${list.name}`"
-        class="h-7 w-7 flex items-center justify-center rounded-md border transition-colors hover:bg-goingRed hover:border-goingRed hover:text-white"
-        :class="iconButtonClass"
-        @click.stop="emit('delete', list.id)"
+        :class="ICON_BUTTON_CLASS"
+        @click="emit('delete', list.id)"
       >
-        <font-awesome-icon icon="fa-regular fa-trash-can" class="text-xs" />
+        <font-awesome-icon icon="fa-regular fa-trash-can" />
       </button>
     </div>
-
-    <!-- Book spines -->
-    <div class="mt-10 h-[68px] flex items-end gap-1">
-      <template v-if="spines.length">
-        <span
-          v-for="(spine, i) in spines"
-          :key="i"
-          class="rounded-[3px] transition-transform duration-200 group-hover:-translate-y-1"
-          :style="{
-            backgroundColor: spine.color,
-            width: `${spine.width}px`,
-            height: `${spine.height}px`,
-            transitionDelay: `${i * 30}ms`,
-          }"
-        ></span>
-      </template>
-      <template v-else>
-        <span
-          v-for="n in 3"
-          :key="n"
-          class="w-4 h-12 rounded-[3px] border-2 border-dashed border-gray-500"
-        ></span>
-      </template>
-    </div>
-
-    <p class="mt-5 text-lg font-semibold line-clamp-1">{{ list.name }}</p>
-    <span class="text-sm text-gray-500">{{ bookCountLabel }}</span>
   </div>
 </template>

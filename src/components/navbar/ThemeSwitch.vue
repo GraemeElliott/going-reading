@@ -17,8 +17,9 @@ const toggleDarkMode = () => {
 <template>
   <button
     @click="toggleDarkMode"
-    class="toggle-theme-btn"
-    style="width: 24px; height: 24px"
+    type="button"
+    class="toggle-theme-btn flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] transition-opacity hover:opacity-80"
+    :aria-label="darkMode ? 'Switch to light theme' : 'Switch to dark theme'"
   >
     <template v-if="darkMode">
       <font-awesome-icon icon="fa-solid fa-moon" class="fa-xl" />

@@ -11,6 +11,9 @@ const authStore = useAuthStore();
 const darkModeStore = useDarkModeStore();
 const route = useRoute();
 
+// Apply the saved theme to <html> so the theme tokens match the toggle on load
+darkModeStore.initializeDarkMode();
+
 const isHome = computed(() => route.name === 'home');
 
 onMounted(() => {
@@ -27,14 +30,14 @@ onMounted(() => {
     class="flex flex-col min-h-screen wrapper overflow-x-hidden"
   >
     <Navbar />
-    <main class="relative flex-grow">
+    <main class="relative flex flex-col flex-grow">
       <div
         v-if="!route.meta.fullWidth"
-        class="max-w-7xl mx-auto px-6 lg:px-26 xl:px-36"
+        class="w-full max-w-7xl mx-auto px-6 lg:px-26 xl:px-36"
       >
         <router-view></router-view>
       </div>
-      <div v-else>
+      <div v-else class="flex flex-col flex-grow">
         <router-view></router-view>
       </div>
       <Toaster />

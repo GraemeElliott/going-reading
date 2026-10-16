@@ -217,9 +217,10 @@ const handleTotalPagesUpdate = async () => {
 
 <template>
   <Dialog v-model:open="isDialogOpen">
-    <DialogTrigger>
+    <DialogTrigger as-child>
       <Button
-        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-gray-800 px-4 py-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm font-medium hover:bg-gray-100 hover:text-black"
+        :aria-label="`Update progress for ${book.title}`"
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-11 rounded-[10px] border border-gr-line bg-gr-surface px-4 text-gr-text font-medium opacity-0 transition-opacity duration-200 hover:border-gr-line hover:bg-gr-surface-2 hover:text-gr-text group-hover:opacity-100 focus-visible:opacity-100"
       >
         Update
       </Button>

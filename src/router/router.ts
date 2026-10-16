@@ -10,7 +10,8 @@ import MyAccount from '@/pages/Account/MyAccount.vue';
 import SearchResults from '@/pages/SearchResults.vue';
 import BookDetails from '@/pages/BookDetails.vue';
 import MyBooks from '@/pages/MyBooks.vue';
-import MyBooksByStatus from '@/pages/MyBooksByStatus.vue';
+import Bookshelves from '@/pages/Bookshelves.vue';
+import Library from '@/pages/Library.vue';
 import AuthorDetails from '@/pages/AuthorDetails.vue';
 import ReadingStatsDashboard from '@/pages/ReadingStats/ReadingStatsDashboard.vue';
 
@@ -23,15 +24,16 @@ const router = createRouter({
       component: Home,
     },
     {
-      path: '/user/:username/account',
+      path: '/account',
       name: 'account',
       component: MyAccount,
-      meta: { requiresAuth: true, requiresOwner: true },
+      meta: { requiresAuth: true },
     },
     {
       path: '/search/',
       name: 'search-results',
       component: SearchResults,
+      meta: { fullWidth: true },
     },
     {
       path: '/book/:isbn',
@@ -46,22 +48,39 @@ const router = createRouter({
       props: true,
     },
     {
-      path: '/user/:username/reading-stats',
+      path: '/reading-stats',
       name: 'reading-stats',
       component: ReadingStatsDashboard,
-      meta: { requiresAuth: true, requiresOwner: true },
+      meta: { requiresAuth: true, fullWidth: true },
     },
     {
-      path: '/user/:username/my-books',
+      path: '/my-books',
       name: 'my-books',
       component: MyBooks,
-      meta: { requiresAuth: true, requiresOwner: true },
+      meta: { requiresAuth: true, fullWidth: true },
     },
     {
+      path: '/my-books/library',
+      name: 'library',
+      component: Library,
+      meta: { requiresAuth: true, fullWidth: true },
+    },
+    {
+      path: '/my-books/bookshelves',
+      name: 'bookshelves',
+      component: Bookshelves,
+      meta: { requiresAuth: true, fullWidth: true },
+    },
+    // Old URLs that included the username
+    { path: '/user/:username/my-books', redirect: '/my-books' },
+    { path: '/user/:username/reading-stats', redirect: '/reading-stats' },
+    { path: '/user/:username/account', redirect: '/account' },
+    {
       path: '/user/:username/my-books/:status',
-      name: 'my-books-by-status',
-      component: MyBooksByStatus,
-      meta: { requiresAuth: true, requiresOwner: true },
+      redirect: (to) => ({
+        path: '/my-books/bookshelves',
+        query: { shelf: to.params.status },
+      }),
     },
   ],
   scrollBehavior(_to, _from, savedPosition) {
@@ -90,18 +109,12 @@ router.beforeEach(
 
     // Redirect from home to my-books if authenticated
     if (to.path === '/' && isAuthenticated && currentUsername) {
-      return next(`/user/${currentUsername}/my-books`);
+      return next('/my-books');
     }
 
     if (to.matched.some((record) => record.meta.requiresAuth)) {
       if (!isAuthenticated) {
         return next({ name: 'sign-in', query: { redirect: to.fullPath } });
-      }
-
-      if (to.matched.some((record) => record.meta.requiresOwner)) {
-        if (to.params.username !== currentUsername) {
-          return next({ name: 'home' });
-        }
       }
     }
     next();

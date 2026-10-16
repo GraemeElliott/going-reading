@@ -23,6 +23,8 @@ import { useReadingGoalsStore } from '@/store/reading-goals-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { useUserAnalyticsStore } from '@/store/user-analytics-store';
 import ReadingHeatmap from './ReadingHeatmap.vue';
+import EmptyState from '@/components/ui/EmptyState.vue';
+import { useRatingStats, MIN_BOOKS_PER_GENRE, RATING_GENRE_COLORS } from '../useRatingStats';
 
 ChartJS.register(
   CategoryScale, LinearScale, BarElement, LineElement, PointElement,
@@ -35,6 +37,7 @@ const goalsStore = useReadingGoalsStore();
 const userBooksStore = useUserBooksStore();
 const analyticsStore = useUserAnalyticsStore();
 const isDark = computed(() => darkModeStore.darkMode);
+const { ratingData, noRatings, ratingOptions, topGenresByRating } = useRatingStats();
 
 const currentYear = new Date().getFullYear();
 const goalInput = ref('');
@@ -504,6 +507,43 @@ const booksPerYearOptions = computed(() => ({
           </div>
         </div>
         <p v-else class="text-sm" :class="isDark ? 'text-gray-400' : 'text-gray-500'">No genre data yet.</p>
+      </div>
+    </div>
+
+    <!-- Rating breakdown + Top genres by avg rating -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+      <div
+        class="rounded-lg border p-4"
+        :class="isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'"
+      >
+        <div class="text-xs font-medium uppercase tracking-wider mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-500'">Rating breakdown</div>
+        <div class="h-44">
+          <Chart v-if="!noRatings" type="bar" :data="ratingData" :options="ratingOptions" />
+          <EmptyState v-else icon="fa-solid fa-star-half-stroke" title="No rated books yet" size="sm" />
+        </div>
+      </div>
+      <div
+        class="rounded-lg border p-4"
+        :class="isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'"
+      >
+        <div class="text-xs font-medium uppercase tracking-wider mb-4" :class="isDark ? 'text-gray-400' : 'text-gray-500'">Top genres by avg rating</div>
+        <div class="h-44">
+          <div v-if="topGenresByRating.length > 0" class="h-full flex flex-col justify-around">
+            <div
+              v-for="(g, i) in topGenresByRating"
+              :key="g.genre"
+              class="flex items-center gap-3"
+              :title="`${g.genre}: ${g.avg.toFixed(1)}★ across ${g.count} books`"
+            >
+              <span class="text-xs w-32 flex-shrink-0 truncate" :class="isDark ? 'text-gray-300' : 'text-gray-600'">{{ g.genre }}</span>
+              <div class="flex-1 h-2 rounded-full overflow-hidden" :class="isDark ? 'bg-gray-700' : 'bg-gray-200'">
+                <div class="h-full rounded-full" :style="{ width: Math.round(g.avg / 5 * 100) + '%', background: RATING_GENRE_COLORS[i] }"></div>
+              </div>
+              <span class="text-xs w-7 text-right flex-shrink-0" :class="isDark ? 'text-gray-400' : 'text-gray-500'">{{ g.avg.toFixed(1) }}</span>
+            </div>
+          </div>
+          <EmptyState v-else icon="fa-solid fa-tags" :title="`Rate ${MIN_BOOKS_PER_GENRE}+ books in the same genre to see rankings`" size="sm" />
+        </div>
       </div>
     </div>
 

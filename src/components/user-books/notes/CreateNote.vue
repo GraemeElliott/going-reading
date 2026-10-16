@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useNotesStore } from '@/store/notes-store';
-import { useDarkModeStore } from '@/store/store';
 
 const props = defineProps<{
   bookId: string;
@@ -18,14 +15,7 @@ const emit = defineEmits<{
 const newTitle = ref('');
 const newNote = ref('');
 const notesStore = useNotesStore();
-const darkModeStore = useDarkModeStore();
 const isSubmitting = ref(false);
-
-const placeholderStyle = computed(() => {
-  return {
-    '--placeholder-color': darkModeStore.darkMode ? 'white' : 'black',
-  };
-});
 
 // Quill editor options with full toolbar
 const editorOptions = {
@@ -44,7 +34,7 @@ const editorOptions = {
       ['clean'],
     ],
   },
-  placeholder: 'Write a new note... (required)',
+  placeholder: 'Write a new note...',
   bounds: '.note-editor-container',
 };
 
@@ -95,68 +85,47 @@ defineExpose({
 </script>
 
 <template>
-  <div class="space-y-3">
-    <Input
-      v-model="newTitle"
-      placeholder="Title (required)"
-      class="text-sm md:text-base"
-    />
-    <div class="note-editor-container" :style="placeholderStyle">
-      <QuillEditor
-        v-model:content="newNote"
-        :options="editorOptions"
-        contentType="html"
-        class="note-editor"
+  <div class="grid gap-4">
+    <div class="grid gap-2">
+      <label :for="`note-title-${bookId}`" class="text-[15px] font-semibold">
+        Title
+      </label>
+      <input
+        :id="`note-title-${bookId}`"
+        v-model="newTitle"
+        type="text"
+        class="gr-input"
       />
     </div>
-    <Button class="w-full" @click="handleCreateNote" :disabled="isSubmitting">
-      {{ isSubmitting ? 'Adding...' : 'Add Note' }}
-    </Button>
+    <div class="grid gap-2">
+      <span :id="`note-body-${bookId}`" class="text-[15px] font-semibold">
+        Note
+      </span>
+      <div
+        class="note-editor-container gr-editor"
+        role="group"
+        :aria-labelledby="`note-body-${bookId}`"
+      >
+        <QuillEditor
+          v-model:content="newNote"
+          :options="editorOptions"
+          contentType="html"
+        />
+      </div>
+    </div>
+    <button
+      type="button"
+      class="gr-btn gr-btn-primary w-full"
+      :disabled="isSubmitting"
+      @click="handleCreateNote"
+    >
+      {{ isSubmitting ? 'Adding...' : 'Add note' }}
+    </button>
   </div>
 </template>
 
 <style scoped>
 .note-editor-container {
   position: relative;
-  isolation: isolate;
-  min-height: 300px;
-}
-
-.note-editor {
-  @apply min-h-[300px];
-}
-
-:deep(.ql-toolbar) {
-  @apply rounded-t-md border-border;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background-color: var(--background);
-}
-
-:deep(.ql-container) {
-  @apply rounded-b-md border-border text-sm md:text-base;
-}
-
-:deep(.ql-editor) {
-  min-height: 300px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-:deep(.ql-editor.ql-blank::before) {
-  color: var(--placeholder-color) !important;
-  font-style: normal !important;
-}
-
-/* Make toolbar more compact on mobile */
-@media (max-width: 640px) {
-  :deep(.ql-toolbar) {
-    @apply p-1.5;
-  }
-
-  :deep(.ql-toolbar button) {
-    @apply p-1;
-  }
 }
 </style>

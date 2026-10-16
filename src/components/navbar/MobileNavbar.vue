@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/auth-store';
 import SearchBar from '@/components/search/SearchBar.vue';
 import Separator from '@/components/ui/separator/Separator.vue';
 import { Skeleton } from '@/components/ui/skeleton';
+import LibraryIcon from './LibraryIcon.vue';
 
 const darkModeStore = useDarkModeStore();
 const authStore = useAuthStore();
@@ -32,7 +33,7 @@ const emit = defineEmits<{
 // Compute the logo destination based on user authentication status
 const logoDestination = computed(() => {
   if (authStore.userMetadata?.username) {
-    return `/user/${authStore.userMetadata.username}/my-books`;
+    return '/my-books';
   }
   return '/';
 });
@@ -174,7 +175,7 @@ const handleNavClick = () => {
         <div v-if="userData.username" class="flex flex-row my-5">
           <div class="flex">
             <router-link
-              :to="`/user/${userData.username}/account`"
+              :to="'/account'"
               @click="handleNavClick"
               class="relative"
             >
@@ -194,7 +195,7 @@ const handleNavClick = () => {
             </router-link>
             <div class="flex flex-col mt-4">
               <router-link
-                :to="`/user/${userData.username}/account`"
+                :to="'/account'"
                 @click="handleNavClick"
               >
                 <p class="text-md font-bold">
@@ -213,7 +214,7 @@ const handleNavClick = () => {
         <div class="flex flex-col my-8 space-y-8 items-center">
           <router-link
             v-if="authStore.user && userData.username"
-            :to="`/user/${userData.username}/account`"
+            :to="'/account'"
             class="w-full"
             @click="handleNavClick"
           >
@@ -224,7 +225,7 @@ const handleNavClick = () => {
           </router-link>
           <router-link
             v-if="authStore.user && userData.username"
-            :to="`/user/${userData.username}/my-books`"
+            :to="'/my-books'"
             class="w-full"
             @click="handleNavClick"
           >
@@ -235,7 +236,18 @@ const handleNavClick = () => {
           </router-link>
           <router-link
             v-if="authStore.user && userData.username"
-            :to="`/user/${userData.username}/reading-stats`"
+            :to="'/my-books/library'"
+            class="w-full"
+            @click="handleNavClick"
+          >
+            <div class="flex flex-row space-x-3 items-center">
+              <LibraryIcon />
+              <p class="text-md font-medium">Library</p>
+            </div>
+          </router-link>
+          <router-link
+            v-if="authStore.user && userData.username"
+            :to="'/reading-stats'"
             class="w-full"
             @click="handleNavClick"
           >

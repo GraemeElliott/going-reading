@@ -2,12 +2,8 @@
 import { ref, computed } from 'vue';
 import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useNotesStore } from '@/store/notes-store';
 import type { Note } from '@/store/notes-store';
-import { useDarkModeStore } from '@/store/store';
-import { Separator } from '@/components/ui/separator';
 
 const props = defineProps<{
   bookId: string;
@@ -19,7 +15,6 @@ const emit = defineEmits<{
 
 const editingNote = ref<Note | null>(null);
 const notesStore = useNotesStore();
-const darkModeStore = useDarkModeStore();
 const isSubmitting = ref(false);
 
 // Quill editor options with full toolbar
@@ -123,108 +118,80 @@ const cancelEditing = () => {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div
-      v-if="!notes.length"
-      class="text-center py-4 text-sm text-muted-foreground"
-    >
-      No notes yet
-    </div>
-    <div v-for="note in notes" :key="note.id" class="space-y-3">
-      <div v-if="editingNote?.id === note.id">
-        <Input
-          v-model="editingTitle"
-          placeholder="Title (required)"
-          class="w-full mb-3"
-        />
-        <QuillEditor
-          v-model:content="editingNote.note"
-          :options="editorOptions"
-          contentType="html"
-          class="note-editor mb-3"
-        />
-        <div class="flex justify-end gap-2 mt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            class="hover:bg-goingRed hover:border-none hover:text-white"
-            @click="cancelEditing"
-          >
-            <font-awesome-icon icon="fa-solid fa-ban" />
-          </Button>
-          <Button
-            size="sm"
-            class="hover:bg-goingGreen hover:text-white hover:border hover:border-goingGreen"
-            :class="{
-              'bg-white text-black': !darkModeStore.darkMode,
-              'bg-gray-900 text-white border border-white':
-                darkModeStore.darkMode,
-            }"
-            @click="handleUpdateNote(note)"
-            :disabled="isSubmitting"
-          >
-            <font-awesome-icon icon="fa-solid fa-floppy-disk" />
-          </Button>
-        </div>
-        <Separator class="my-4" />
-      </div>
-      <div v-else>
-        <div class="flex flex-col gap-3">
-          <div class="space-y-2">
-            <div class="flex flex-row justify-between">
-              <h4 v-if="note.title" class="font-medium text-base">
-                {{ note.title }}
-              </h4>
-              <div class="flex flex-row space-x-3">
-                <Button
-                  size="sm"
-                  class="hover:bg-goingTeal hover:text-white hover:border hover:border-goingTeal"
-                  :class="{
-                    'bg-white text-black': !darkModeStore.darkMode,
-                    'bg-gray-900 text-white border border-white':
-                      darkModeStore.darkMode,
-                  }"
-                  @click="startEditing(note)"
-                >
-                  <font-awesome-icon icon="fa-solid fa-pen-to-square" />
-                </Button>
-                <Button
-                  size="sm"
-                  class="hover:bg-goingRed hover:text-white hover:border hover:border-goingRed"
-                  :class="{
-                    'bg-white text-black': !darkModeStore.darkMode,
-                    'bg-gray-900 text-white border border-white':
-                      darkModeStore.darkMode,
-                  }"
-                  @click="handleDeleteNote(note.id)"
-                >
-                  <font-awesome-icon icon="fa-solid fa-trash-can" />
-                </Button>
-              </div>
-            </div>
-            <p class="text-xs text-muted-foreground">
-              {{ formatDate(note.created_at) }}
-            </p>
-            <div
-              v-html="note.note"
-              class="prose prose-sm max-w-none text-sm md:text-base ql-content"
-              :class="{
-                'prose-invert': darkModeStore.darkMode,
-              }"
-            ></div>
+  <div>
+    <p v-if="!notes.length" class="gr-empty">
+      No notes yet. Add a note, quote or review below.
+    </p>
+    <ul v-else class="divide-y divide-gr-line">
+      <li v-for="note in notes" :key="note.id" class="py-4 first:pt-0">
+        <div v-if="editingNote?.id === note.id" class="grid gap-3">
+          <input
+            v-model="editingTitle"
+            type="text"
+            class="gr-input"
+            aria-label="Title"
+            placeholder="Title"
+          />
+          <div class="gr-editor" role="group" aria-label="Note">
+            <QuillEditor
+              v-model:content="editingNote.note"
+              :options="editorOptions"
+              contentType="html"
+            />
           </div>
-          <Separator />
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              class="gr-btn gr-btn-outline"
+              @click="cancelEditing"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="gr-btn gr-btn-primary"
+              :disabled="isSubmitting"
+              @click="handleUpdateNote(note)"
+            >
+              Save
+            </button>
+          </div>
         </div>
-      </div>
-    </div>
+        <div v-else>
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <h3 v-if="note.title" class="font-[650]">{{ note.title }}</h3>
+              <p class="text-[13px] text-gr-muted">
+                {{ formatDate(note.created_at) }}
+              </p>
+            </div>
+            <div class="-mt-2 flex shrink-0">
+              <button
+                type="button"
+                class="gr-icon-btn"
+                :aria-label="`Edit note ${note.title || ''}`"
+                @click="startEditing(note)"
+              >
+                <font-awesome-icon icon="fa-regular fa-pen-to-square" />
+              </button>
+              <button
+                type="button"
+                class="gr-icon-btn hover:!text-gr-danger-text"
+                :aria-label="`Delete note ${note.title || ''}`"
+                @click="handleDeleteNote(note.id)"
+              >
+                <font-awesome-icon icon="fa-regular fa-trash-can" />
+              </button>
+            </div>
+          </div>
+          <div v-html="note.note" class="ql-content mt-1 text-[15px]"></div>
+        </div>
+      </li>
+    </ul>
   </div>
 </template>
 
 <style scoped>
-.note-editor {
-  @apply min-h-[150px] max-h-[300px];
-}
-
 /* Ensure proper spacing in prose content */
 :deep(.prose) {
   @apply space-y-2;
@@ -244,7 +211,7 @@ const cancelEditing = () => {
 }
 
 :deep(.ql-content blockquote) {
-  @apply pl-4 border-l-4 border-gray-300 dark:border-gray-600 italic my-4;
+  @apply pl-4 border-l-4 border-gr-line italic my-4;
 }
 
 :deep(.ql-content ul) {
@@ -260,7 +227,7 @@ const cancelEditing = () => {
 }
 
 :deep(.ql-content a) {
-  @apply text-blue-600 dark:text-blue-400 hover:underline;
+  @apply text-gr-accent hover:underline;
 }
 
 :deep(.ql-content strong) {

@@ -206,6 +206,7 @@ watch(
                     v-if="bookData.id"
                     :book-id="bookData.id"
                     :book-title="bookData.title"
+                    :book-authors="bookData.authors"
                   />
                   <UserRating
                     v-if="showRating"

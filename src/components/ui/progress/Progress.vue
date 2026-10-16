@@ -32,7 +32,7 @@ const delegatedProps = computed(() => {
     "
   >
     <ProgressIndicator
-      class="h-full w-full flex-1 bg-goingTeal transition-all"
+      class="h-full w-full flex-1 rounded-full bg-gr-accent transition-all"
       :style="`transform: translateX(-${100 - (props.modelValue ?? 0)}%);`"
     />
   </ProgressRoot>
