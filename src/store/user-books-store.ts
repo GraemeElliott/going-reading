@@ -287,6 +287,23 @@ export const useUserBooksStore = defineStore('userBooks', () => {
     }
   };
 
+  // Move a book to Read (adding it to the shelves if needed) with a chosen
+  // finish date rather than today. `finishedOn` is a local 'YYYY-MM-DD'.
+  const markAsRead = async (book: BookBasicInfo, finishedOn: string): Promise<void> => {
+    if (!authStore.user) {
+      throw new Error(updateBookErrorMessages.userNotLoggedInStatus);
+    }
+    // Same path as any other status change (activity log, new-book handling)...
+    await updateBookStatus(book, 'read');
+    // ...then replace its "today" finish date. Midday local time keeps the
+    // date from shifting a day when converted to UTC.
+    const [y, m, d] = finishedOn.split('-').map(Number);
+    const dateFinished = new Date(y, m - 1, d, 12).toISOString();
+    const now = new Date().toISOString();
+    await UserBookService.updateDateFinished(authStore.user.id, book.isbn, dateFinished, now);
+    updateLocalBook(book.isbn, { date_finished: dateFinished, date_updated: now });
+  };
+
   const deleteBook = async (isbn: string): Promise<void> => {
     if (!authStore.user) {
       throw new Error('User must be logged in to delete a book');
@@ -330,6 +347,7 @@ export const useUserBooksStore = defineStore('userBooks', () => {
     getUserBookRating,
     updateBookRating,
     updateBookStatus,
+    markAsRead,
     updateBookProgress,
     updateBookTotalPages,
     fetchUserBooks,

@@ -19,6 +19,7 @@ export interface LibraryQuery {
 export const libraryErrorMessages = {
   noFormat: 'A book needs at least one format.',
   duplicate: 'This book is already in your library.',
+  noTitle: 'A book needs a title.',
 };
 
 // Dedupe, drop unknown values and keep a stable order
@@ -115,6 +116,23 @@ export class LibraryService {
     return this.update(userId, entryId, { date_added: dateAdded });
   }
 
+  // Edits this library entry's own copy of the book details only; shelves
+  // (user_books) and lists keep theirs
+  static async updateDetails(
+    userId: string,
+    entryId: string,
+    details: Pick<LibraryEntry, 'title' | 'authors' | 'formats' | 'date_added'>
+  ): Promise<LibraryEntry> {
+    const title = details.title.trim();
+    if (!title) throw new Error(libraryErrorMessages.noTitle);
+    return this.update(userId, entryId, {
+      title,
+      authors: details.authors.map((a) => a.trim()).filter(Boolean),
+      formats: normaliseFormats(details.formats),
+      date_added: details.date_added,
+    });
+  }
+
   static async removeEntry(userId: string, entryId: string): Promise<void> {
     const { error } = await supabase
       .from('library_entries')
@@ -128,7 +146,7 @@ export class LibraryService {
   private static async update(
     userId: string,
     entryId: string,
-    changes: Partial<Pick<LibraryEntry, 'formats' | 'date_added'>>
+    changes: Partial<Pick<LibraryEntry, 'title' | 'authors' | 'formats' | 'date_added'>>
   ): Promise<LibraryEntry> {
     const { data, error } = await supabase
       .from('library_entries')

@@ -44,6 +44,21 @@ export class UserBookService {
     if (error) throw error;
   }
 
+  static async updateDateFinished(
+    userId: string,
+    isbn: string,
+    dateFinished: string,
+    now: string
+  ): Promise<void> {
+    const { error } = await supabase
+      .from('user_books')
+      .update({ date_finished: dateFinished, date_updated: now })
+      .eq('user_id', userId)
+      .eq('isbn', isbn);
+
+    if (error) throw error;
+  }
+
   static async addNewBook(
     userId: string,
     book: BookBasicInfo,

@@ -15,11 +15,6 @@ import {
   DropdownMenuPortal,
   DropdownMenuRoot,
   DropdownMenuTrigger,
-  PopoverClose,
-  PopoverContent,
-  PopoverPortal,
-  PopoverRoot,
-  PopoverTrigger,
 } from 'radix-vue';
 import type { LibraryEntry, LibraryFormat } from '@/types/library';
 import { LIBRARY_FORMATS } from '@/types/library';
@@ -29,7 +24,8 @@ import { SHELF_STATUS_META } from '@/components/user-books/shelfStatusMeta';
 import { toast } from '@/components/ui/toast';
 import BookTitle from '@/components/partials/BookTitle.vue';
 import { formatAuthors, formatBookTitle } from '@/utils/book-display';
-import { FORMAT_META, formatLibraryDate, todayStr } from './formatMeta';
+import { FORMAT_META, formatLibraryDate } from './formatMeta';
+import EditLibraryEntryDialog from './EditLibraryEntryDialog.vue';
 
 const props = defineProps<{
   entry: LibraryEntry;
@@ -55,8 +51,7 @@ const shelfLabel = computed(() => {
 });
 const saving = ref(false);
 const showLastFormatHint = ref(false);
-const dateDraft = ref(props.entry.date_added);
-const datePopoverOpen = ref(false);
+const editOpen = ref(false);
 
 const formatLabel = computed(() =>
   props.entry.formats.map((f) => FORMAT_META[f].label).join(' + ')
@@ -92,24 +87,6 @@ const toggleFormat = async (format: LibraryFormat, checked: boolean) => {
 
 const onMenuOpenChange = (open: boolean) => {
   if (!open) showLastFormatHint.value = false;
-};
-
-const onDatePopoverChange = (open: boolean) => {
-  datePopoverOpen.value = open;
-  if (open) dateDraft.value = props.entry.date_added;
-};
-
-const saveDate = async () => {
-  if (!dateDraft.value || dateDraft.value === props.entry.date_added) {
-    datePopoverOpen.value = false;
-    return;
-  }
-  try {
-    await libraryStore.updateDateAdded(props.entry.id, dateDraft.value);
-    datePopoverOpen.value = false;
-  } catch (err) {
-    toastError('Error updating date', err);
-  }
 };
 
 const removeEntry = async () => {
@@ -178,10 +155,21 @@ const removeEntry = async () => {
           </router-link>
         </div>
 
+        <div class="flex shrink-0 gap-2">
+        <button
+          type="button"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gr-muted transition-colors hover:bg-gr-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gr-accent relative after:absolute after:-inset-x-1 after:-inset-y-1.5 after:content-[''] hover:text-gr-text"
+          :aria-label="`Edit ${entry.title}`"
+          title="Edit"
+          @click="editOpen = true"
+        >
+          <font-awesome-icon icon="fa-regular fa-pen-to-square" />
+        </button>
+
         <!-- Remove confirmation -->
         <AlertDialogRoot>
           <AlertDialogTrigger
-            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gr-muted transition-colors hover:bg-gr-surface-2 hover:text-gr-danger-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-gr-accent relative after:absolute after:-inset-x-1.5 after:-inset-y-1.5 after:content-['']"
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gr-muted transition-colors hover:bg-gr-surface-2 hover:text-gr-danger-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-gr-accent relative after:absolute after:-inset-x-1 after:-inset-y-1.5 after:content-['']"
             :aria-label="`Remove ${entry.title} from library`"
           >
             <font-awesome-icon icon="fa-regular fa-trash-can" />
@@ -210,6 +198,7 @@ const removeEntry = async () => {
             </AlertDialogContent>
           </AlertDialogPortal>
         </AlertDialogRoot>
+        </div>
       </div>
 
     </div>
@@ -217,42 +206,9 @@ const removeEntry = async () => {
 
     <!-- Footer: date added under the cover, format on the far right -->
     <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <!-- Date added (editable) -->
-        <PopoverRoot :open="datePopoverOpen" @update:open="onDatePopoverChange">
-          <PopoverTrigger
-            class="inline-flex h-8 items-center gap-1.5 rounded !text-[13px] text-gr-muted relative after:absolute after:-inset-x-1.5 after:-inset-y-1.5 after:content-[''] transition-colors hover:text-gr-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-gr-accent"
-            :aria-label="`Added ${formatLibraryDate(entry.date_added)}. Change date added`"
-          >
-            Added {{ formatLibraryDate(entry.date_added) }}
-            <font-awesome-icon icon="fa-solid fa-pen" class="text-[10px]" />
-          </PopoverTrigger>
-        <PopoverPortal>
-          <PopoverContent
-            align="start"
-            :side-offset="6"
-            :collision-padding="16"
-            class="gr-panel z-50 w-[260px] p-4"
-          >
-            <form class="grid gap-3" @submit.prevent="saveDate">
-              <label :for="`date-${entry.id}`" class="text-[15px] font-semibold">
-                Date added
-              </label>
-              <input
-                :id="`date-${entry.id}`"
-                v-model="dateDraft"
-                type="date"
-                :max="todayStr()"
-                required
-                class="gr-input dark:[color-scheme:dark]"
-              />
-              <div class="flex justify-end gap-2">
-                <PopoverClose class="gr-btn gr-btn-outline">Cancel</PopoverClose>
-                <button type="submit" class="gr-btn gr-btn-primary">Save</button>
-              </div>
-            </form>
-          </PopoverContent>
-        </PopoverPortal>
-        </PopoverRoot>
+        <span class="inline-flex h-8 items-center text-[13px] text-gr-muted">
+          Added {{ formatLibraryDate(entry.date_added) }}
+        </span>
         <!-- Format menu -->
         <DropdownMenuRoot @update:open="onMenuOpenChange">
           <DropdownMenuTrigger
@@ -313,5 +269,7 @@ const removeEntry = async () => {
           </DropdownMenuPortal>
         </DropdownMenuRoot>
     </div>
+
+    <EditLibraryEntryDialog v-model:open="editOpen" :entry="entry" />
   </div>
 </template>

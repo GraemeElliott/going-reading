@@ -68,6 +68,13 @@ export const useLibraryStore = defineStore('library', () => {
     replaceEntry(await LibraryService.updateDateAdded(requireUserId(), entryId, dateAdded));
   };
 
+  const updateDetails = async (
+    entryId: string,
+    details: Pick<LibraryEntry, 'title' | 'authors' | 'formats' | 'date_added'>
+  ) => {
+    replaceEntry(await LibraryService.updateDetails(requireUserId(), entryId, details));
+  };
+
   const removeEntry = async (entryId: string) => {
     await LibraryService.removeEntry(requireUserId(), entryId);
     entries.value = entries.value.filter((e) => e.id !== entryId);
@@ -85,6 +92,7 @@ export const useLibraryStore = defineStore('library', () => {
     addEntry,
     updateFormats,
     updateDateAdded,
+    updateDetails,
     removeEntry,
   };
 });
