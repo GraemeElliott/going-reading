@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/store/auth-store';
 import { useUserBooksStore } from '@/store/user-books-store';
@@ -8,8 +8,10 @@ import { extractYear } from '@/utils/book-utils';
 import { authorMatches, compareByAuthor } from '@/utils/book-display';
 import PageLayout from '@/components/layout/PageLayout.vue';
 import ThemedSelect from '@/components/layout/ThemedSelect.vue';
+import ListPagination from '@/components/layout/ListPagination.vue';
 import ShelfBookCard from '@/components/user-books/ShelfBookCard.vue';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useQueryPagination } from '@/composables/useQueryPagination';
 
 type SortKey = 'added' | 'title' | 'author' | 'year';
 
@@ -53,7 +55,6 @@ const countLabel = computed(() => {
 
 const search = ref('');
 const sort = ref<SortKey>('added');
-const visibleCount = ref(BOOKS_PER_PAGE);
 
 const SORTERS: Record<SortKey, (a: UserBook, b: UserBook) => number> = {
   added: (a, b) =>
@@ -79,9 +80,16 @@ const filteredBooks = computed(() => {
   return [...matches].sort(SORTERS[sort.value]);
 });
 
-const displayedBooks = computed(() =>
-  filteredBooks.value.slice(0, visibleCount.value)
-);
+// Switching shelf drops ?page= with the tab link, so only search and sort reset here
+const {
+  currentPage,
+  pageCount,
+  pagedItems: displayedBooks,
+} = useQueryPagination(filteredBooks, {
+  pageSize: BOOKS_PER_PAGE,
+  resetOn: [search, sort],
+  ready: () => !isInitializing.value,
+});
 
 watch(shelf, () => {
   search.value = '';
@@ -100,19 +108,6 @@ watch(
   },
   { flush: 'post' }
 );
-watch([shelf, search, sort], () => {
-  visibleCount.value = BOOKS_PER_PAGE;
-});
-
-// Infinite scroll: show another page when the sentinel scrolls into view
-const sentinel = ref<HTMLElement | null>(null);
-const observer = new IntersectionObserver((entries) => {
-  if (entries[0].isIntersecting) visibleCount.value += BOOKS_PER_PAGE;
-});
-watch(sentinel, (el) => {
-  observer.disconnect();
-  if (el) observer.observe(el);
-});
 
 const handleBookDelete = async (isbn: string) => {
   try {
@@ -137,8 +132,6 @@ onMounted(async () => {
     ?.querySelector('[aria-current]')
     ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 });
-
-onUnmounted(() => observer.disconnect());
 </script>
 
 <template>
@@ -219,16 +212,14 @@ onUnmounted(() => observer.disconnect());
       </p>
 
       <!-- Books -->
-      <ul v-else class="mt-6 space-y-3">
-        <li v-for="book in displayedBooks" :key="book.isbn">
-          <ShelfBookCard :book="book" @delete="handleBookDelete" />
-        </li>
-      </ul>
-      <div
-        v-if="displayedBooks.length < filteredBooks.length"
-        ref="sentinel"
-        class="h-px"
-      ></div>
+      <template v-else>
+        <ul class="mt-6 space-y-3">
+          <li v-for="book in displayedBooks" :key="book.isbn">
+            <ShelfBookCard :book="book" @delete="handleBookDelete" />
+          </li>
+        </ul>
+        <ListPagination v-model:page="currentPage" :page-count="pageCount" />
+      </template>
     </div>
   </PageLayout>
 </template>

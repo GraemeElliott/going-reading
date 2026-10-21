@@ -36,11 +36,12 @@ const readingProgress = computed(() => {
 
 <template>
   <div class="flex flex-col items-center px-1 text-center">
-    <div class="relative group w-[150px]">
+    <!-- Fixed frame keeps progress rows aligned; the cover scales to fit inside it uncropped -->
+    <div class="relative group flex h-[225px] w-[150px] items-end justify-center">
       <img
         :src="book.image"
         :alt="book.title"
-        class="w-[150px] h-[225px] rounded-lg shadow-gr-card object-cover transition duration-200 group-hover:brightness-75 group-focus-within:brightness-75"
+        class="max-h-full max-w-full rounded-lg shadow-gr-card transition duration-200 group-hover:brightness-75 group-focus-within:brightness-75"
       />
       <UpdateBookProgress
         :book="book"

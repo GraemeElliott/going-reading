@@ -4,7 +4,10 @@ import { useAuthStore } from '@/store/auth-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { supabase } from '@/supabase/supabase';
 import ThemedSelect from '@/components/layout/ThemedSelect.vue';
+import ListPagination from '@/components/layout/ListPagination.vue';
 import BookTitle from '@/components/partials/BookTitle.vue';
+import UserRating from '@/components/user-books/UserRating.vue';
+import { toast } from '@/components/ui/toast';
 import { authorMatches, formatAuthors } from '@/utils/book-display';
 import type { UserBook } from '@/types/book';
 
@@ -177,29 +180,22 @@ const mobileMeta = (book: UserBook) =>
     .filter(Boolean)
     .join(' · ');
 
-// ── Pagination ────────────────────────────────────────────────────────────
-// First, last, current and its neighbours, with '…' for the gaps
-const pageItems = computed(() => {
-  const total = pageCount.value;
-  const shown = [...new Set([1, currentPage.value - 1, currentPage.value, currentPage.value + 1, total])]
-    .filter((p) => p >= 1 && p <= total)
-    .sort((a, b) => a - b);
-  const items: (number | '…')[] = [];
-  shown.forEach((p, i) => {
-    if (i > 0 && p - shown[i - 1] > 1) items.push('…');
-    items.push(p);
-  });
-  return items;
-});
-
-function goToPage(page: number) {
-  if (page < 1 || page > pageCount.value || page === currentPage.value) return;
-  currentPage.value = page;
-  listTop.value?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+async function handleRatingChange(book: UserBook, rating: number | null) {
+  try {
+    await userBooksStore.updateBookRating(book.isbn, rating);
+  } catch (error) {
+    toast({
+      title: 'Error Updating Rating',
+      description: `There was an error updating your rating for ${book.title}: ${error}.`,
+      variant: 'destructive',
+      duration: 4000,
+    });
+  }
 }
 
-const PAGE_BUTTON =
-  'inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-[10px] border px-3 font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gr-accent disabled:pointer-events-none disabled:opacity-45';
+// ── Pagination ────────────────────────────────────────────────────────────
+const scrollToList = () =>
+  listTop.value?.scrollIntoView({ block: 'start', behavior: 'smooth' });
 </script>
 
 <template>
@@ -254,9 +250,9 @@ const PAGE_BUTTON =
               :key="book.isbn"
               class="border-t border-gr-line first:border-t-0"
             >
-              <RouterLink
-                :to="`/book/${book.isbn}`"
-                class="flex items-start gap-3.5 py-3.5 pl-3.5 pr-4 transition-colors hover:bg-gr-surface-2 focus-visible:bg-gr-surface-2 focus-visible:outline-none md:items-center md:gap-4 md:pl-4 md:pr-5"
+              <!-- The title link stretches over the whole row; the rating sits above it -->
+              <div
+                class="relative flex items-start gap-3.5 py-3.5 pl-3.5 pr-4 transition-colors hover:bg-gr-surface-2 has-[a:focus-visible]:bg-gr-surface-2 md:items-center md:gap-4 md:pl-4 md:pr-5"
               >
                 <!-- Cover -->
                 <img
@@ -277,23 +273,21 @@ const PAGE_BUTTON =
                 <!-- Info -->
                 <div class="min-w-0 flex-1">
                   <p class="text-[15px] font-[650] leading-snug md:text-base">
-                    <BookTitle :title="book.title" compact />
+                    <RouterLink
+                      :to="`/book/${book.isbn}`"
+                      class="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+                    >
+                      <BookTitle :title="book.title" compact />
+                    </RouterLink>
                   </p>
                   <p v-if="bylineFor(book)" class="truncate text-sm text-gr-muted">
                     {{ bylineFor(book) }}
                   </p>
-                  <span
-                    role="img"
-                    :aria-label="book.user_rating ? `Rated ${book.user_rating} out of 5` : 'Not rated'"
-                    class="mt-1 flex gap-0.5 text-[15px]"
-                  >
-                    <font-awesome-icon
-                      v-for="n in 5"
-                      :key="n"
-                      icon="fa-solid fa-star"
-                      :class="n <= (book.user_rating ?? 0) ? 'text-gr-star' : 'text-gr-star-off'"
-                    />
-                  </span>
+                  <UserRating
+                    :model-value="book.user_rating ?? null"
+                    class="relative z-10 mt-1 w-fit text-[15px]"
+                    @update:model-value="(rating) => handleRatingChange(book, rating)"
+                  />
                   <p v-if="mobileMeta(book)" class="mt-1 text-[13px] text-gr-muted md:hidden">
                     {{ mobileMeta(book) }}
                   </p>
@@ -312,59 +306,17 @@ const PAGE_BUTTON =
                     {{ timeLabel(book) }} read
                   </p>
                 </div>
-              </RouterLink>
+              </div>
             </li>
           </ul>
         </section>
       </div>
 
-      <!-- Pagination -->
-      <nav
-        v-if="pageCount > 1"
-        aria-label="Pagination"
-        class="mt-6 flex flex-wrap items-center justify-between gap-3"
-      >
-        <span class="text-sm text-gr-muted">Page {{ currentPage }} of {{ pageCount }}</span>
-        <div class="flex items-center gap-1.5">
-          <button
-            type="button"
-            :class="[PAGE_BUTTON, 'border-gr-line hover:bg-gr-surface-2']"
-            :disabled="currentPage === 1"
-            @click="goToPage(currentPage - 1)"
-          >
-            <font-awesome-icon icon="fa-solid fa-chevron-left" class="text-xs" />
-            Previous
-          </button>
-          <template v-for="(item, i) in pageItems" :key="i">
-            <span v-if="item === '…'" class="hidden px-1 text-gr-muted md:inline">…</span>
-            <button
-              v-else
-              type="button"
-              class="hidden md:inline-flex"
-              :class="[
-                PAGE_BUTTON,
-                item === currentPage
-                  ? 'border-gr-text bg-gr-text text-gr-bg'
-                  : 'border-gr-line hover:bg-gr-surface-2',
-              ]"
-              :aria-current="item === currentPage ? 'page' : undefined"
-              :aria-label="`Page ${item}`"
-              @click="goToPage(item)"
-            >
-              {{ item }}
-            </button>
-          </template>
-          <button
-            type="button"
-            :class="[PAGE_BUTTON, 'border-gr-line hover:bg-gr-surface-2']"
-            :disabled="currentPage === pageCount"
-            @click="goToPage(currentPage + 1)"
-          >
-            Next
-            <font-awesome-icon icon="fa-solid fa-chevron-right" class="text-xs" />
-          </button>
-        </div>
-      </nav>
+      <ListPagination
+        v-model:page="currentPage"
+        :page-count="pageCount"
+        @navigate="scrollToList"
+      />
     </template>
   </div>
 </template>

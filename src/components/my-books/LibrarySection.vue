@@ -1,12 +1,44 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import PageSection from '@/components/layout/PageSection.vue';
+import StatCard from './StatCard.vue';
+import LibraryIcon from '@/components/navbar/LibraryIcon.vue';
 import { useLibraryStore } from '@/store/library-store';
 import { FORMAT_META } from '@/components/library/formatMeta';
-import type { LibraryFormat } from '@/types/library';
+import { LIBRARY_FORMATS } from '@/types/library';
+import { bookCount, percentLabel } from '@/utils/book-display';
 
 const libraryStore = useLibraryStore();
-const TILES: LibraryFormat[] = ['physical', 'digital'];
+const total = computed(() => libraryStore.counts.all);
+
+const EMPTY_TEXT = {
+  physical: { emptyText: 'No print books yet', caption: 'Add your first physical book' },
+  digital: { emptyText: 'No ebooks yet', caption: 'Add your first digital book' },
+};
+
+// A book owned in both formats counts in both cards, so their shares can add
+// up to more than 100%
+const formatCards = computed(() =>
+  LIBRARY_FORMATS.map((format) => {
+    const count = libraryStore.counts[format];
+    const empty = count === 0;
+    return {
+      format,
+      label: FORMAT_META[format].label,
+      icon: FORMAT_META[format].icon,
+      count,
+      variant: empty ? ('add' as const) : ('stat' as const),
+      // The Library page opens its add dialog with this format preselected
+      to: empty
+        ? { name: 'library', query: { add: format } }
+        : { name: 'library', query: { format } },
+      emptyText: EMPTY_TEXT[format].emptyText,
+      caption: empty
+        ? EMPTY_TEXT[format].caption
+        : percentLabel(count, total.value, 'of what you own'),
+    };
+  })
+);
 
 onMounted(async () => {
   try {
@@ -18,48 +50,42 @@ onMounted(async () => {
 </script>
 
 <template>
-  <PageSection
-    title="Library"
-    :count="`${libraryStore.counts.all} ${libraryStore.counts.all === 1 ? 'book' : 'books'} owned`"
-  >
-    <router-link
-      to="/my-books/library"
-      class="gr-card group flex flex-wrap items-center gap-x-8 gap-y-4 p-6 transition duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gr-accent"
+  <PageSection title="Library" :count="`${bookCount(total)} owned`">
+    <div
+      class="grid grid-cols-1 gap-5 md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]"
     >
-      <div class="basis-full md:basis-auto">
-        <p class="font-semibold">Books you own</p>
-        <p
-          class="mt-1 text-4xl font-bold leading-tight transition-colors duration-200 group-hover:text-gr-accent"
-        >
-          {{ libraryStore.counts.all }}
-        </p>
-        <p v-if="!libraryStore.counts.all" class="mt-1 text-sm text-gr-muted">
-          Add the books you own
-        </p>
-      </div>
+      <StatCard
+        v-if="!total"
+        :to="{ name: 'library', query: { add: null } }"
+        variant="add"
+        label="Library"
+        empty-text="No books in your library yet"
+        caption="Add your first book"
+      >
+        <template #icon><LibraryIcon /></template>
+      </StatCard>
 
-      <!-- A book owned in both formats counts in both tiles -->
-      <div class="grid basis-full grid-cols-2 gap-3 md:ml-auto md:w-[420px] md:basis-auto">
-        <div
-          v-for="f in TILES"
-          :key="f"
-          class="flex items-center gap-3 rounded-xl bg-gr-surface-2 px-3.5 py-3"
+      <template v-else>
+        <StatCard
+          :to="{ name: 'library' }"
+          label="All owned"
+          :count="total"
+          caption="Browse your whole library"
         >
-          <font-awesome-icon :icon="FORMAT_META[f].icon" class="text-gr-muted" />
-          <div>
-            <p class="text-xl font-bold leading-tight">{{ libraryStore.counts[f] }}</p>
-            <p class="text-[13px] text-gr-muted">{{ FORMAT_META[f].label }}</p>
-          </div>
-        </div>
-      </div>
-
-      <span class="ml-auto inline-flex items-center gap-2 font-semibold text-gr-accent">
-        Open library
-        <font-awesome-icon
-          icon="fa-solid fa-chevron-right"
-          class="text-xs transition-transform duration-200 group-hover:translate-x-1"
+          <template #icon><LibraryIcon /></template>
+        </StatCard>
+        <StatCard
+          v-for="card in formatCards"
+          :key="card.format"
+          :to="card.to"
+          :variant="card.variant"
+          :label="card.label"
+          :count="card.count"
+          :empty-text="card.emptyText"
+          :caption="card.caption"
+          :icon="card.icon"
         />
-      </span>
-    </router-link>
+      </template>
+    </div>
   </PageSection>
 </template>

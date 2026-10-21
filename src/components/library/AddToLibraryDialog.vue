@@ -29,6 +29,8 @@ const open = defineModel<boolean>('open', { required: true });
 const props = defineProps<{
   /** Preselect this book; the dialog then only asks for format(s) and date */
   presetBook?: Book | null;
+  /** Format to preselect instead of physical */
+  presetFormat?: LibraryFormat | null;
 }>();
 
 const SEARCH_OPTIONS: { value: LibrarySearchField; label: string }[] = [
@@ -76,7 +78,7 @@ watch(open, (isOpen) => {
   query.value = '';
   results.value = props.presetBook ? [props.presetBook] : [];
   selectedIsbn.value = props.presetBook?.isbn ?? null;
-  formats.value = ['physical'];
+  formats.value = [props.presetFormat ?? 'physical'];
   dateAdded.value = todayStr();
   errorMessage.value = null;
 });

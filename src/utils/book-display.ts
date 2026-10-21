@@ -52,3 +52,14 @@ export const authorMatches = (
   (authors ?? []).some(
     (a) => a.toLowerCase().includes(term) || formatAuthor(a).toLowerCase().includes(term)
   );
+
+/** "1 book" / "3 books" */
+export const bookCount = (count: number): string =>
+  `${count} ${count === 1 ? 'book' : 'books'}`;
+
+/** "40% of your library"; a non-zero share that rounds to 0 reads "Under 1% ..." */
+export const percentLabel = (count: number, total: number, of: string): string => {
+  const percent = total ? Math.round((count / total) * 100) : 0;
+  if (count > 0 && percent < 1) return `Under 1% ${of}`;
+  return `${percent}% ${of}`;
+};

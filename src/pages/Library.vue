@@ -1,14 +1,22 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import PageLayout from '@/components/layout/PageLayout.vue';
 import ThemedSelect from '@/components/layout/ThemedSelect.vue';
+import ListPagination from '@/components/layout/ListPagination.vue';
+import { useQueryPagination } from '@/composables/useQueryPagination';
 import LibraryBookCard from '@/components/library/LibraryBookCard.vue';
 import AddToLibraryDialog from '@/components/library/AddToLibraryDialog.vue';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLibraryStore } from '@/store/library-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { queryLibrary } from '@/services/libraryService';
-import type { LibraryFormat, LibrarySearchField, LibrarySort } from '@/types/library';
+import {
+  LIBRARY_FORMATS,
+  type LibraryFormat,
+  type LibrarySearchField,
+  type LibrarySort,
+} from '@/types/library';
 import { STATUS_DISPLAY_NAMES, type BookStatus } from '@/types/book';
 
 const libraryStore = useLibraryStore();
@@ -48,6 +56,28 @@ const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
 ];
 const statusFilter = ref<StatusFilter>('all');
 const addOpen = ref(false);
+const addFormat = ref<LibraryFormat | null>(null);
+
+const openAdd = (preset: LibraryFormat | null = null) => {
+  addFormat.value = preset;
+  addOpen.value = true;
+};
+
+// Links from My Books: ?format=digital filters the list, ?add=digital opens the
+// add dialog with that format preselected (a bare ?add opens it as normal)
+const route = useRoute();
+const router = useRouter();
+const asFormat = (value: unknown): LibraryFormat | null =>
+  LIBRARY_FORMATS.find((f) => f === value) ?? null;
+
+const queryFormat = asFormat(route.query.format);
+if (queryFormat) format.value = queryFormat;
+if ('add' in route.query) {
+  openAdd(asFormat(route.query.add));
+  // Drop it so a refresh or Back doesn't reopen the dialog
+  const { add: _add, ...rest } = route.query;
+  router.replace({ query: rest });
+}
 
 const visibleEntries = computed(() =>
   queryLibrary(libraryStore.entries, {
@@ -61,6 +91,16 @@ const visibleEntries = computed(() =>
     return statusFilter.value === 'none' ? !status : status === statusFilter.value;
   })
 );
+
+const {
+  currentPage,
+  pageCount,
+  pagedItems: pagedEntries,
+} = useQueryPagination(visibleEntries, {
+  pageSize: 20,
+  resetOn: [format, searchBy, search, sort, statusFilter],
+  ready: () => libraryStore.initialized,
+});
 
 onMounted(async () => {
   try {
@@ -83,7 +123,7 @@ onMounted(async () => {
     back-label="My Books"
   >
     <template #actions>
-      <button type="button" class="gr-btn gr-btn-primary" @click="addOpen = true">
+      <button type="button" class="gr-btn gr-btn-primary" @click="openAdd()">
         <font-awesome-icon icon="fa-solid fa-plus" />
         Add book
       </button>
@@ -166,7 +206,7 @@ onMounted(async () => {
       <!-- Empty library -->
       <div v-else-if="!libraryStore.entries.length" class="gr-empty mt-6">
         <p>Your library is empty. Add the books you own, in print or on screen.</p>
-        <button type="button" class="gr-btn gr-btn-primary mt-4" @click="addOpen = true">
+        <button type="button" class="gr-btn gr-btn-primary mt-4" @click="openAdd()">
           <font-awesome-icon icon="fa-solid fa-plus" />
           Add book
         </button>
@@ -177,16 +217,19 @@ onMounted(async () => {
         No books in your library match your filters.
       </p>
 
-      <ul
-        v-else
-        class="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,480px),1fr))] gap-3"
-      >
-        <li v-for="entry in visibleEntries" :key="entry.id">
-          <LibraryBookCard :entry="entry" class="h-full" />
-        </li>
-      </ul>
+      <template v-else>
+        <ul
+          class="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(100%,480px),1fr))] gap-3"
+        >
+          <li v-for="entry in pagedEntries" :key="entry.id">
+            <LibraryBookCard :entry="entry" class="h-full" />
+          </li>
+        </ul>
+        <!-- The router's scrollBehavior handles scrolling: top on a click, saved position on Back -->
+        <ListPagination v-model:page="currentPage" :page-count="pageCount" />
+      </template>
     </div>
 
-    <AddToLibraryDialog v-model:open="addOpen" />
+    <AddToLibraryDialog v-model:open="addOpen" :preset-format="addFormat" />
   </PageLayout>
 </template>
