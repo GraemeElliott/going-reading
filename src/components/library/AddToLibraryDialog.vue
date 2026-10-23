@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from 'radix-vue';
 import { debounce } from 'lodash';
-import isbndbService from '@/services/isbndbService';
+import bookApiService from '@/services/bookApiService';
 import ThemedSelect from '@/components/layout/ThemedSelect.vue';
 import BookTitle from '@/components/partials/BookTitle.vue';
 import { formatAuthors } from '@/utils/book-display';
@@ -83,7 +83,7 @@ watch(open, (isOpen) => {
   errorMessage.value = null;
 });
 
-// Uses the same ISBNdb lookup as the header search. An author search returns
+// Uses the same book lookup as the header search. An author search returns
 // author names, so we load the best-matching author's books.
 const runSearch = debounce(async (term: string, field: LibrarySearchField) => {
   if (term.trim().length < 3) {
@@ -93,12 +93,12 @@ const runSearch = debounce(async (term: string, field: LibrarySearchField) => {
   }
   try {
     if (field === 'author') {
-      const authors = await isbndbService.searchQuery(term, 'author');
+      const authors = await bookApiService.searchQuery(term, 'author');
       const top = authors[0];
-      const details = top && 'name' in top ? await isbndbService.getAuthorDetails(top.name) : null;
+      const details = top && 'name' in top ? await bookApiService.getAuthorDetails(top.name) : null;
       results.value = details?.books ?? [];
     } else {
-      const found = await isbndbService.searchQuery(term, field);
+      const found = await bookApiService.searchQuery(term, field);
       results.value = found.filter((r): r is Book => !('type' in r && r.type === 'author'));
     }
   } finally {

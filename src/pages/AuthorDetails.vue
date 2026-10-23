@@ -3,7 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Author } from '@/types/author';
 import type { Book } from '@/types/book';
-import isbndbService from '@/services/isbndbService';
+import bookApiService from '@/services/bookApiService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -62,7 +62,7 @@ const fetchAuthorDetails = async (page: number = 1) => {
       return;
     }
 
-    const authorDetails = await isbndbService.getAuthorDetails(
+    const authorDetails = await bookApiService.getAuthorDetails(
       authorName,
       page
     );
@@ -84,9 +84,11 @@ const fetchAuthorDetails = async (page: number = 1) => {
         }
       }
 
-      // If we have a total, check if we've loaded all books
+      // If we have a total, check if we've paged through all books. Works
+      // without an ISBN are skipped, so count pages rather than books.
       if (totalBooks.value !== undefined) {
-        hasMore.value = allBooks.value.length < totalBooks.value;
+        hasMore.value =
+          authorDetails.books.length > 0 && page * 20 < totalBooks.value;
       } else {
         // If no total is available, check if we got a full page
         hasMore.value = authorDetails.books.length === 20;

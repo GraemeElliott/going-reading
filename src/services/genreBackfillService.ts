@@ -1,5 +1,5 @@
 import { supabase } from '../supabase/supabase';
-import isbndbService from './isbndbService';
+import bookApiService from './bookApiService';
 import { mapToStandardGenre, normaliseSubjects } from '../utils/book-utils';
 
 // The full set of standard genre names — used to detect already-normalised records
@@ -76,7 +76,7 @@ export const backfillGenres = async (userId: string): Promise<BackfillResult> =>
 
   for (const book of books) {
     try {
-      const apiBook = await isbndbService.getBookByIsbn(book.isbn);
+      const apiBook = await bookApiService.getBookByIsbn(book.isbn);
       const genres = apiBook ? normaliseSubjects(apiBook.subjects) : [];
 
       const { error: updateError } = await supabase
@@ -93,8 +93,8 @@ export const backfillGenres = async (userId: string): Promise<BackfillResult> =>
       result.failed++;
     }
 
-    // Respect ISBNDB rate limits
-    await delay(200);
+    // Stay under Hardcover's 60 requests per minute
+    await delay(1100);
   }
 
   return result;

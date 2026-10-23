@@ -40,7 +40,6 @@ const authorText = computed(() => formatAuthors(props.book.authors));
 const metaLine = computed(() =>
   [
     extractYear(props.book.date_published),
-    props.book.publisher,
     props.book.pages ? `${props.book.pages.toLocaleString()} pages` : null,
   ]
     .filter(Boolean)

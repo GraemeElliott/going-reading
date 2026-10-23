@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed, defineAsyncComponent } from 'vue';
 import { useRoute } from 'vue-router';
-import isbndbService from '@/services/isbndbService';
+import bookApiService from '@/services/bookApiService';
 import type { Book, BookStatus, BookBasicInfo } from '@/types/book';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/store/auth-store';
@@ -108,7 +108,7 @@ const fetchBookDetails = async (isbn: string) => {
   error.value = null;
 
   try {
-    const bookData = await isbndbService.getBookByIsbn(isbn);
+    const bookData = await bookApiService.getBookByIsbn(isbn);
     if (bookData) {
       book.value = bookData;
     } else {

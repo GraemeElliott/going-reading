@@ -3,7 +3,7 @@ const coreFeatures = [
   {
     title: 'Powerful Book Search',
     description:
-      'Find any book instantly with our advanced search capabilities powered by the extensive ISBNDB database.',
+      'Find any book instantly with our advanced search capabilities powered by Hardcover and Open Library.',
     details: [
       {
         text: 'Search by title, author, or ISBN',

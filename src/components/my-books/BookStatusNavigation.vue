@@ -4,7 +4,7 @@ import { useUserBooksStore } from '@/store/user-books-store';
 import PageSection from '@/components/layout/PageSection.vue';
 import StatCard from './StatCard.vue';
 import { STATUS_DISPLAY_NAMES, BookStatus } from '@/types/book';
-import { bookCount, percentLabel } from '@/utils/book-display';
+import { bookCount } from '@/utils/book-display';
 
 const userBooksStore = useUserBooksStore();
 
@@ -22,15 +22,11 @@ const totalBooks = computed(() =>
 );
 
 const shelves = computed(() =>
-  statuses.map((status) => {
-    const count = bookCounts.value[status] || 0;
-    return {
-      status,
-      name: STATUS_DISPLAY_NAMES[status],
-      count,
-      percentLabel: percentLabel(count, totalBooks.value, 'of your library'),
-    };
-  })
+  statuses.map((status) => ({
+    status,
+    name: STATUS_DISPLAY_NAMES[status],
+    count: bookCounts.value[status] || 0,
+  }))
 );
 </script>
 
@@ -48,7 +44,6 @@ const shelves = computed(() =>
         :to="{ name: 'bookshelves', query: { shelf: shelf.status } }"
         :label="shelf.name"
         :count="shelf.count"
-        :caption="shelf.percentLabel"
       />
     </div>
   </PageSection>

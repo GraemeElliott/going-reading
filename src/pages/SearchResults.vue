@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import isbndbService from '@/services/isbndbService';
+import bookApiService from '@/services/bookApiService';
 import type { Book } from '@/types/book';
 import type { Author } from '@/types/author';
 import PageLayout from '@/components/layout/PageLayout.vue';
@@ -83,7 +83,7 @@ const fetchResults = async (searchQuery: string, page: number = 1) => {
 
   error.value = null;
   try {
-    const newResults = await isbndbService.searchQuery(
+    const newResults = await bookApiService.searchQuery(
       searchQuery,
       searchType.value,
       page,

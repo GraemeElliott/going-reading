@@ -10,7 +10,7 @@ const props = withDefaults(
     to: RouteLocationRaw;
     label: string;
     count?: number;
-    caption: string;
+    caption?: string;
     variant?: 'stat' | 'add';
     /** Shown in place of the count on the 'add' variant, e.g. "No ebooks yet" */
     emptyText?: string;
@@ -24,11 +24,13 @@ const slots = useSlots();
 const isAdd = computed(() => props.variant === 'add');
 const hasIcon = computed(() => !!props.icon || !!slots.icon);
 
-const accessibleName = computed(() =>
-  isAdd.value
-    ? `${props.label}: ${props.emptyText}. ${props.caption}`
-    : `${props.label}: ${bookCount(props.count)}, ${props.caption}`
-);
+const accessibleName = computed(() => {
+  const name = isAdd.value
+    ? `${props.label}: ${props.emptyText}`
+    : `${props.label}: ${bookCount(props.count)}`;
+  if (!props.caption) return name;
+  return isAdd.value ? `${name}. ${props.caption}` : `${name}, ${props.caption}`;
+});
 </script>
 
 <template>
@@ -67,7 +69,9 @@ const accessibleName = computed(() =>
         >
           {{ count }}
         </p>
-        <p class="mt-1 text-sm" :class="isAdd ? '' : 'text-gr-muted'">{{ caption }}</p>
+        <p v-if="caption" class="mt-1 text-sm" :class="isAdd ? '' : 'text-gr-muted'">
+          {{ caption }}
+        </p>
       </div>
     </div>
     <font-awesome-icon

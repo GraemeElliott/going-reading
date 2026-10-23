@@ -67,33 +67,6 @@ export const STATUS_DISPLAY_NAMES: Record<BookStatus, string> = {
   '': '',
 };
 
-// API Types
-export interface APIBookResponse {
-  isbn?: string;
-  isbn13?: string;
-  title?: string;
-  title_long?: string;
-  authors?: string | string[];
-  publisher?: string;
-  language?: string;
-  date_published?: string;
-  pages?: number;
-  image?: string;
-  synopsis?: string;
-  subjects?: string[];
-  binding?: string;
-  other_isbns?: { isbn: string; binding: string }[];
-  overview?: string;
-  excerpt?: string;
-  msrp?: number;
-  edition?: string;
-  dimensions?: string;
-}
-
-export interface AuthorBookResponse {
-  book: APIBookResponse;
-}
-
 // Search Types
 export interface ScoredBook extends Book {
   score: number;

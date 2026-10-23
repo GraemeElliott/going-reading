@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import isbndbService from '@/services/isbndbService';
+import bookApiService from '@/services/bookApiService';
 import type { Book } from '@/types/book';
 import type { Author } from '@/types/author';
 import { debounce } from 'lodash';
@@ -77,7 +77,7 @@ const performSearch = debounce(async (newQuery: string) => {
   isSearching.value = true;
 
   try {
-    const data = await isbndbService.searchQuery(newQuery, searchType.value);
+    const data = await bookApiService.searchQuery(newQuery, searchType.value);
     totalResults.value = data.length;
     searchResults.value = data.slice(0, 5);
   } catch (error) {
