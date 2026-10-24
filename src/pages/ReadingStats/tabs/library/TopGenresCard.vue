@@ -10,12 +10,10 @@ const props = defineProps<{
   loading?: boolean;
 }>();
 
-// The Overview's genre colours, plus the page's chart teal for the sixth row
-const BAR_COLORS = [...RATING_GENRE_COLORS, 'rgba(0,128,128,0.8)'];
-
 const max = computed(() => props.genres.rows[0]?.count ?? 1);
+// Same colours as the Overview's "Top genres by books read"
 const rows = computed(() => [
-  ...props.genres.rows.map((r, i) => ({ label: r.genre, count: r.count, other: false, color: BAR_COLORS[i] })),
+  ...props.genres.rows.map((r, i) => ({ label: r.genre, count: r.count, other: false, color: RATING_GENRE_COLORS[i] })),
   ...(props.genres.other ? [{ label: 'Other', count: props.genres.other, other: true, color: undefined }] : []),
 ]);
 // Scaled to the largest genre; "Other" can be larger, so it's capped

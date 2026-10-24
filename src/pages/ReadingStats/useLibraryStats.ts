@@ -117,28 +117,24 @@ export function useLibraryStats(now: Date = new Date()) {
     };
   });
 
-  // Owned books only, so "added − read" is the change in the owned to-read pile
+  // Reads of owned books only
   const readVsAdded = computed(() => {
     const periods = readVsAddedPeriods(timeline.value);
     const readDates = entries.value
       .map((e) => shelfBooks.value.get(e.isbn))
       .filter((b) => b?.status === 'read' && b.date_finished)
       .map((b) => localDateUtils.toLocalDate(b!.date_finished!));
-    const added = countPerPeriod(addedDates.value, periods);
-    const read = countPerPeriod(readDates, periods);
     return {
       granularity: timeline.value.granularity,
       labels: periods.map((p) => p.label),
-      added,
-      read,
-      totalAdded: added.reduce((a, b) => a + b, 0),
-      totalRead: read.reduce((a, b) => a + b, 0),
+      added: countPerPeriod(addedDates.value, periods),
+      read: countPerPeriod(readDates, periods),
     };
   });
 
   // Genres are stored on shelf books, so owned books not on a shelf have none
   const genres = computed(() =>
-    topGenres(entries.value.map((e) => shelfBooks.value.get(e.isbn)?.genres?.[0] ?? null))
+    topGenres(entries.value.map((e) => shelfBooks.value.get(e.isbn)?.genres?.[0] ?? null), 5)
   );
 
   const unread = computed(() =>

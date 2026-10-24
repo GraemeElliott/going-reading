@@ -20,8 +20,6 @@ const props = defineProps<{
     labels: string[];
     added: number[];
     read: number[];
-    totalAdded: number;
-    totalRead: number;
   };
 }>();
 
@@ -38,30 +36,16 @@ const series = computed(() => [
 
 const focus = useChartFocus(() => props.stats.labels.length);
 
-const enoughData = computed(
-  () => props.stats.labels.length > 0 && props.stats.totalAdded + props.stats.totalRead > 0
+const enoughData = computed(() =>
+  [...props.stats.added, ...props.stats.read].some((count) => count > 0)
 );
 const periodName = (i: number) =>
   props.stats.granularity === 'week' ? `w/c ${props.stats.labels[i]}` : props.stats.labels[i];
-const spanName = computed(() => {
-  const n = props.stats.labels.length;
-  const unit = props.stats.granularity === 'week' ? 'week' : 'month';
-  return n === 1 ? `this ${unit}` : `the last ${n} ${unit}s`;
-});
 
 const readout = computed(() => {
   const i = focus.active.value;
   if (i === null) return '';
   return `${periodName(i)} · ${props.stats.added[i]} added, ${props.stats.read[i]} read`;
-});
-
-const pileSummary = computed(() => {
-  const { totalAdded, totalRead } = props.stats;
-  const diff = totalAdded - totalRead;
-  const books = (n: number) => `${n} book${n === 1 ? '' : 's'}`;
-  const change =
-    diff > 0 ? `grew by ${diff}` : diff < 0 ? `shrank by ${-diff}` : 'stayed the same';
-  return `In ${spanName.value} you added ${books(totalAdded)} and read ${totalRead}. Your to-read pile ${change}.`;
 });
 
 const ariaLabel = computed(() =>
@@ -138,7 +122,6 @@ const chartOptions = computed(() => ({
       >
         <Chart type="bar" :data="chartData" :options="chartOptions" />
       </div>
-      <p class="mt-3 text-sm text-gr-muted">{{ pileSummary }}</p>
     </template>
     <p v-else class="text-sm text-gr-muted">Not enough data yet</p>
   </StatsCard>

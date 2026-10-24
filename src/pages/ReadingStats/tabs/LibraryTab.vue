@@ -193,10 +193,7 @@ const LINK = 'inline-flex min-h-11 items-center gap-1.5 rounded text-sm font-sem
         </div>
 
         <!-- Longest waiting on Want to read -->
-        <StatsCard
-          title="Longest waiting on Want to read"
-          subtitle="The books that have been on your pile the longest"
-        >
+        <StatsCard title="Longest waiting on Want to read">
           <template #actions>
             <router-link
               v-if="waiting.count"
