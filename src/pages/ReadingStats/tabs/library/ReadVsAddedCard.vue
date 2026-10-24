@@ -25,11 +25,11 @@ const props = defineProps<{
 
 const { gridColor, tickColor, token } = useChartTheme();
 const readColor = token('--gr-status-read');
-// The site's teal
-const addedColor = token('--gr-accent');
+// Same teal as the page's other bar charts
+const ADDED_COLOR = 'rgba(0, 128, 128, 0.8)';
 
 const series = computed(() => [
-  { key: 'added' as const, label: 'Added', color: addedColor.value },
+  { key: 'added' as const, label: 'Added', color: ADDED_COLOR },
   { key: 'read' as const, label: 'Read', color: readColor.value },
 ]);
 
@@ -55,9 +55,15 @@ const ariaLabel = computed(() =>
   '. Use the arrow keys to step through.'
 );
 
-// Other periods drop to 35% while one is active
+// Other periods drop to 35% while one is active. Takes '#rrggbb' or
+// 'rgba(r, g, b, a)'; an existing alpha is multiplied.
 const withAlpha = (color: string, alpha: number) => {
   if (alpha === 1) return color;
+  const rgba = color.match(/rgba?\(([^)]+)\)/);
+  if (rgba) {
+    const [r, g, b, a = 1] = rgba[1].split(',').map(Number);
+    return `rgba(${r},${g},${b},${a * alpha})`;
+  }
   const hex = color.replace('#', '');
   const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
   return `rgba(${r},${g},${b},${alpha})`;
