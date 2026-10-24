@@ -46,6 +46,7 @@ const router = createRouter({
       name: 'author-details',
       component: AuthorDetails,
       props: true,
+      meta: { fullWidth: true },
     },
     {
       path: '/reading-stats',

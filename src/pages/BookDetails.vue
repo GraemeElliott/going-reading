@@ -2,16 +2,19 @@
 import { ref, onMounted, watch, computed, defineAsyncComponent } from 'vue';
 import { useRoute } from 'vue-router';
 import bookApiService from '@/services/bookApiService';
-import type { Book, BookStatus, BookBasicInfo } from '@/types/book';
+import type { Book, BookBasicInfo } from '@/types/book';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/store/auth-store';
 import { useUserBooksStore } from '@/store/user-books-store';
+import { useLibraryStore } from '@/store/library-store';
 import { Skeleton } from '@/components/ui/skeleton';
+import LibraryIcon from '@/components/navbar/LibraryIcon.vue';
+import { toast } from '@/components/ui/toast';
 import { useDarkModeStore } from '@/store/store';
 
 // Lazy load all interactive components
-const UserBookStatusSelect = defineAsyncComponent(
-  () => import('@/components/user-books/UserBookStatusSelect.vue')
+const ShelfStatusMenu = defineAsyncComponent(
+  () => import('@/components/user-books/ShelfStatusMenu.vue')
 );
 const AddToList = defineAsyncComponent(
   () => import('@/components/user-books/AddToList.vue')
@@ -25,9 +28,20 @@ const UserRating = defineAsyncComponent(
 const UserBookActivity = defineAsyncComponent(
   () => import('@/components/user-books/UserBookActivity.vue')
 );
+const AddToLibraryDialog = defineAsyncComponent(
+  () => import('@/components/library/AddToLibraryDialog.vue')
+);
 
 const authStore = useAuthStore();
 const userBooksStore = useUserBooksStore();
+const libraryStore = useLibraryStore();
+const libraryDialogOpen = ref(false);
+// Bumped after adding to the library so the timeline refetches and shows it
+const activityKey = ref(0);
+
+const isOwned = computed(
+  () => !!book.value && libraryStore.ownedIsbns.has(book.value.isbn)
+);
 const darkModeStore = useDarkModeStore();
 const route = useRoute();
 const book = ref<Book | null>(null);
@@ -58,21 +72,15 @@ const bookData = computed(() => {
   };
 });
 
-// Simplified status management
-const bookStatus = computed({
-  get: () => userBooksStore.getUserBookStatus(bookData.value?.isbn || ''),
-  set: async (newStatus: BookStatus) => {
-    if (!bookData.value?.basicInfo || !authStore.user?.id) return;
-    try {
-      await userBooksStore.updateBookStatus(
-        bookData.value.basicInfo,
-        newStatus
-      );
-    } catch (err) {
-      console.error('Failed to update book status:', err);
-    }
-  },
-});
+// The shelf menu saves status changes itself
+const bookStatus = computed(() =>
+  userBooksStore.getUserBookStatus(bookData.value?.isbn || '')
+);
+
+const onShelfError = (message: string | null) => {
+  if (!message) return;
+  toast({ title: 'Error updating shelf', description: message, variant: 'destructive', duration: 4000 });
+};
 
 const showRating = computed(() =>
   ['read', 'did-not-finish'].includes(bookStatus.value)
@@ -133,6 +141,8 @@ onMounted(async () => {
 
   // Only initialize store if user is logged in
   if (authStore.user?.id) {
+    // The library decides whether to offer "Add to library" or "In your library"
+    libraryStore.initialize().catch((e) => console.error('Failed to load library:', e));
     await userBooksStore.initialize();
   }
 
@@ -192,16 +202,33 @@ watch(
             <Suspense>
               <template #default>
                 <div class="flex flex-col items-center space-y-4">
-                  <UserBookStatusSelect
-                    v-model="bookStatus"
+                  <ShelfStatusMenu
                     :book="bookData.basicInfo"
-                    class="w-48"
+                    :status="bookStatus"
+                    @error="onShelfError"
                   />
                   <AddToList
                     :isbn="bookData.isbn"
                     :book="bookData"
                     class="w-48"
                   />
+                  <router-link
+                    v-if="isOwned"
+                    to="/my-books/library"
+                    class="gr-btn w-48 bg-gr-accent-soft text-gr-accent"
+                  >
+                    <LibraryIcon class="!h-5 !w-5" />
+                    In your library
+                  </router-link>
+                  <button
+                    v-else
+                    type="button"
+                    class="gr-btn gr-btn-outline w-48"
+                    @click="libraryDialogOpen = true"
+                  >
+                    <LibraryIcon class="!h-5 !w-5" />
+                    Add to library
+                  </button>
                   <Notes
                     v-if="bookData.id"
                     :book-id="bookData.id"
@@ -282,7 +309,7 @@ watch(
         <template #default>
           <div class="mt-8">
             <Separator class="mb-6" />
-            <UserBookActivity :isbn="bookData.isbn" />
+            <UserBookActivity :key="activityKey" :isbn="bookData.isbn" />
           </div>
         </template>
         <template #fallback>
@@ -292,6 +319,13 @@ watch(
           </div>
         </template>
       </Suspense>
+
+      <AddToLibraryDialog
+        v-if="authStore.user?.id"
+        v-model:open="libraryDialogOpen"
+        :preset-book="book"
+        @added="activityKey++"
+      />
     </div>
   </div>
 </template>

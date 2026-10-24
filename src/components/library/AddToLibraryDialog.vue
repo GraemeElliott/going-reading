@@ -33,6 +33,10 @@ const props = defineProps<{
   presetFormat?: LibraryFormat | null;
 }>();
 
+const emit = defineEmits<{
+  (e: 'added', isbn: string): void;
+}>();
+
 const SEARCH_OPTIONS: { value: LibrarySearchField; label: string }[] = [
   { value: 'title', label: 'Title' },
   { value: 'author', label: 'Author' },
@@ -130,6 +134,7 @@ const handleAdd = async () => {
   errorMessage.value = null;
   try {
     await libraryStore.addEntry(selectedBook.value, formats.value, dateAdded.value);
+    emit('added', selectedBook.value.isbn);
     toast({
       title: 'Added to library',
       description: `${selectedBook.value.title} is now in your library.`,

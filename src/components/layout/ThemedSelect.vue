@@ -14,7 +14,8 @@ import {
 } from 'radix-vue';
 
 defineProps<{
-  options: { value: T; label: string }[];
+  /** `count` is shown beside the option in the list, but not on the trigger */
+  options: { value: T; label: string; count?: number }[];
   /** Accessible name for the trigger */
   label: string;
 }>();
@@ -55,6 +56,12 @@ const model = defineModel<T>({ required: true });
               </SelectItemIndicator>
             </span>
             <SelectItemText>{{ option.label }}</SelectItemText>
+            <span
+              v-if="option.count !== undefined"
+              class="ml-auto pl-4 text-sm font-normal text-gr-muted"
+            >
+              {{ option.count }}
+            </span>
           </SelectItem>
         </SelectViewport>
       </SelectContent>

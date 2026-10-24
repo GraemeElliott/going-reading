@@ -57,6 +57,13 @@ export const authorMatches = (
 export const bookCount = (count: number): string =>
   `${count} ${count === 1 ? 'book' : 'books'}`;
 
+/** "0%", "<1%" for any non-zero share under 1%, otherwise the rounded percentage */
+export const formatPercent = (count: number, total: number): string => {
+  if (!total || !count) return '0%';
+  if (count / total < 0.01) return '<1%';
+  return `${Math.round((count / total) * 100)}%`;
+};
+
 /** "40% of your library"; a non-zero share that rounds to 0 reads "Under 1% ..." */
 export const percentLabel = (count: number, total: number, of: string): string => {
   const percent = total ? Math.round((count / total) * 100) : 0;

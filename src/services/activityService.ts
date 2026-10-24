@@ -1,5 +1,6 @@
 import { supabase } from '../supabase/supabase';
 import type { BookStatus } from '../types/book';
+import type { LibraryFormat } from '../types/library';
 
 export enum ActivityType {
   BOOK_ADDED = 'BOOK_ADDED',
@@ -11,6 +12,7 @@ export enum ActivityType {
   BOOK_ADDED_TO_LIST = 'BOOK_ADDED_TO_LIST',
   BOOK_REMOVED_FROM_LIST = 'BOOK_REMOVED_FROM_LIST',
   LIST_DELETED = 'LIST_DELETED',
+  BOOK_ADDED_TO_LIBRARY = 'BOOK_ADDED_TO_LIBRARY',
 }
 
 interface ActivityMetadata {
@@ -22,6 +24,7 @@ interface ActivityMetadata {
   listId?: string;
   listName?: string;
   bookTitle?: string;
+  formats?: LibraryFormat[];
 }
 
 export class ReadingActivityService {

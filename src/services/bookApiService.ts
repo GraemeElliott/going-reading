@@ -30,10 +30,11 @@ import type {
 // titles, missing descriptions — and keeps the site working if Hardcover is down.
 const PAGE_SIZE = 20;
 
-const DEFAULT_COVER = '/default-book-cover.jpg';
+// Placeholders for missing data; exported so pages can tell them apart from real values
+export const DEFAULT_COVER = '/default-book-cover.jpg';
 const UNKNOWN_TITLE = 'Unknown Title';
 const UNKNOWN_AUTHOR = 'Unknown Author';
-const UNKNOWN_PUBLISHER = 'Unknown Publisher';
+export const UNKNOWN_PUBLISHER = 'Unknown Publisher';
 
 const OPEN_LIBRARY_SEARCH_FIELDS = [
   'key', 'title', 'subtitle', 'author_name', 'first_publish_year', 'cover_i',
@@ -502,8 +503,6 @@ const getHardcoverAuthorDetails = async (
     })
     .filter(isBook);
 
-  if (!books.length && page === 1) return null;
-
   return {
     type: 'author',
     name: authorName,
@@ -620,7 +619,6 @@ const getOpenLibraryAuthorDetails = async (
     openLibrarySearch({ q: `author_key:${author.key}`, sort: 'readinglog' }, page),
   ]);
   const books = works.docs.map(mapOpenLibraryDoc).filter(isBook);
-  if (!books.length && page === 1) return null;
 
   return {
     type: 'author',
@@ -729,14 +727,29 @@ const getAuthorDetails = async (
   authorName: string,
   page: number = 1
 ): Promise<Author | null> => {
+  let hardcoverAuthor: Author | null = null;
   try {
-    const author = await getHardcoverAuthorDetails(authorName, page);
-    if (author) return author;
+    hardcoverAuthor = await getHardcoverAuthorDetails(authorName, page);
+    if (hardcoverAuthor && (hardcoverAuthor.books.length || page > 1)) {
+      return hardcoverAuthor;
+    }
   } catch (error) {
     console.error('Hardcover author lookup failed, using Open Library:', error);
   }
 
-  return getOpenLibraryAuthorDetails(authorName, page);
+  // No Hardcover books with an ISBN, so try Open Library. If neither source
+  // lists any books, still return the author so their profile can be shown.
+  const openLibraryAuthor = await getOpenLibraryAuthorDetails(
+    authorName,
+    page
+  ).catch((error) => {
+    if (!hardcoverAuthor) throw error;
+    console.error('Open Library author lookup failed:', error);
+    return null;
+  });
+  return openLibraryAuthor?.books.length
+    ? openLibraryAuthor
+    : hardcoverAuthor ?? openLibraryAuthor;
 };
 
 const lookupByIsbn = async (isbn: string): Promise<Book | null> => {

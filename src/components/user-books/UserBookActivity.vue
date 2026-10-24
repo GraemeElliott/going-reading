@@ -8,6 +8,8 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import StarRating from '../../components/partials/StarRating.vue';
 import { useDarkModeStore } from '@/store/store';
+import { FORMAT_META } from '@/components/library/formatMeta';
+import type { LibraryFormat } from '@/types/library';
 
 const props = defineProps<{
   isbn: string;
@@ -25,6 +27,7 @@ interface Activity {
     totalPages?: number;
     rating?: number;
     listName?: string;
+    formats?: LibraryFormat[];
   };
   created_at: string;
 }
@@ -70,6 +73,7 @@ const getActivityIcon = (activity: Activity): string => {
       return 'fa-solid fa-minus';
     case ActivityType.BOOK_ADDED:
     case ActivityType.BOOK_ADDED_TO_LIST:
+    case ActivityType.BOOK_ADDED_TO_LIBRARY:
       return 'fa-solid fa-plus';
     case ActivityType.BOOK_STATUS_CHANGED:
       return 'fa-solid fa-bookmark';
@@ -108,6 +112,16 @@ const getActivityMessage = (activity: Activity): string | null => {
       return `Added to list: <strong>${metadata.listName}</strong>`;
     case ActivityType.BOOK_REMOVED_FROM_LIST:
       return `Removed from list: <strong>${metadata.listName}</strong>`;
+    case ActivityType.BOOK_ADDED_TO_LIBRARY: {
+      // e.g. "Physical + Digital"; only known formats, since this is rendered as HTML
+      const formats = (metadata.formats ?? [])
+        .filter((f) => f in FORMAT_META)
+        .map((f) => FORMAT_META[f].label)
+        .join(' + ');
+      return formats
+        ? `Added to your library as <strong>${formats}</strong>`
+        : 'Added to your library';
+    }
     default:
       return 'Unknown activity';
   }

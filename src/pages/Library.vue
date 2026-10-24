@@ -55,6 +55,18 @@ const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'none', label: 'Not on a shelf' },
 ];
 const statusFilter = ref<StatusFilter>('all');
+
+// Books per shelf across the whole library, like the format counts
+const statusOptions = computed(() => {
+  const counts: Partial<Record<StatusFilter, number>> = {};
+  for (const entry of libraryStore.entries) {
+    const status = userBooksStore.getUserBookStatus(entry.isbn) || 'none';
+    counts[status] = (counts[status] ?? 0) + 1;
+  }
+  return STATUS_OPTIONS.map((option) =>
+    option.value === 'all' ? option : { ...option, count: counts[option.value] ?? 0 }
+  );
+});
 const addOpen = ref(false);
 const addFormat = ref<LibraryFormat | null>(null);
 
@@ -177,7 +189,7 @@ onMounted(async () => {
         <!-- Status and sort share a line on mobile -->
         <div class="flex basis-full gap-2 md:basis-auto">
           <div class="min-w-0 flex-1 md:w-[180px] md:flex-none">
-            <ThemedSelect v-model="statusFilter" :options="STATUS_OPTIONS" label="Filter by shelf" />
+            <ThemedSelect v-model="statusFilter" :options="statusOptions" label="Filter by shelf" />
           </div>
           <div class="min-w-0 flex-1 md:w-[180px] md:flex-none">
             <ThemedSelect v-model="sort" :options="SORT_OPTIONS" label="Sort by" />

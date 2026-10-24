@@ -8,6 +8,7 @@ import type {
 } from '../types/library';
 import { LIBRARY_FORMATS } from '../types/library';
 import { authorMatches, compareByAuthor } from '../utils/book-display';
+import { ReadingActivityService, ActivityType } from './activityService';
 
 export interface LibraryQuery {
   search?: string;
@@ -97,7 +98,19 @@ export class LibraryService {
     // 23505 = unique violation on (user_id, isbn)
     if (error?.code === '23505') throw new Error(libraryErrorMessages.duplicate);
     if (error) throw error;
-    return data as LibraryEntry;
+
+    const entry = data as LibraryEntry;
+    await ReadingActivityService.logActivity(
+      userId,
+      ActivityType.BOOK_ADDED_TO_LIBRARY,
+      entry.isbn,
+      {
+        bookTitle: entry.title,
+        formats: entry.formats,
+      }
+    );
+
+    return entry;
   }
 
   static async updateFormats(
