@@ -25,12 +25,11 @@ const props = defineProps<{
 
 const { gridColor, tickColor, token } = useChartTheme();
 const readColor = token('--gr-status-read');
-// A light tint of the page's teal, so the two series differ in lightness as
-// well as hue against the darker Read green
-const ADDED_COLOR = '#7cc4c0';
+// The site's teal
+const addedColor = token('--gr-accent');
 
 const series = computed(() => [
-  { key: 'added' as const, label: 'Added', color: ADDED_COLOR },
+  { key: 'added' as const, label: 'Added', color: addedColor.value },
   { key: 'read' as const, label: 'Read', color: readColor.value },
 ]);
 
