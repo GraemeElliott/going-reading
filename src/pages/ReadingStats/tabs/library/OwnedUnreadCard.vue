@@ -25,9 +25,10 @@ const active = ref<string | null>(null);
 const dimmed = (label: string) => active.value !== null && active.value !== label;
 
 const readout = computed(() => {
-  const segment = segments.value.find((s) => s.label === active.value);
-  if (segment) {
-    return `${segment.label} · ${segment.count} (${formatPercent(segment.count, props.unread.owned)})`;
+  // Rows include zero counts, which have no bar segment
+  const row = rows.value.find((r) => r.label === active.value);
+  if (row) {
+    return `${row.label} · ${row.count} (${formatPercent(row.count, props.unread.owned)})`;
   }
   return `${formatPercent(props.unread.unread, props.unread.owned)} of your library unread`;
 });
