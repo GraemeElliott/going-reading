@@ -40,7 +40,7 @@ const width = (count: number) => `${Math.min(100, Math.round((count / max.value)
         :key="row.label"
         class="grid grid-cols-[minmax(0,120px)_1fr_auto] items-center gap-3 text-sm"
       >
-        <span class="truncate" :class="{ 'text-gr-muted': row.other }" :title="row.label">{{ row.label }}</span>
+        <span class="truncate" :title="row.label">{{ row.label }}</span>
         <span class="h-2.5 overflow-hidden rounded-full bg-gr-track">
           <span
             class="block h-full rounded-full"
