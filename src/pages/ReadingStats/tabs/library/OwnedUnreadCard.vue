@@ -8,23 +8,16 @@ const props = defineProps<{
   unread: UnreadBreakdown;
 }>();
 
-// Where the unread books are. Did not finish is left out: those were read in part.
+// Where the unread books are
 const rows = computed(() => [
   { label: 'On Want to read', count: props.unread.wantToRead, swatch: 'bg-gr-status-want' },
   { label: 'Currently reading', count: props.unread.currentlyReading, swatch: 'bg-gr-status-reading' },
+  { label: 'Did not finish', count: props.unread.didNotFinish, swatch: 'bg-gr-status-dnf' },
   { label: 'Not on a shelf', count: props.unread.notOnShelf, swatch: 'bg-gr-status-none' },
 ]);
 
-// Read, then the unread statuses in table order. Did not finish books count
-// as unread but aren't broken down, so they're the neutral remainder.
-const segments = computed(() => {
-  const listed = rows.value.reduce((sum, row) => sum + row.count, 0);
-  return [
-    { label: 'Read', count: props.unread.read, swatch: 'bg-gr-status-read' },
-    ...rows.value,
-    { label: 'Did not finish', count: props.unread.unread - listed, swatch: 'bg-gr-track' },
-  ].filter((segment) => segment.count > 0);
-});
+// The unread books by status, in table order
+const segments = computed(() => rows.value.filter((row) => row.count > 0));
 
 // Hovering or focusing a segment or row highlights that status, as on the
 // "Library by shelf status" card
@@ -41,7 +34,7 @@ const readout = computed(() => {
 
 const barLabel = computed(
   () =>
-    `${props.unread.owned} owned books: ` +
+    `${props.unread.unread} unread owned books: ` +
     segments.value.map((s) => `${s.label} ${s.count}`).join(', ')
 );
 </script>

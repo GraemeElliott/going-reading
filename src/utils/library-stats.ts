@@ -151,6 +151,7 @@ export interface UnreadBreakdown {
   wantToRead: number;
   notOnShelf: number;
   currentlyReading: number;
+  didNotFinish: number;
 }
 
 /** Owned books split by whether they've been read. Takes each owned book's shelf status. */
@@ -164,6 +165,7 @@ export const unreadBreakdown = (statuses: BookStatus[]): UnreadBreakdown => {
     wantToRead: count('want-to-read'),
     notOnShelf: count(''),
     currentlyReading: count('currently-reading'),
+    didNotFinish: count('did-not-finish'),
   };
 };
 

@@ -159,7 +159,7 @@ test.describe('aggregates', () => {
       '', 'currently-reading', 'did-not-finish',
     ]);
     expect(result).toEqual({
-      owned: 8, read: 2, unread: 6, wantToRead: 3, notOnShelf: 1, currentlyReading: 1,
+      owned: 8, read: 2, unread: 6, wantToRead: 3, notOnShelf: 1, currentlyReading: 1, didNotFinish: 1,
     });
   });
 
