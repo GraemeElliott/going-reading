@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { useUserBooksStore } from '@/store/user-books-store';
 import { truncateText } from '@/utils/book-utils';
+import BookLink from '@/components/partials/BookLink.vue';
 import {
   Carousel,
   CarouselContent,
@@ -34,18 +35,18 @@ const recentlyReadBooks = computed(() => {
             class="pl-1 basis-full md:basis-1/2 lg:basis-1/4"
           >
             <div class="flex flex-col items-center p-1">
-              <router-link :to="`/book/${book.isbn}`">
+              <BookLink :isbn="book.isbn">
                 <img
                   :src="book.image"
                   :alt="book.title"
                   class="w-32 h-48 object-cover rounded shadow-md hover:shadow-lg transition-shadow"
                 />
-              </router-link>
-              <router-link :to="`/book/${book.isbn}`">
+              </BookLink>
+              <BookLink :isbn="book.isbn">
                 <h3 class="text-sm font-medium text-center mt-2">
                   {{ truncateText(book.title, 40) }}
                 </h3>
-              </router-link>
+              </BookLink>
               <router-link
                 :to="`/author/${encodeURIComponent(book.authors.join(', '))}`"
               >

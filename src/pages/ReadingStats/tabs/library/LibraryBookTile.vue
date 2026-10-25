@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { Book as BookOutlineIcon } from 'lucide-vue-next';
 import { DEFAULT_COVER } from '@/services/bookApiService';
 import { formatAuthors } from '@/utils/book-display';
+import BookLink from '@/components/partials/BookLink.vue';
 
 // A book row in the Library tab's lists, laid out like Overview's Currently
 // reading: cover on the left, then title, author, pages and a pill (#pill
@@ -22,8 +23,8 @@ const hasCover = computed(
 </script>
 
 <template>
-  <router-link
-    :to="`/book/${isbn}`"
+  <BookLink
+    :isbn="isbn"
     class="group flex items-start gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gr-accent"
   >
     <span class="block h-16 w-11 shrink-0 overflow-hidden rounded bg-gr-surface-2">
@@ -56,5 +57,5 @@ const hasCover = computed(
         <slot name="pill" />
       </span>
     </span>
-  </router-link>
+  </BookLink>
 </template>

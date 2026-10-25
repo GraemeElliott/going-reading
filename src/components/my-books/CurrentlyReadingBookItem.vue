@@ -4,6 +4,7 @@ import type { UserBook, BookStatus } from '@/types/book';
 import UpdateBookProgress from './UpdateBookProgress.vue';
 import Progress from '../ui/progress/Progress.vue';
 import BookTitle from '@/components/partials/BookTitle.vue';
+import BookLink from '@/components/partials/BookLink.vue';
 import { formatAuthors } from '@/utils/book-display';
 
 const props = defineProps<{
@@ -60,14 +61,14 @@ const readingProgress = computed(() => {
       >
     </div>
     <!-- Links are padded out to a 44px touch target -->
-    <router-link
-      :to="`/book/${book.isbn}`"
+    <BookLink
+      :isbn="book.isbn"
       class="flex min-h-11 min-w-11 items-end justify-center pb-0.5 transition-colors hover:text-gr-accent"
     >
       <h3 class="text-lg font-[650] leading-snug">
         <BookTitle :title="book.title" title-class="line-clamp-2" />
       </h3>
-    </router-link>
+    </BookLink>
     <router-link
       :to="`/author/${encodeURIComponent(book.authors.join(', '))}`"
       class="flex min-h-11 min-w-11 items-start justify-center pt-0.5"

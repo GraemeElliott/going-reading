@@ -1,4 +1,25 @@
+import type { BookStatus } from '@/types/book';
+import { STATUS_DISPLAY_NAMES } from '@/types/book';
 import type { LibraryFormat } from '@/types/library';
+
+// Shelf picker in the add and edit dialogs. Radix Select can't use '' as a
+// value, so 'none' stands for "not on a shelf". Read is set by the "Mark as
+// read" checkbox (which also asks for a finish date), so it's only shown
+// while that's ticked.
+export type ShelfChoice = Exclude<BookStatus, ''> | 'none';
+
+const shelfOption = (value: Exclude<BookStatus, ''>) => ({
+  value,
+  label: STATUS_DISPLAY_NAMES[value],
+});
+
+export const NO_SHELF_OPTION = { value: 'none' as ShelfChoice, label: 'No shelf' };
+export const SHELF_OPTIONS: { value: ShelfChoice; label: string }[] = [
+  shelfOption('want-to-read'),
+  shelfOption('currently-reading'),
+  shelfOption('did-not-finish'),
+];
+export const READ_SHELF_OPTION = shelfOption('read');
 
 export const FORMAT_META: Record<
   LibraryFormat,

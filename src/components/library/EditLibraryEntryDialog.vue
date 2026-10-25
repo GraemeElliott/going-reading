@@ -16,7 +16,15 @@ import { STATUS_DISPLAY_NAMES } from '@/types/book';
 import { toast } from '@/components/ui/toast';
 import type { LibraryEntry, LibraryFormat } from '@/types/library';
 import { LIBRARY_FORMATS } from '@/types/library';
-import { FORMAT_META, todayStr } from './formatMeta';
+import ThemedSelect from '@/components/layout/ThemedSelect.vue';
+import {
+  FORMAT_META,
+  NO_SHELF_OPTION,
+  READ_SHELF_OPTION,
+  SHELF_OPTIONS,
+  todayStr,
+  type ShelfChoice,
+} from './formatMeta';
 
 // Edit a library entry's title, authors, formats and date added.
 // Styled to match the "Add to library" dialog.
@@ -36,6 +44,20 @@ const alreadyRead = computed(() => shelfBook.value?.status === 'read');
 const markRead = ref(false);
 const finishedOn = ref('');
 const originalFinishedOn = ref('');
+const shelf = ref<ShelfChoice>('none');
+
+// Ticking "Mark as read" locks the picker to Read. "No shelf" is only offered
+// before the book is on one: taking it off would delete its rating and notes.
+const shelfOptions = computed(() => {
+  if (markRead.value) return [READ_SHELF_OPTION];
+  return shelfBook.value?.status ? SHELF_OPTIONS : [NO_SHELF_OPTION, ...SHELF_OPTIONS];
+});
+const shelfValue = computed<ShelfChoice>({
+  get: () => (markRead.value ? 'read' : shelf.value),
+  set: (value) => {
+    if (value !== 'read') shelf.value = value;
+  },
+});
 
 // Timestamp -> local 'YYYY-MM-DD' for the date input
 const toLocalDate = (iso: string) => {
@@ -65,6 +87,8 @@ watch(open, (isOpen) => {
   originalFinishedOn.value =
     alreadyRead.value && shelfBook.value?.date_finished ? toLocalDate(shelfBook.value.date_finished) : '';
   finishedOn.value = originalFinishedOn.value || todayStr();
+  const status = shelfBook.value?.status;
+  shelf.value = status && status !== 'read' ? status : 'none';
 });
 
 const canSave = computed(
@@ -104,20 +128,21 @@ const handleSave = async () => {
       formats: formats.value,
       date_added: dateAdded.value,
     });
+    const book = {
+      isbn: props.entry.isbn,
+      title: title.value.trim(),
+      authors: authors.value.map((a) => a.trim()).filter(Boolean),
+      image: props.entry.image ?? '',
+      date_published: props.entry.date_published ?? undefined,
+      publisher: props.entry.publisher ?? undefined,
+      pages: props.entry.pages ?? undefined,
+    };
     // Move to Read (or change the finish date) only when something changed
     if (markRead.value && (!alreadyRead.value || finishedOn.value !== originalFinishedOn.value)) {
-      await userBooksStore.markAsRead(
-        {
-          isbn: props.entry.isbn,
-          title: title.value.trim(),
-          authors: authors.value.map((a) => a.trim()).filter(Boolean),
-          image: props.entry.image ?? '',
-          date_published: props.entry.date_published ?? undefined,
-          publisher: props.entry.publisher ?? undefined,
-          pages: props.entry.pages ?? undefined,
-        },
-        finishedOn.value
-      );
+      await userBooksStore.markAsRead(book, finishedOn.value);
+      analyticsStore.invalidate();
+    } else if (!markRead.value && shelf.value !== 'none' && shelf.value !== shelfBook.value?.status) {
+      await userBooksStore.updateBookStatus(book, shelf.value);
       analyticsStore.invalidate();
     }
     toast({
@@ -254,6 +279,12 @@ const handleSave = async () => {
           <!-- Reading status -->
           <div class="grid gap-2">
             <p class="text-[15px] font-semibold">Reading</p>
+            <ThemedSelect
+              v-model="shelfValue"
+              :options="shelfOptions"
+              label="Shelf"
+              :disabled="markRead"
+            />
             <label
               class="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-gr-line bg-gr-bg px-3.5"
               :class="{ 'cursor-default': alreadyRead }"

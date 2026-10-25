@@ -18,6 +18,7 @@ defineProps<{
   options: { value: T; label: string; count?: number }[];
   /** Accessible name for the trigger */
   label: string;
+  disabled?: boolean;
 }>();
 
 // Radix Select doesn't allow '' as an option value, so use a real value for "all"
@@ -25,10 +26,10 @@ const model = defineModel<T>({ required: true });
 </script>
 
 <template>
-  <SelectRoot v-model="model">
+  <SelectRoot v-model="model" :disabled="disabled">
     <SelectTrigger
       :aria-label="label"
-      class="gr-input flex min-w-0 items-center justify-between gap-3 bg-gr-surface px-3.5 text-left"
+      class="gr-input flex min-w-0 items-center justify-between gap-3 bg-gr-surface px-3.5 text-left disabled:cursor-not-allowed disabled:opacity-60"
     >
       <span class="truncate"><SelectValue /></span>
       <font-awesome-icon

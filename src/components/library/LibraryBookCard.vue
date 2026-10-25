@@ -23,13 +23,18 @@ import { useUserBooksStore } from '@/store/user-books-store';
 import { SHELF_STATUS_META } from '@/components/user-books/shelfStatusMeta';
 import { toast } from '@/components/ui/toast';
 import BookTitle from '@/components/partials/BookTitle.vue';
-import { formatAuthors, formatBookTitle } from '@/utils/book-display';
+import { formatAuthors, formatBookTitle, isManualBookId } from '@/utils/book-display';
 import { FORMAT_META, formatLibraryDate } from './formatMeta';
 import EditLibraryEntryDialog from './EditLibraryEntryDialog.vue';
 
 const props = defineProps<{
   entry: LibraryEntry;
 }>();
+
+// Books added by hand without an ISBN have no book page
+const bookLink = computed(() =>
+  isManualBookId(props.entry.isbn) ? null : { to: `/book/${props.entry.isbn}` }
+);
 
 const libraryStore = useLibraryStore();
 const userBooksStore = useUserBooksStore();
@@ -107,8 +112,9 @@ const removeEntry = async () => {
 <template>
   <div class="gr-card flex flex-col gap-1 py-4 pl-4 pr-3">
     <div class="flex gap-4">
-    <router-link
-      :to="`/book/${entry.isbn}`"
+    <component
+      :is="bookLink ? 'router-link' : 'span'"
+      v-bind="bookLink"
       class="shrink-0"
       tabindex="-1"
       aria-hidden="true"
@@ -126,18 +132,20 @@ const removeEntry = async () => {
       >
         <font-awesome-icon icon="fa-solid fa-book" class="fa-lg" />
       </span>
-    </router-link>
+    </component>
 
     <div class="min-w-0 flex-1">
       <div class="flex items-start gap-2">
         <div class="min-w-0 flex-1">
           <h2 class="text-[17px] font-[650] leading-snug">
-            <router-link
-              :to="`/book/${entry.isbn}`"
-              class="block break-words transition-colors hover:text-gr-accent"
+            <component
+              :is="bookLink ? 'router-link' : 'span'"
+              v-bind="bookLink"
+              class="block break-words"
+              :class="{ 'transition-colors hover:text-gr-accent': bookLink }"
             >
               <BookTitle :title="entry.title" />
-            </router-link>
+            </component>
           </h2>
           <p v-if="entry.authors.length" class="mt-0.5 text-[15px] text-gr-muted">
             {{ formatAuthors(entry.authors) }}

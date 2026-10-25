@@ -13,7 +13,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/toast';
 import EditListDetails from '@/components/lists/EditListDetails.vue';
 import BookTitle from '@/components/partials/BookTitle.vue';
-import { authorMatches, formatAuthors } from '@/utils/book-display';
+import { authorMatches, formatAuthors, isManualBookId } from '@/utils/book-display';
 import { useListsStore } from '@/store/lists-store';
 import type { UserBook } from '@/types/book';
 import type { List } from '@/types/list';
@@ -388,10 +388,11 @@ const handleRemoveSelected = async () => {
                     class="text-xs"
                   />
                 </span>
+                <!-- Books added by hand without an ISBN have no page to link to -->
                 <component
-                  :is="selecting ? 'span' : RouterLink"
+                  :is="selecting || isManualBookId(book.isbn) ? 'span' : RouterLink"
                   v-bind="
-                    selecting
+                    selecting || isManualBookId(book.isbn)
                       ? {}
                       : {
                           to: `/book/${book.isbn}`,
@@ -411,12 +412,12 @@ const handleRemoveSelected = async () => {
                 </component>
                 <span class="min-w-0">
                   <component
-                    :is="selecting ? 'span' : RouterLink"
-                    v-bind="selecting ? {} : { to: `/book/${book.isbn}` }"
+                    :is="selecting || isManualBookId(book.isbn) ? 'span' : RouterLink"
+                    v-bind="selecting || isManualBookId(book.isbn) ? {} : { to: `/book/${book.isbn}` }"
                     class="block text-base font-[650] leading-snug"
                     :class="{
                       'rounded-sm transition-colors hover:text-gr-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gr-accent':
-                        !selecting,
+                        !selecting && !isManualBookId(book.isbn),
                     }"
                     @click="!selecting && (open = false)"
                   >

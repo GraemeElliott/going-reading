@@ -70,3 +70,19 @@ export const percentLabel = (count: number, total: number, of: string): string =
   if (count > 0 && percent < 1) return `Under 1% ${of}`;
   return `${percent}% ${of}`;
 };
+
+// Books added by hand without an ISBN get a generated id in its place, so the
+// (user_id, isbn) keys on library_entries and user_books still hold
+const MANUAL_ID_PREFIX = 'manual-';
+
+export const createManualBookId = (): string => `${MANUAL_ID_PREFIX}${crypto.randomUUID()}`;
+
+/** True for a generated id: there's no book page to link to */
+export const isManualBookId = (isbn: string | null | undefined): boolean =>
+  !!isbn?.startsWith(MANUAL_ID_PREFIX);
+
+/** Strips spaces and hyphens; null unless it's a 10 or 13 character ISBN */
+export const normaliseIsbn = (value: string): string | null => {
+  const clean = value.replace(/[\s-]/g, '').toUpperCase();
+  return /^(\d{9}[\dX]|\d{13})$/.test(clean) ? clean : null;
+};

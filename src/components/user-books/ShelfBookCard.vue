@@ -20,11 +20,16 @@ import UserRating from '@/components/user-books/UserRating.vue';
 import BookNotes from '@/components/user-books/BookNotes.vue';
 import { useUserBooksStore } from '@/store/user-books-store';
 import BookTitle from '@/components/partials/BookTitle.vue';
-import { formatAuthors, formatBookTitle } from '@/utils/book-display';
+import { formatAuthors, formatBookTitle, isManualBookId } from '@/utils/book-display';
 
 const props = defineProps<{
   book: UserBook;
 }>();
+
+// Books added by hand without an ISBN have no book page
+const bookLink = computed(() =>
+  isManualBookId(props.book.isbn) ? null : { to: `/book/${props.book.isbn}` }
+);
 
 const emit = defineEmits<{
   (e: 'delete', isbn: string): void;
@@ -83,26 +88,36 @@ const handleRatingChange = async (newRating: number | null) => {
 <template>
   <div class="gr-card flex flex-wrap items-center gap-4 p-4">
     <div class="flex min-w-0 flex-1 basis-full items-center gap-4 md:basis-[320px]">
-      <router-link
-        :to="`/book/${book.isbn}`"
+      <component
+        :is="bookLink ? 'router-link' : 'span'"
+        v-bind="bookLink"
         class="shrink-0"
         tabindex="-1"
         aria-hidden="true"
       >
         <img
+          v-if="book.image"
           :src="book.image"
           alt=""
           class="h-[126px] w-[84px] rounded-md object-cover shadow-gr-card"
         />
-      </router-link>
+        <span
+          v-else
+          class="flex h-[126px] w-[84px] items-center justify-center rounded-md bg-gr-surface-2 text-gr-muted"
+        >
+          <font-awesome-icon icon="fa-solid fa-book" class="fa-lg" />
+        </span>
+      </component>
       <div class="min-w-0">
         <h2 class="text-[19px] font-[650] leading-snug">
-          <router-link
-            :to="`/book/${book.isbn}`"
-            class="block break-words transition-colors hover:text-gr-accent"
+          <component
+            :is="bookLink ? 'router-link' : 'span'"
+            v-bind="bookLink"
+            class="block break-words"
+            :class="{ 'transition-colors hover:text-gr-accent': bookLink }"
           >
             <BookTitle :title="book.title" />
-          </router-link>
+          </component>
         </h2>
         <p class="mt-0.5 text-[15px] text-gr-muted">
           by

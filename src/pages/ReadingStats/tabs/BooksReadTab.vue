@@ -6,6 +6,7 @@ import { supabase } from '@/supabase/supabase';
 import ThemedSelect from '@/components/layout/ThemedSelect.vue';
 import ListPagination from '@/components/layout/ListPagination.vue';
 import BookTitle from '@/components/partials/BookTitle.vue';
+import BookLink from '@/components/partials/BookLink.vue';
 import UserRating from '@/components/user-books/UserRating.vue';
 import { toast } from '@/components/ui/toast';
 import { authorMatches, formatAuthors } from '@/utils/book-display';
@@ -273,12 +274,12 @@ const scrollToList = () =>
                 <!-- Info -->
                 <div class="min-w-0 flex-1">
                   <p class="text-[15px] font-[650] leading-snug md:text-base">
-                    <RouterLink
-                      :to="`/book/${book.isbn}`"
+                    <BookLink
+                      :isbn="book.isbn"
                       class="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
                     >
                       <BookTitle :title="book.title" compact />
-                    </RouterLink>
+                    </BookLink>
                   </p>
                   <p v-if="bylineFor(book)" class="truncate text-sm text-gr-muted">
                     {{ bylineFor(book) }}
