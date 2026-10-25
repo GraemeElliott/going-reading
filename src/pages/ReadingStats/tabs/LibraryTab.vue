@@ -18,7 +18,6 @@ import StatsCard from './library/StatsCard.vue';
 import LibraryBookTile from './library/LibraryBookTile.vue';
 import GrowthCard from './library/GrowthCard.vue';
 import TopGenresCard from './library/TopGenresCard.vue';
-import ReadVsAddedCard from './library/ReadVsAddedCard.vue';
 import OwnedUnreadCard from './library/OwnedUnreadCard.vue';
 import { useLibraryStats } from '../useLibraryStats';
 import { useChartTheme } from '../useChartTheme';
@@ -33,8 +32,9 @@ defineProps<{
 const libraryStore = useLibraryStore();
 const router = useRouter();
 const { isDark, gridColor, tickColor, tooltip } = useChartTheme();
-const { metrics, addedPerMonth, statusCounts, recent, growth, readVsAdded, genres, unread, waiting } =
-  useLibraryStats();
+const {
+  metrics, addedPerMonth, statusCounts, recent, growth, growthRange, genres, unread, waiting,
+} = useLibraryStats();
 
 onMounted(() => {
   libraryStore.initialize().catch((err) => console.error('Failed to load library:', err));
@@ -82,7 +82,8 @@ const addedChartOptions = computed(() => ({
   },
 }));
 
-const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,170px),1fr))] gap-6';
+// Stacked book rows with dividers, like Overview's Currently reading
+const LIST = 'divide-y divide-gr-line [&>li]:py-2.5 [&>li:first-child]:pt-0 [&>li:last-child]:pb-0';
 const LINK = 'inline-flex min-h-11 items-center gap-1.5 rounded text-sm font-semibold text-gr-accent hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gr-accent';
 </script>
 
@@ -162,7 +163,7 @@ const LINK = 'inline-flex min-h-11 items-center gap-1.5 rounded text-sm font-sem
             </router-link>
           </template>
           <p v-if="!recent.length" class="text-sm text-gr-muted">No books yet</p>
-          <ul v-else :class="GRID">
+          <ul v-else :class="LIST">
             <li v-for="entry in recent" :key="entry.id">
               <LibraryBookTile
                 :isbn="entry.isbn"
@@ -182,15 +183,12 @@ const LINK = 'inline-flex min-h-11 items-center gap-1.5 rounded text-sm font-sem
 
         <!-- Growth over time + Top genres -->
         <div class="flex flex-wrap gap-5">
-          <GrowthCard :growth="growth" class="flex-[7_1_560px]" />
+          <GrowthCard v-model:range="growthRange" :growth="growth" class="flex-[7_1_560px]" />
           <TopGenresCard :genres="genres" :loading="genresLoading" class="flex-[5_1_360px]" />
         </div>
 
-        <!-- Read vs added + Owned but unread -->
-        <div class="flex flex-wrap gap-5">
-          <ReadVsAddedCard :stats="readVsAdded" class="flex-[7_1_560px]" />
-          <OwnedUnreadCard :unread="unread" class="flex-[5_1_360px]" />
-        </div>
+        <!-- Owned but unread -->
+        <OwnedUnreadCard :unread="unread" />
 
         <!-- Longest waiting on Want to read -->
         <StatsCard title="Longest waiting on Want to read">
@@ -205,7 +203,7 @@ const LINK = 'inline-flex min-h-11 items-center gap-1.5 rounded text-sm font-sem
             </router-link>
           </template>
           <p v-if="!waiting.items.length" class="text-sm text-gr-muted">Your Want to read shelf is empty</p>
-          <ul v-else :class="GRID">
+          <ul v-else :class="LIST">
             <li v-for="{ book, since } in waiting.items" :key="book.isbn">
               <LibraryBookTile
                 :isbn="book.isbn"

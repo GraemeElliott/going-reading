@@ -42,9 +42,9 @@ const startOfDay = (date: Date) =>
 export const formatMonthYear = (date: Date): string =>
   date.toLocaleDateString(SITE_LOCALE, { month: 'short', year: 'numeric' });
 
-/** "Oct 26", for chart axes */
+/** "Oct ’26", for chart axes. The apostrophe stops "Jan 11" reading as a day */
 export const formatMonthShort = (date: Date): string =>
-  date.toLocaleDateString(SITE_LOCALE, { month: 'short', year: '2-digit' });
+  `${date.toLocaleDateString(SITE_LOCALE, { month: 'short' })} ’${String(date.getFullYear()).slice(-2)}`;
 
 /** "6 Oct", for weekly chart axes */
 export const formatDayMonth = (date: Date): string =>

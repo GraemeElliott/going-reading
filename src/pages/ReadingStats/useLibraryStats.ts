@@ -1,16 +1,14 @@
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useLibraryStore } from '@/store/library-store';
 import { useUserBooksStore } from '@/store/user-books-store';
 import type { LibraryEntry, LibraryFormat } from '@/types/library';
 import type { LibraryStatusKey } from './tabs/LibraryStatusBreakdown.vue';
-import { localDateUtils } from '@/utils/date-utils';
+import { formatMonthShort, localDateUtils } from '@/utils/date-utils';
 import {
-  buildTimeline,
-  countPerPeriod,
-  detectFirstImport,
+  type ChartRange,
   growthSeries,
+  libraryPeriods,
   longestWaiting,
-  readVsAddedPeriods,
   recentlyAdded,
   topGenres,
   unreadBreakdown,
@@ -61,7 +59,7 @@ export function useLibraryStats(now: Date = new Date()) {
       months.push({
         year: d.getFullYear(),
         month: d.getMonth(),
-        label: d.toLocaleString('default', { month: 'short', year: '2-digit' }),
+        label: formatMonthShort(d),
       });
     }
 
@@ -96,39 +94,22 @@ export function useLibraryStats(now: Date = new Date()) {
 
   const recent = computed(() => recentlyAdded(entries.value));
 
-  // Growth and read-vs-added skip past the first bulk import
-  const firstImport = computed(() =>
-    detectFirstImport(entries.value.map((e) => e.date_added))
-  );
-  const timeline = computed(() => buildTimeline(now, firstImport.value?.date ?? null));
+  // Growth shows the last 12 months, or everything since the first book was added
+  const growthRange = ref<ChartRange>('year');
   const addedDates = computed(() =>
     entries.value.map((e) => localDateUtils.parseLocalDate(e.date_added))
   );
 
   const growth = computed(() => {
-    const { totals, baseline } = growthSeries(addedDates.value, timeline.value);
+    const { granularity, periods, hasOlder } = libraryPeriods(addedDates.value, now, growthRange.value);
+    const { totals, baseline } = growthSeries(addedDates.value, periods);
     return {
-      granularity: timeline.value.granularity,
-      startsAtImport: timeline.value.startsAtImport,
-      labels: timeline.value.periods.map((p) => p.label),
+      granularity,
+      hasOlder,
+      labels: periods.map((p) => p.label),
       totals,
       baseline,
       current: totals[totals.length - 1] ?? entries.value.length,
-    };
-  });
-
-  // Reads of owned books only
-  const readVsAdded = computed(() => {
-    const periods = readVsAddedPeriods(timeline.value);
-    const readDates = entries.value
-      .map((e) => shelfBooks.value.get(e.isbn))
-      .filter((b) => b?.status === 'read' && b.date_finished)
-      .map((b) => localDateUtils.toLocalDate(b!.date_finished!));
-    return {
-      granularity: timeline.value.granularity,
-      labels: periods.map((p) => p.label),
-      added: countPerPeriod(addedDates.value, periods),
-      read: countPerPeriod(readDates, periods),
     };
   });
 
@@ -154,7 +135,7 @@ export function useLibraryStats(now: Date = new Date()) {
     statusCounts,
     recent,
     growth,
-    readVsAdded,
+    growthRange,
     genres,
     unread,
     waiting,

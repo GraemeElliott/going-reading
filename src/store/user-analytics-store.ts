@@ -5,7 +5,7 @@ import { useAuthStore } from './auth-store';
 import { AnalyticsService, dateUtils } from '../services/analyticsService';
 import type { ReadingData, TimePeriod } from '../types/analytics';
 import { formatUtils } from '../utils/format-utils';
-import { localDateUtils } from '../utils/date-utils';
+import { formatMonthShort, localDateUtils } from '../utils/date-utils';
 import { supabase } from '../supabase/supabase';
 
 export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
@@ -96,7 +96,7 @@ export const useUserAnalyticsStore = defineStore('userAnalytics', () => {
       months.push({
         year: d.getFullYear(),
         month: d.getMonth(),
-        label: d.toLocaleString('default', { month: 'short', year: '2-digit' }),
+        label: formatMonthShort(d),
       });
     }
 

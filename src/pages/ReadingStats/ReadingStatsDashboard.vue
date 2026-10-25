@@ -24,14 +24,13 @@ const router = useRouter();
 const currentYear = new Date().getFullYear();
 const isBackfilling = ref(false);
 
-const VALID_TABS = ['overview', 'progress', 'books-read', 'my-library'] as const;
+const VALID_TABS = ['overview', 'progress', 'books-read', 'library'] as const;
 type Tab = typeof VALID_TABS[number];
 
 const activeTab = computed<Tab>(() => {
   let t = route.query.tab as string;
-  // Books Read used to be called "library"; keep old links working (which is
-  // why the Library tab is "my-library")
-  if (t === 'library') t = 'books-read';
+  // The Library tab used to be "my-library"; keep old links working
+  if (t === 'my-library') t = 'library';
   return (VALID_TABS.includes(t as Tab) ? t : 'overview') as Tab;
 });
 
@@ -49,7 +48,7 @@ const tabs = [
   { key: 'overview', label: 'Overview' },
   { key: 'progress', label: 'Progress' },
   { key: 'books-read', label: 'Books Read' },
-  { key: 'my-library', label: 'Library' },
+  { key: 'library', label: 'Library' },
 ] as const;
 
 async function refreshAnalytics() {
@@ -135,7 +134,7 @@ watch(() => analyticsStore.pagesReadInitialized, (initialized) => {
           <OverviewTab v-show="activeTab === 'overview'" />
           <ProgressTab v-show="activeTab === 'progress'" />
           <BooksReadTab v-show="activeTab === 'books-read'" />
-          <LibraryTab v-show="activeTab === 'my-library'" :genres-loading="isBackfilling" />
+          <LibraryTab v-show="activeTab === 'library'" :genres-loading="isBackfilling" />
         </template>
       </template>
 

@@ -11,16 +11,20 @@ import {
 } from 'chart.js';
 import { Chart } from 'vue-chartjs';
 import { computed, ref, watch } from 'vue';
-import type { Granularity } from '@/utils/library-stats';
+import type { ChartRange, Granularity } from '@/utils/library-stats';
 import { useChartFocus, useChartTheme } from '../../useChartTheme';
 import StatsCard from './StatsCard.vue';
+import RangeToggle from './RangeToggle.vue';
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, LineController, Filler);
+
+const range = defineModel<ChartRange>('range', { required: true });
 
 const props = defineProps<{
   growth: {
     granularity: Granularity;
-    startsAtImport: boolean;
+    /** Books predate the last 12 months, so the range toggle is shown */
+    hasOlder: boolean;
     labels: string[];
     totals: number[];
     baseline: number;
@@ -44,21 +48,17 @@ const periodName = (i: number) =>
   props.growth.granularity === 'week' ? `w/c ${props.growth.labels[i]}` : props.growth.labels[i];
 
 const change = computed(() => props.growth.current - props.growth.baseline);
-const since = computed(() =>
-  props.growth.startsAtImport ? 'after your first import' : 'a year ago'
-);
 const summary = computed(() =>
   change.value > 0
-    ? `books, up from ${props.growth.baseline.toLocaleString()} ${since.value}`
-    : `books, the same as ${since.value}`
+    ? `books, up from ${props.growth.baseline.toLocaleString()} in ${periodName(0)}`
+    : `books, the same as in ${periodName(0)}`
 );
 
 const readout = computed(() => {
   const i = focus.active.value;
   if (i !== null) return `${periodName(i)} · ${props.growth.totals[i].toLocaleString()} books`;
   const sign = change.value >= 0 ? '+' : '−';
-  const span = props.growth.startsAtImport ? `since ${periodName(0)}` : 'in 12 months';
-  return `${sign}${Math.abs(change.value).toLocaleString()} ${span}`;
+  return `${sign}${Math.abs(change.value).toLocaleString()} since ${periodName(0)}`;
 });
 
 const ariaLabel = computed(() =>
@@ -126,7 +126,10 @@ const chartOptions = computed(() => ({
 <template>
   <StatsCard title="Growth over time">
     <template #actions>
-      <p v-if="enoughData" aria-live="polite" class="text-sm text-gr-muted">{{ readout }}</p>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p v-if="enoughData" aria-live="polite" class="text-sm text-gr-muted">{{ readout }}</p>
+        <RangeToggle v-if="growth.hasOlder" v-model="range" />
+      </div>
     </template>
 
     <template v-if="enoughData">

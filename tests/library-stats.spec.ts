@@ -3,12 +3,9 @@ import { test, expect } from '@playwright/test';
 import { formatDuration, formatMonthYear } from '../src/utils/date-utils';
 import { formatPercent } from '../src/utils/book-display';
 import {
-  buildTimeline,
-  countPerPeriod,
-  detectFirstImport,
   growthSeries,
+  libraryPeriods,
   longestWaiting,
-  readVsAddedPeriods,
   recentlyAdded,
   topGenres,
   unreadBreakdown,
@@ -46,95 +43,67 @@ test.describe('date helpers', () => {
   });
 });
 
-test.describe('detectFirstImport', () => {
-  test('finds the earliest day with a large batch', () => {
-    const dates = [
-      '2026-01-03', '2026-01-05',
-      ...repeat('2026-02-10', 40),
-      ...repeat('2026-05-01', 30),
-      '2026-06-01',
-    ];
-    expect(detectFirstImport(dates)).toEqual({ date: '2026-02-10', count: 40 });
-  });
-
-  test('ignores days below the minimum batch size or share', () => {
-    expect(detectFirstImport([...repeat('2026-02-10', 9), '2026-03-01'])).toBeNull();
-    // 12 books in a day, but only 12% of a 100-book library
-    const spread = Array.from({ length: 88 }, (_, i) => `2025-${String((i % 12) + 1).padStart(2, '0')}-0${(i % 9) + 1}`);
-    expect(detectFirstImport([...repeat('2026-02-10', 12), ...spread])).toBeNull();
-  });
-
-  test('handles an empty library', () => {
-    expect(detectFirstImport([])).toBeNull();
-  });
-});
-
-test.describe('buildTimeline', () => {
+test.describe('libraryPeriods', () => {
   const now = day('2026-10-24');
+  const older = ['2024-05-01', '2025-10-31', ...repeat('2026-10-06', 40), '2026-10-20'].map(day);
 
-  test('last 12 months without an import', () => {
-    const t = buildTimeline(now, null);
+  test('all time starts at the first book added', () => {
+    const t = libraryPeriods(older, now, 'all');
     expect(t.granularity).toBe('month');
-    expect(t.startsAtImport).toBe(false);
+    expect(t.hasOlder).toBe(true);
+    expect(t.periods[0].start).toEqual(day('2024-05-01'));
+    expect(t.periods).toHaveLength(30);
+    expect(t.periods.at(-1)!.end).toEqual(day('2026-11-01'));
+    expect(t.periods.at(-1)!.label).toBe('Oct ’26');
+  });
+
+  test('12 months starts a year ago when books are older', () => {
+    const t = libraryPeriods(older, now, 'year');
+    expect(t.granularity).toBe('month');
     expect(t.periods).toHaveLength(12);
     expect(t.periods[0].start).toEqual(day('2025-11-01'));
-    expect(t.periods[11].end).toEqual(day('2026-11-01'));
-    expect(t.periods[11].label).toBe('Oct 26');
   });
 
-  test('an import older than 12 months is ignored', () => {
-    const t = buildTimeline(now, '2024-03-02');
-    expect(t.startsAtImport).toBe(false);
-    expect(t.periods).toHaveLength(12);
+  test('12 months starts at the first book when that is more recent', () => {
+    const dates = ['2026-02-10', '2026-06-01'].map(day);
+    for (const range of ['year', 'all'] as const) {
+      const t = libraryPeriods(dates, now, range);
+      expect(t.hasOlder).toBe(false);
+      expect(t.periods[0].start).toEqual(day('2026-02-01'));
+      expect(t.periods).toHaveLength(9);
+    }
   });
 
-  test('starts at an import within the window', () => {
-    const t = buildTimeline(now, '2026-02-10');
-    expect(t.granularity).toBe('month');
-    expect(t.startsAtImport).toBe(true);
-    expect(t.periods[0].start).toEqual(day('2026-02-01'));
-    expect(t.periods).toHaveLength(9);
-    expect(readVsAddedPeriods(t)[0].start).toEqual(day('2026-03-01'));
-  });
-
-  test('weekly when the import was under 3 months ago', () => {
-    const t = buildTimeline(now, '2026-09-02'); // a Wednesday
+  test('weekly when the first book was under 3 months ago', () => {
+    const t = libraryPeriods([day('2026-09-02')], now, 'all'); // a Wednesday
     expect(t.granularity).toBe('week');
     expect(t.periods[0].start).toEqual(day('2026-08-31')); // its Monday
     expect(t.periods[0].label).toBe('31 Aug');
     expect(t.periods.at(-1)!.start).toEqual(day('2026-10-19'));
     expect(t.periods).toHaveLength(8);
-    expect(readVsAddedPeriods(t)[0].start).toEqual(day('2026-09-07'));
+  });
+
+  test('handles an empty library', () => {
+    expect(libraryPeriods([], now, 'all')).toEqual({ granularity: 'month', periods: [], hasOlder: false });
   });
 });
 
 test.describe('series', () => {
   const now = day('2026-10-24');
 
-  test('growthSeries starts from the import total', () => {
-    const dates = [...repeat('2026-02-10', 40), '2026-03-05', '2026-03-20', '2026-10-01'].map(day);
-    const t = buildTimeline(now, '2026-02-10');
-    const { totals, baseline } = growthSeries(dates, t);
-    expect(baseline).toBe(40);
-    expect(totals[0]).toBe(40);
-    expect(totals[1]).toBe(42);
-    expect(totals.at(-1)).toBe(43);
+  test('growthSeries counts the library at the end of each period', () => {
+    const dates = ['2024-05-01', '2025-10-31', ...repeat('2026-10-06', 40), '2026-10-20'].map(day);
+    const all = growthSeries(dates, libraryPeriods(dates, now, 'all').periods);
+    expect(all.baseline).toBe(1);
+    expect(all.totals.at(-2)).toBe(2);
+    expect(all.totals.at(-1)).toBe(43);
+    const year = growthSeries(dates, libraryPeriods(dates, now, 'year').periods);
+    expect(year.baseline).toBe(2);
+    expect(year.totals.at(-1)).toBe(43);
   });
 
-  test('growthSeries baseline is the size before the window', () => {
-    const dates = ['2024-05-01', '2025-10-31', '2025-11-02', '2026-10-01'].map(day);
-    const { totals, baseline } = growthSeries(dates, buildTimeline(now, null));
-    expect(baseline).toBe(2);
-    expect(totals[0]).toBe(3);
-    expect(totals.at(-1)).toBe(4);
-  });
-
-  test('countPerPeriod', () => {
-    const t = buildTimeline(now, null);
-    const counts = countPerPeriod(['2026-10-01', '2026-10-31', '2026-09-15', '2025-01-01'].map(day), t.periods);
-    expect(counts.at(-1)).toBe(2);
-    expect(counts.at(-2)).toBe(1);
-    expect(counts.reduce((a, b) => a + b, 0)).toBe(3);
+  test('growthSeries handles no periods', () => {
+    expect(growthSeries([], [])).toEqual({ totals: [], baseline: 0 });
   });
 });
 

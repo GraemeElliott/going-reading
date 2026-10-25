@@ -4,33 +4,6 @@ import type { BookStatus } from '../types/book';
 import { formatDayMonth, formatMonthShort, localDateUtils } from './date-utils';
 
 // ---------------------------------------------------------------------------
-// First bulk import
-
-/** A day counts as a bulk import when at least this many books were added... */
-export const IMPORT_MIN_BOOKS = 10;
-/** ...and they make up at least this share of the library */
-export const IMPORT_MIN_SHARE = 0.2;
-
-/**
- * The earliest day on which a large batch of books was added (the first bulk
- * import), or null when there wasn't one. Takes 'YYYY-MM-DD' dates.
- */
-export const detectFirstImport = (
-  dates: string[]
-): { date: string; count: number } | null => {
-  const perDay = new Map<string, number>();
-  for (const date of dates) {
-    const day = date.slice(0, 10);
-    perDay.set(day, (perDay.get(day) ?? 0) + 1);
-  }
-  const threshold = Math.max(IMPORT_MIN_BOOKS, Math.ceil(dates.length * IMPORT_MIN_SHARE));
-  const bulkDays = [...perDay]
-    .filter(([, count]) => count >= threshold)
-    .sort(([a], [b]) => a.localeCompare(b));
-  return bulkDays.length ? { date: bulkDays[0][0], count: bulkDays[0][1] } : null;
-};
-
-// ---------------------------------------------------------------------------
 // Chart periods
 
 export type Granularity = 'month' | 'week';
@@ -39,16 +12,12 @@ export interface Period {
   start: Date;
   /** Exclusive */
   end: Date;
-  /** Axis label: "Oct 26" or "6 Oct" */
+  /** Axis label: "Oct ’26" or "6 Oct" */
   label: string;
 }
 
-export interface LibraryTimeline {
-  granularity: Granularity;
-  periods: Period[];
-  /** True when the first period is the one holding the first bulk import */
-  startsAtImport: boolean;
-}
+/** How far back the growth chart goes */
+export type ChartRange = 'year' | 'all';
 
 const monthStart = (year: number, month: number) => new Date(year, month, 1);
 const addDays = (date: Date, days: number) =>
@@ -57,29 +26,24 @@ const addDays = (date: Date, days: number) =>
 const weekStart = (date: Date) => addDays(date, -((date.getDay() + 6) % 7));
 
 /**
- * Periods for the growth and read-vs-added charts: the last 12 months, unless
- * the first bulk import falls inside them, in which case the periods start at
- * the import. With fewer than 3 months since the import, periods are weeks.
+ * Periods from the given date up to now: weeks from its Monday when it's
+ * under 3 months ago, otherwise months from its month.
  */
-export const buildTimeline = (now: Date, importDate: string | null): LibraryTimeline => {
-  const thisMonth = monthStart(now.getFullYear(), now.getMonth());
-  const windowStart = monthStart(now.getFullYear(), now.getMonth() - 11);
-  const imported = importDate ? localDateUtils.parseLocalDate(importDate) : null;
-  const startsAtImport = !!imported && imported >= windowStart && imported <= now;
-
+export const periodsFrom = (
+  now: Date,
+  from: Date
+): { granularity: Granularity; periods: Period[] } => {
+  const periods: Period[] = [];
   const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
-  if (imported && startsAtImport && imported > threeMonthsAgo) {
-    const periods: Period[] = [];
-    for (let start = weekStart(imported); start <= now; start = addDays(start, 7)) {
+  if (from > threeMonthsAgo) {
+    for (let start = weekStart(from); start <= now; start = addDays(start, 7)) {
       periods.push({ start, end: addDays(start, 7), label: formatDayMonth(start) });
     }
-    return { granularity: 'week', periods, startsAtImport };
+    return { granularity: 'week', periods };
   }
 
-  const first = startsAtImport && imported
-    ? monthStart(imported.getFullYear(), imported.getMonth())
-    : windowStart;
-  const periods: Period[] = [];
+  const thisMonth = monthStart(now.getFullYear(), now.getMonth());
+  const first = monthStart(from.getFullYear(), from.getMonth());
   for (let start = first; start <= thisMonth; start = monthStart(start.getFullYear(), start.getMonth() + 1)) {
     periods.push({
       start,
@@ -87,34 +51,38 @@ export const buildTimeline = (now: Date, importDate: string | null): LibraryTime
       label: formatMonthShort(start),
     });
   }
-  return { granularity: 'month', periods, startsAtImport };
+  return { granularity: 'month', periods };
 };
 
-/** How many of the dates fall in each period */
-export const countPerPeriod = (dates: Date[], periods: Period[]): number[] =>
-  periods.map((p) => dates.filter((d) => d >= p.start && d < p.end).length);
+/**
+ * Periods for the growth chart. 'all' starts at the first
+ * book added; 'year' starts 12 months ago, or at the first book when that's
+ * more recent. hasOlder is true when books predate the 12 months, which is
+ * the only time the two ranges differ.
+ */
+export const libraryPeriods = (
+  dates: Date[],
+  now: Date,
+  range: ChartRange
+): { granularity: Granularity; periods: Period[]; hasOlder: boolean } => {
+  if (!dates.length) return { granularity: 'month', periods: [], hasOlder: false };
+  const first = new Date(Math.min(...dates.map((d) => d.getTime())));
+  const windowStart = monthStart(now.getFullYear(), now.getMonth() - 11);
+  const hasOlder = first < windowStart;
+  return { ...periodsFrom(now, range === 'year' && hasOlder ? windowStart : first), hasOlder };
+};
 
 /**
  * Library size at the end of each period, plus the size it grew from: the
- * import total when the timeline starts at the import, otherwise the size
- * just before the first period.
+ * total at the end of the first period.
  */
 export const growthSeries = (
   dates: Date[],
-  timeline: LibraryTimeline
+  periods: Period[]
 ): { totals: number[]; baseline: number } => {
-  const { periods, startsAtImport } = timeline;
   const totals = periods.map((p) => dates.filter((d) => d < p.end).length);
-  if (!periods.length) return { totals, baseline: 0 };
-  const baseline = startsAtImport
-    ? totals[0]
-    : dates.filter((d) => d < periods[0].start).length;
-  return { totals, baseline };
+  return { totals, baseline: totals[0] ?? 0 };
 };
-
-/** Read vs added starts after the import's period so the import doesn't dwarf it */
-export const readVsAddedPeriods = (timeline: LibraryTimeline): Period[] =>
-  timeline.startsAtImport ? timeline.periods.slice(1) : timeline.periods;
 
 // ---------------------------------------------------------------------------
 // Other aggregates
