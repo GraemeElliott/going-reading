@@ -83,6 +83,7 @@ const manualTitle = ref('');
 const manualAuthors = ref<string[]>(['']);
 const manualIsbn = ref('');
 const manualPublisher = ref('');
+const manualPages = ref('');
 const manualCover = ref('');
 const coverFailed = ref(false);
 const markRead = ref(false);
@@ -101,6 +102,11 @@ const shelfValue = computed<ShelfChoice>({
 });
 const authorInputs = ref<HTMLInputElement[]>([]);
 
+// Blank, or a whole number of pages
+const pagesInvalid = computed(() => {
+  const value = String(manualPages.value).trim();
+  return !!value && !/^[1-9]\d{0,4}$/.test(value);
+});
 const isbnInvalid = computed(() => !!manualIsbn.value.trim() && !normaliseIsbn(manualIsbn.value));
 const isbnOwned = computed(() => {
   const isbn = normaliseIsbn(manualIsbn.value);
@@ -126,6 +132,7 @@ const manualReady = computed(
     !!manualTitle.value.trim() &&
     !isbnInvalid.value &&
     !isbnOwned.value &&
+    !pagesInvalid.value &&
     coverUrl.value !== null &&
     (!markRead.value || !!finishedOn.value)
 );
@@ -149,6 +156,7 @@ watch(open, (isOpen) => {
   manualAuthors.value = [''];
   manualIsbn.value = '';
   manualPublisher.value = '';
+  manualPages.value = '';
   manualCover.value = '';
   markRead.value = false;
   finishedOn.value = todayStr();
@@ -230,6 +238,7 @@ const buildManualBook = (): BookBasicInfo => ({
   authors: manualAuthors.value.map((a) => a.trim()).filter(Boolean),
   image: coverUrl.value && !coverFailed.value ? coverUrl.value : '',
   publisher: manualPublisher.value.trim() || undefined,
+  pages: Number(manualPages.value) || undefined,
 });
 
 const handleAdd = async () => {
@@ -525,6 +534,27 @@ const handleAdd = async () => {
                 Publisher <span class="font-normal text-gr-muted">(optional)</span>
               </label>
               <input id="manual-publisher" v-model="manualPublisher" type="text" class="gr-input" />
+            </div>
+
+            <!-- Pages -->
+            <div class="grid gap-2">
+              <label for="manual-pages" class="text-[15px] font-semibold">
+                Pages <span class="font-normal text-gr-muted">(optional, used for reading progress)</span>
+              </label>
+              <input
+                id="manual-pages"
+                v-model="manualPages"
+                type="number"
+                inputmode="numeric"
+                min="1"
+                max="99999"
+                step="1"
+                class="gr-input"
+                :aria-invalid="pagesInvalid"
+              />
+              <p v-if="pagesInvalid" class="text-[13px] text-gr-danger-text">
+                Enter a whole number of pages.
+              </p>
             </div>
 
             <!-- ISBN -->
