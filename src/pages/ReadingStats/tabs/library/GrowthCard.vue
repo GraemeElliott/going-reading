@@ -134,7 +134,7 @@ const chartOptions = computed(() => ({
 
     <template v-if="enoughData">
       <p class="mb-4">
-        <span class="text-[36px] font-bold leading-none tracking-[-0.02em]">{{ growth.current.toLocaleString() }}</span>
+        <span class="text-2xl font-medium leading-none">{{ growth.current.toLocaleString() }}</span>
         <span class="ml-1.5 text-gr-muted">{{ summary }}</span>
       </p>
       <div

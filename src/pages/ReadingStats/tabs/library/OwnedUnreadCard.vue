@@ -50,7 +50,7 @@ const barLabel = computed(
 
     <div v-else class="flex flex-col gap-4">
       <p>
-        <span class="text-[36px] font-bold leading-none tracking-[-0.02em]">{{ unread.unread.toLocaleString() }}</span>
+        <span class="text-2xl font-medium leading-none">{{ unread.unread.toLocaleString() }}</span>
         <span class="ml-1.5 text-gr-muted">
           of {{ unread.owned.toLocaleString() }} {{ unread.owned === 1 ? 'book' : 'books' }} you own
           {{ unread.unread === 1 ? "hasn't" : "haven't" }} been read yet

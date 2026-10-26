@@ -57,7 +57,7 @@ const barLabel = computed(() =>
           Library by shelf status
         </h3>
         <p class="mt-1.5">
-          <span class="text-[36px] font-bold leading-none tracking-[-0.02em]">{{ total.toLocaleString() }}</span>
+          <span class="text-2xl font-medium leading-none">{{ total.toLocaleString() }}</span>
           <span class="ml-1.5 text-gr-muted">{{ total === 1 ? 'book' : 'books' }}</span>
         </p>
       </div>
