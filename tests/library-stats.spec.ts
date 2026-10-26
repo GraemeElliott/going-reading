@@ -9,6 +9,7 @@ import {
   recentlyAdded,
   topGenres,
   unreadBreakdown,
+  waitTimes,
 } from '../src/utils/library-stats';
 
 const day = (s: string) => {
@@ -152,5 +153,29 @@ test.describe('aggregates', () => {
     const result = longestWaiting(books, libraryDates, 5);
     expect(result.map((r) => r.book.isbn)).toEqual(['2', '3', '1']);
     expect(result[0].since).toEqual(day('2025-06-01'));
+  });
+
+  test('waitTimes gives the average, median and spread of waits', () => {
+    const now = day('2026-10-24');
+    const books = [
+      { isbn: '1', date_added: '2026-10-10' },
+      { isbn: '2', date_added: '2026-08-24' },
+      { isbn: '3', date_added: null },
+      { isbn: '4', date_added: '2024-01-01' },
+      { isbn: '5', date_added: null },
+    ];
+    const libraryDates = new Map([['3', '2025-08-01']]);
+    const result = waitTimes(books, libraryDates, now);
+    expect(result.count).toBe(4);
+    expect(result.overAYear).toBe(2);
+    expect(formatDuration(result.medianSince!, now)).toBe('8 months');
+    expect(result.buckets.map((b) => b.count)).toEqual([1, 1, 0, 0, 1, 1]);
+  });
+
+  test('waitTimes with no books', () => {
+    const result = waitTimes([], new Map(), day('2026-10-24'));
+    expect(result.count).toBe(0);
+    expect(result.averageSince).toBeNull();
+    expect(result.buckets.every((b) => b.count === 0)).toBe(true);
   });
 });

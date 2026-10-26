@@ -151,20 +151,74 @@ export const recentlyAdded = <T extends { date_added: string; created_at?: strin
     .slice(0, limit);
 
 /**
- * Want to read books that have waited longest. Waiting is measured from the
- * date the book went on the shelf, or the date it was added to the library
- * when the shelf date is missing.
+ * When each Want to read book started waiting: the date it went on the shelf,
+ * or the date it was added to the library when the shelf date is missing.
+ * Books with neither are left out.
  */
-export const longestWaiting = <T extends { isbn: string; date_added?: string | null }>(
+const waitingSince = <T extends { isbn: string; date_added?: string | null }>(
   books: T[],
-  libraryDates: Map<string, string>,
-  limit = 5
+  libraryDates: Map<string, string>
 ): { book: T; since: Date }[] =>
   books
     .map((book) => {
       const date = book.date_added || libraryDates.get(book.isbn);
       return date ? { book, since: localDateUtils.toLocalDate(date) } : null;
     })
-    .filter((item): item is { book: T; since: Date } => item !== null)
+    .filter((item): item is { book: T; since: Date } => item !== null);
+
+/** Want to read books that have waited longest */
+export const longestWaiting = <T extends { isbn: string; date_added?: string | null }>(
+  books: T[],
+  libraryDates: Map<string, string>,
+  limit = 5
+): { book: T; since: Date }[] =>
+  waitingSince(books, libraryDates)
     .sort((a, b) => a.since.getTime() - b.since.getTime())
     .slice(0, limit);
+
+export interface WaitTimes {
+  /** Books with a known waiting date */
+  count: number;
+  /** Start dates of the average and median waits, for formatDuration */
+  averageSince: Date | null;
+  medianSince: Date | null;
+  overAYear: number;
+  /** How many books have waited for each span, shortest first */
+  buckets: { label: string; count: number }[];
+}
+
+// Upper bounds in days (exclusive); the last bucket is open-ended
+const WAIT_BUCKETS = [
+  { label: '<1 mo', maxDays: 30 },
+  { label: '1–3 mo', maxDays: 91 },
+  { label: '3–6 mo', maxDays: 182 },
+  { label: '6–12 mo', maxDays: 365 },
+  { label: '1–2 yr', maxDays: 730 },
+  { label: '2+ yr', maxDays: Infinity },
+];
+
+/** How long Want to read books have been waiting: average, median and spread */
+export const waitTimes = <T extends { isbn: string; date_added?: string | null }>(
+  books: T[],
+  libraryDates: Map<string, string>,
+  now: Date = new Date()
+): WaitTimes => {
+  const times = waitingSince(books, libraryDates)
+    .map(({ since }) => since.getTime())
+    .sort((a, b) => a - b);
+  const days = times.map((t) => Math.max(0, localDateUtils.daysBetween(new Date(t), now)));
+
+  const mid = Math.floor(times.length / 2);
+  const median = times.length % 2 ? times[mid] : (times[mid - 1] + times[mid]) / 2;
+
+  return {
+    count: times.length,
+    averageSince: times.length ? new Date(times.reduce((sum, t) => sum + t, 0) / times.length) : null,
+    medianSince: times.length ? new Date(median) : null,
+    overAYear: days.filter((d) => d >= 365).length,
+    buckets: WAIT_BUCKETS.map(({ label, maxDays }, i) => {
+      const minDays = i ? WAIT_BUCKETS[i - 1].maxDays : 0;
+      return { label, count: days.filter((d) => d >= minDays && d < maxDays).length };
+    }),
+  };
+};

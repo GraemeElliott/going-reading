@@ -19,6 +19,7 @@ import LibraryBookTile from './library/LibraryBookTile.vue';
 import GrowthCard from './library/GrowthCard.vue';
 import TopGenresCard from './library/TopGenresCard.vue';
 import OwnedUnreadCard from './library/OwnedUnreadCard.vue';
+import WaitTimesCard from './library/WaitTimesCard.vue';
 import { useLibraryStats } from '../useLibraryStats';
 import { useChartTheme } from '../useChartTheme';
 
@@ -187,39 +188,43 @@ const LINK = 'inline-flex min-h-11 items-center gap-1.5 rounded text-sm font-sem
           <TopGenresCard :genres="genres" :loading="genresLoading" class="flex-[5_1_360px]" />
         </div>
 
-        <!-- Owned but unread -->
-        <OwnedUnreadCard :unread="unread" />
-
-        <!-- Longest waiting on Want to read -->
-        <StatsCard title="Longest waiting on Want to read">
-          <template #actions>
-            <router-link
-              v-if="waiting.count"
-              :to="{ path: '/my-books/bookshelves', query: { shelf: 'want-to-read' } }"
-              :class="LINK"
-            >
-              See all {{ waiting.count }}
-              <font-awesome-icon icon="fa-solid fa-chevron-right" class="text-xs" />
-            </router-link>
-          </template>
-          <p v-if="!waiting.items.length" class="text-sm text-gr-muted">Your Want to read shelf is empty</p>
-          <ul v-else :class="LIST">
-            <li v-for="{ book, since } in waiting.items" :key="book.isbn">
-              <LibraryBookTile
-                :isbn="book.isbn"
-                :title="book.title"
-                :authors="book.authors"
-                :image="book.image"
-                :pages="book.pages"
+        <!-- Owned but unread and Time on Want to read + Longest waiting on Want to read -->
+        <div class="flex flex-wrap gap-5">
+          <div class="flex flex-[1_1_400px] flex-col gap-5">
+            <OwnedUnreadCard :unread="unread" />
+            <!-- Fills whatever height the longest waiting list leaves -->
+            <WaitTimesCard :times="waiting.times" class="flex-1" />
+          </div>
+          <StatsCard title="Longest waiting on Want to read" class="flex-[1_1_400px]">
+            <template #actions>
+              <router-link
+                v-if="waiting.count"
+                :to="{ path: '/my-books/bookshelves', query: { shelf: 'want-to-read' } }"
+                :class="LINK"
               >
-                <template #pill>
-                  <font-awesome-icon icon="fa-regular fa-clock" />
-                  {{ formatDuration(since) }}
-                </template>
-              </LibraryBookTile>
-            </li>
-          </ul>
-        </StatsCard>
+                See all {{ waiting.count }}
+                <font-awesome-icon icon="fa-solid fa-chevron-right" class="text-xs" />
+              </router-link>
+            </template>
+            <p v-if="!waiting.items.length" class="text-sm text-gr-muted">Your Want to read shelf is empty</p>
+            <ul v-else :class="LIST">
+              <li v-for="{ book, since } in waiting.items" :key="book.isbn">
+                <LibraryBookTile
+                  :isbn="book.isbn"
+                  :title="book.title"
+                  :authors="book.authors"
+                  :image="book.image"
+                  :pages="book.pages"
+                >
+                  <template #pill>
+                    <font-awesome-icon icon="fa-regular fa-clock" />
+                    {{ formatDuration(since) }}
+                  </template>
+                </LibraryBookTile>
+              </li>
+            </ul>
+          </StatsCard>
+        </div>
       </div>
     </template>
   </div>

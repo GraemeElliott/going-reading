@@ -12,6 +12,7 @@ import {
   recentlyAdded,
   topGenres,
   unreadBreakdown,
+  waitTimes,
 } from '@/utils/library-stats';
 
 // Every aggregate shown on the Library tab, computed once from the library and
@@ -126,7 +127,11 @@ export function useLibraryStats(now: Date = new Date()) {
   const waiting = computed(() => {
     const libraryDates = new Map(entries.value.map((e) => [e.isbn, e.date_added]));
     const owned = userBooksStore.groupedBooks['want-to-read'].filter((b) => libraryDates.has(b.isbn));
-    return { items: longestWaiting(owned, libraryDates), count: owned.length };
+    return {
+      items: longestWaiting(owned, libraryDates),
+      count: owned.length,
+      times: waitTimes(owned, libraryDates, now),
+    };
   });
 
   return {
